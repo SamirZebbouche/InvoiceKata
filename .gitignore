@@ -486,3 +486,6 @@ $RECYCLE.BIN/
 
 # CI reports built locally
 site/
+
+# Mutation testing output
+StrykerOutput/

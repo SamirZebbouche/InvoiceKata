@@ -96,6 +96,10 @@ chaque pull request.
   - l'exhaustivité se teste : Samir a relevé que rien ne garantissait la traduction d'une nouvelle
     exception en code HTTP. Un test parcourt désormais toutes les exceptions du produit. L'agent l'a
     vérifié en ajoutant un instant une exception oubliée, qui l'a fait échouer.
+  - les tests par mutation automatisent ces casses : Samir a proposé Stryker.NET. Le premier passage a
+    trouvé trois vrais trous (des libellés de forme juridique non figés, un cas d'échec non couvert, un
+    constructeur de devis vidable sans qu'aucun test du domaine ne le voie). Stryker fait désormais partie
+    des preuves, au même titre que `dotnet format`, avec un seuil bloquant de 70 % ; le score est de 80 %.
   - une casse doit aussi compiler : deux casses rendaient du code inaccessible, ce que
     `TreatWarningsAsErrors` refuse. Aucun test n'a tourné, et l'absence de sortie n'était pas une preuve.
     L'agent les a refaites, en vérifiant le build avant de lire les tests.

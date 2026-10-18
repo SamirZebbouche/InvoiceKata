@@ -86,7 +86,9 @@ explanation makes no claim to verify.
 <!-- /ai-core:method-verify-before-claiming -->
 
 ### In this project
-Proofs here: `dotnet test` and `dotnet format --verify-no-changes`.
+Proofs here: `dotnet test` and `dotnet format --verify-no-changes` after every change, and `dotnet stryker`
+(mutation testing, configured in `stryker-config.json`, blocking below its `break` threshold) at the end of
+each batch. The CI runs all three. A surviving mutant is a test gap to report, not to hide.
 
 <!-- ai-core:git-action-gate@v3 -->
 ## Git and remote action gate
