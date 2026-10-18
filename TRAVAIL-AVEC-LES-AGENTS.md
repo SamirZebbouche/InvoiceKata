@@ -33,7 +33,13 @@ chaque pull request.
     Samir dans sa base, sous l'identifiant `test-mutation-testing`, pour servir à ses autres projets.
 
   Le projet complète aussi ses propres notes : le ruleset de `main`, l'exception de langue des
-  scénarios Gherkin, la zone des spikes, et maintenant Stryker parmi les preuves.
+  scénarios Gherkin, la zone des spikes, et maintenant Stryker parmi les preuves. Quand le rendu des PDF
+  a fait passer un passage complet de Stryker de 3 à 25 minutes, Samir a demandé s'il ralentissait le
+  développement, puis a posé la règle : « on ne peut pas se permettre des tests de 10 minutes dans la boucle
+  de feedback rapide ». La boucle rapide se limite aux tests et au format (10 secondes). Stryker en sort : il
+  tourne en arrière-plan en fin de PR, sur les seuls fichiers modifiés, et dans un job de CI à part, complet
+  sur `main`. Un faux moteur de rendu dans les tests qui ne parlent pas du PDF a aussi ramené le passage
+  complet de 25 à 10 minutes.
 - **Les décisions de conception.** L'agent propose des options et réfute celles qui ne tiennent pas ;
   Samir tranche.
 - **La démarche.** Samir décrit d'abord un cadre large, que l'on conçoit ensemble par ADR. On construit
@@ -91,7 +97,11 @@ chaque pull request.
   exigé « ceinture et bretelles » : le domaine doit aussi empêcher la collision. Il a demandé si un
   *interlock* conviendrait. L'agent l'a placé dans l'adaptateur, où un verrou existait déjà, et a laissé
   au domaine un calcul pur à partir des numéros déjà pris. Samir a demandé que ce partage soit consigné
-  dans un CDR ([CDR-0007](docs/cdr/CDR-0007-numerotation-des-devis.md)).
+  dans un CDR ([CDR-0007](docs/cdr/CDR-0007-numerotation-des-devis.md)). Pour le PDF, Samir a retenu les
+  quatre propositions de l'agent : un contrat en JSON plutôt qu'en YAML, un rendu en réaction à la
+  finalisation juste après l'enregistrement, un `500` explicite pour un document que le validateur final
+  refuse, et un projet à part pour l'adaptateur Typst (amendement de
+  l'[ADR-0005](docs/adr/ADR-0005-rendu-pdf-par-typst.md)).
 - **La roadmap.** L'agent a proposé un découpage en lots, et Samir l'a validé. Samir a ensuite validé la
   structure de la solution (projets et sens des dépendances), et l'agent a rédigé le détail PR par PR
   dans [docs/ROADMAP.md](docs/ROADMAP.md), avec les questions à trancher en chemin. L'agent a signalé un
