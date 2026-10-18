@@ -66,9 +66,14 @@ chaque pull request.
 
 ## Comment c'est vérifié
 
-- **Le code** : en TDD, chaque test est vu en échec avant d'écrire le code. `dotnet test` et
-  `dotnet format --verify-no-changes` sont relancés après la dernière modification. Il n'y a pas encore
-  de code.
+- **Le code** : en ATDD et en TDD, chaque test est vu en échec avant d'écrire le code. `dotnet test` et
+  `dotnet format --verify-no-changes` sont relancés après la dernière modification, puis par la CI sur
+  chaque PR. Quand un simple échec de compilation ne prouverait rien, l'agent casse exprès le code pour
+  voir le test échouer pour la bonne raison :
+  - un identifiant volontairement généré en GUID v7 a fait échouer le test qui exige un v4 ;
+  - le filtre par émetteur, retiré un instant de l'adaptateur, a fait échouer le scénario d'isolation ;
+  - un test de `404` passait déjà parce que la route n'existait pas : il exige désormais une réponse
+    Problem Details.
 - **La documentation et les décisions** : Samir les relit, pull request par pull request.
 - **Le spike de rendu** : l'agent lit chaque PDF produit et en recalcule les totaux, plutôt que de se
   fier au code de retour.
@@ -103,3 +108,19 @@ chaque pull request.
   que le spike lui a fait faire. L'ADR vient ensuite. Le débrief a produit deux décisions de Samir : les
   totaux, les mentions et la signature toujours sur la même page, et un devis court pour tester l'autre
   extrême.
+- **Une obsession des types primitifs.** L'agent avait écrit `Address(string, string, string)` et des
+  commandes qui alignaient quatre `string` (dénomination, forme juridique, SIREN, n° de TVA) : un SIREN
+  pouvait prendre en silence la place du n° de TVA. Samir l'a relevé en relecture. La règle existait dans
+  `ai-core` (`arch-no-uniform-patterns` : un objet valeur seulement si des primitives peuvent être
+  inversées ou s'il porte du comportement), mais elle n'était pas installée dans le projet, et l'agent
+  ne l'avait donc pas sous les yeux. Samir l'a installée, et l'agent a appliqué la règle dans les deux
+  sens : `Siren` et `VatNumber` deviennent des types, `Address` reçoit des propriétés nommées à chaque
+  appel, sans un type par champ, et les DTO de l'API restent primitifs. Une règle qu'on n'installe pas
+  ne protège pas.
+- **Un fichier généré commité.** Le code produit par Reqnroll (`*.feature.cs`) est entré dans un commit.
+  L'agent l'a vu en relisant le commit, l'a ajouté au `.gitignore` et a corrigé le commit, qui n'était
+  pas encore poussé.
+- **Une DLL périmée.** Après avoir restauré l'adaptateur qu'il avait cassé exprès, l'agent a vu le test
+  rester rouge. La copie de sauvegarde avait gardé une date antérieure à la dernière compilation, si bien
+  que la compilation incrémentale n'avait pas repris le fichier. Une reconstruction complète a corrigé
+  le problème. Depuis, les preuves sont lancées avec `--no-incremental`.
