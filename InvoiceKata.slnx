@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/InvoiceKata.Adapters.Persistence/InvoiceKata.Adapters.Persistence.csproj" />
+    <Project Path="src/InvoiceKata.Api/InvoiceKata.Api.csproj" />
+    <Project Path="src/InvoiceKata.Application/InvoiceKata.Application.csproj" />
+    <Project Path="src/InvoiceKata.Domain/InvoiceKata.Domain.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/InvoiceKata.Acceptance/InvoiceKata.Acceptance.csproj" />
+    <Project Path="tests/InvoiceKata.Api.Tests/InvoiceKata.Api.Tests.csproj" />
+    <Project Path="tests/InvoiceKata.Domain.Tests/InvoiceKata.Domain.Tests.csproj" />
+    <Project Path="tests/InvoiceKata.Persistence.ContractTests/InvoiceKata.Persistence.ContractTests.csproj" />
+  </Folder>
+</Solution>
