@@ -55,6 +55,9 @@ chaque pull request.
 - **La documentation et les décisions** : Samir les relit, pull request par pull request.
 - **Le spike de rendu** : l'agent lit chaque PDF produit et en recalcule les totaux, plutôt que de se
   fier au code de retour.
+- **Factur-X** : un validateur indépendant, Mustang, juge le résultat, pas l'agent. Mustang a trouvé un
+  bug de l'agent (`50` écrit `5E+1`) et des règles françaises que la recherche n'avait pas relevées
+  (mentions codées, adresses électroniques obligatoires).
 
 ## Ce qui n'a pas marché du premier coup
 
@@ -68,9 +71,9 @@ chaque pull request.
   existait. L'agent n'a rien poussé et a posé la question ; la règle a été corrigée.
 - **Une première version trop détaillée de cette page.** Samir recadre : la page sert à l'évaluer, elle
   doit être synthétique.
-- **Une réponse présentée comme un choix par défaut.** « Un YAML en entrée, un PDF en sortie » répondait
-  déjà à la question de Factur-X. L'agent a pourtant présenté ce point comme un défaut qu'il retenait, et
-  Samir l'a relevé.
+- **Une question posée en jargon.** L'agent a demandé s'il fallait « tenter Factur-X » sans expliquer ce
+  que c'était. Samir pensait y avoir répondu, et l'agent a cru comprendre que le sujet était écarté. Une
+  fois Factur-X expliqué, Samir a demandé de le vérifier dans le spike.
 - **Un chemin déformé dans le spike.** Git Bash a converti le chemin passé à Typst en chemin Windows, et
   la première compilation a échoué. L'agent a diagnostiqué la cause, puis l'a contournée.
 - **Un spike conclu trop vite.** Samir avait annoncé « POC, discutons ». L'agent a pourtant enchaîné le
