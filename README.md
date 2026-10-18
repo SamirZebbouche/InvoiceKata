@@ -40,7 +40,7 @@ Stack : C# / .NET, avec `dotnet test` et `dotnet format --verify-no-changes` com
 
 ## Périmètre retenu
 
-La partie back d'un logiciel de devis et de factures. On enregistre un client, on crée un devis, on y
+La partie back d'un logiciel de devis et de factures, exposée par une **API**. On enregistre un client, on crée un devis, on y
 ajoute ou on en retire des lignes, et la TVA est recalculée à chaque fois. On finalise ensuite le devis
 pour en rendre le PDF, puis on génère la facture à partir du devis. Les mentions légales dépendent de
 l'émetteur et du client, et tout contexte non pris en charge est refusé
@@ -55,6 +55,7 @@ l'émetteur et du client, et tout contexte non pris en charge est refusé
 | [0003](docs/adr/ADR-0003-reactions-par-evenements-idempotentes.md) | Les réactions par événements de domaine, idempotentes |
 | [0004](docs/adr/ADR-0004-atdd-et-bdd-par-cas-d-usage.md) | ATDD et BDD pour chaque cas d'usage |
 | [0005](docs/adr/ADR-0005-rendu-pdf-par-typst.md) | Le rendu PDF par Typst, à partir d'un document résolu |
+| [0006](docs/adr/ADR-0006-persistance-par-port-secondaire.md) | La persistance derrière un port secondaire, des fichiers pour le kata |
 
 ## Roadmap
 
@@ -63,7 +64,7 @@ Chaque lot laisse un système fonctionnel : la fin de chaque lot est un point d'
 | Lot | Contenu | Ce qui apparaît |
 |---|---|---|
 | Spike ✅ | YAML + template → PDF, jamais mergé ([branche `spike/pdf-rendering`](https://github.com/SamirZebbouche/InvoiceKata/tree/spike/pdf-rendering/spike)) | [ADR-0005](docs/adr/ADR-0005-rendu-pdf-par-typst.md) |
-| 1 | Client, devis brouillon, ajout et retrait de lignes, TVA. Un seul contexte : une société au régime normal qui facture un professionnel. | Le premier scénario ATDD et le refus des contextes non pris en charge |
+| 1 | Client, devis brouillon, ajout et retrait de lignes, TVA. Un seul contexte : une société au régime normal qui facture un professionnel. Exposé par l'API, stocké en fichiers. | Le premier scénario ATDD, le refus des contextes non pris en charge, et la suite de contrat du port de persistance |
 | 2 | Finalisation du devis, qui est alors figé, et rendu de son PDF | `QuoteFinalized`, le premier gestionnaire idempotent |
 | 3 | Facture créée à partir du devis : numérotation continue, immuabilité, mentions de paiement | `InvoiceIssued` |
 | 4 | Un second contexte : un EI en franchise de TVA | La Strategy de TVA |

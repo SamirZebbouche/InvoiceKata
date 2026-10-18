@@ -29,7 +29,7 @@ réalité, ces exemples seraient validés par un PO ; ici, c'est Samir qui en jo
 | Option | Raison |
 |---|---|
 | Des tests xUnit nommés en Given/When/Then, sans Gherkin | La spécification ne serait pas lisible sans lire le code. |
-| Une acceptation passant par une API HTTP | Il n'y a pas d'API dans le périmètre : il faudrait d'abord construire de la plomberie. |
+| Une acceptation passant par une API HTTP | Les scénarios seraient plus lents et plus fragiles, et ils testeraient la sérialisation en même temps que les règles. L'API est un adaptateur fin, qui a ses propres tests d'intégration. *(Raison corrigée le 2026-10-18, voir l'amendement.)* |
 | L'acceptation seule, sans TDD unitaire | Les cas limites se noieraient dans des scénarios lents à diagnostiquer. |
 | SpecFlow | En fin de vie depuis fin 2024. |
 
@@ -37,3 +37,10 @@ réalité, ces exemples seraient validés par un PO ; ici, c'est Samir qui en jo
 
 - Le [CLAUDE.md](../../CLAUDE.md) déclare l'exception de langue pour les fichiers `.feature`.
 - Chaque lot de la roadmap s'ouvre par ses scénarios.
+
+## Amendement du 2026-10-18 : le système est une API
+
+La première version écartait l'acceptation par HTTP avec une raison fausse : « il n'y a pas d'API dans le
+périmètre ». Le périmètre retenu par Samir, « la partie back », est une API depuis le début, et l'agent
+l'avait mal compris. La décision ne change pas : les scénarios attaquent les cas d'usage de l'application.
+Seule la raison change, et elle est corrigée dans le tableau des options écartées.
