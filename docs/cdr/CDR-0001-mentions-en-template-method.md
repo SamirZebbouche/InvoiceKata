@@ -48,6 +48,23 @@ gestionnaire qui ne serait pas fondé sur l'état.
 | Un dictionnaire générique de données | On perdrait le typage, et les erreurs n'apparaîtraient qu'à l'exécution. |
 | Des gestionnaires écrits librement, sans classe de base | Rien n'empêcherait un gestionnaire fondé sur le delta, faux dès que deux lignes déclenchent la même mention. |
 
+## Amendement du 2026-10-18 : la mention de validité est composée à la finalisation
+
+La durée de validité n'est pas déduite du contenu du devis. C'est un paramètre de la finalisation
+(30 jours par défaut, réglable à la requête). Le cas d'usage de finalisation demande donc son texte au
+catalogue `IMentionTexts`, et le domaine pose la mention et fige le devis **en une seule opération**.
+Aucune règle chorégraphiée ne la produit. Un devis finalisé refuse ensuite toute modification, mentions
+comprises, sans exception ([ADR-0009](../adr/ADR-0009-documents-legaux-jamais-reecrits.md)).
+
+| Option écartée | Raison |
+|---|---|
+| Une règle de plus, qui réagit à `QuoteFinalized` avant l'enregistrement | Le devis finalisé devrait encore accepter des changements de mentions : le domaine ne garantirait plus que ce qui est émis ne change jamais. |
+| Un événement `QuoteFinalizing`, levé avant le gel | Un concept nouveau, qui n'existerait que pour ordonner les appels. |
+| La phrase de validité écrite par le template PDF | Le texte sortirait du catalogue unique, et la mention n'apparaîtrait pas dans l'API. |
+
+Les mentions de contexte gardent la valeur qu'elles avaient dans le brouillon. Si un émetteur peut un jour
+modifier son profil, la finalisation devra les réévaluer avant le gel.
+
 ## Conséquences
 
 - La classe de base `LegalMentionRule` est le seul endroit où vivent l'approche fondée sur l'état et

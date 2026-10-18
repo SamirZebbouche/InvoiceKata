@@ -17,6 +17,7 @@ Chaque CDR suit la même trame : le problème, le motif retenu, où il s'appliqu
 | [0004](CDR-0004-erreurs-et-codes-http.md) | Les erreurs du domaine traduites en codes HTTP | En place |
 | [0005](CDR-0005-controleurs-plutot-que-minimal-apis.md) | Des contrôleurs plutôt que des minimal APIs | En place |
 | [0006](CDR-0006-etat-persistant-des-agregats.md) | L'état persistant des agrégats, garanti par une interface | En place |
+| [0007](CDR-0007-numerotation-des-devis.md) | La numérotation des devis, calculée par le domaine et bloquée par le port | À venir |
 
 ## Carte des motifs en usage
 
