@@ -14,6 +14,47 @@ jobs:
         with:
           global-json-file: global.json
       - run: dotnet restore
+      - run: dotnet tool restore
       - run: dotnet build --no-restore
-      - run: dotnet test --no-build
+      - name: Test, with a summary per test and coverage
+        run: >
+          dotnet test --no-build
+          --logger GitHubActions
+          --collect:"XPlat Code Coverage"
+          --results-directory TestResults
       - run: dotnet format --verify-no-changes --no-restore
+
+      - name: Build the reports
+        if: always()
+        run: |
+          dotnet tool run reportgenerator \
+            -reports:"TestResults/**/coverage.cobertura.xml" \
+            -targetdir:site/coverage \
+            -reporttypes:"Html;MarkdownSummaryGithub" \
+            -assemblyfilters:"+InvoiceKata.Domain;+InvoiceKata.Application;+InvoiceKata.Adapters.Persistence;+InvoiceKata.Api"
+          cat site/coverage/SummaryGithub.md >> "$GITHUB_STEP_SUMMARY"
+          cp tests/InvoiceKata.Acceptance/bin/Debug/net10.0/reports/scenarios.html site/scenarios.html
+          sed "s/__COMMIT__/${GITHUB_SHA::7}/" .github/pages/index.html > site/index.html
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-reports
+          path: site
+      - uses: actions/upload-pages-artifact@v3
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        with:
+          path: site
+
+  publish-reports:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

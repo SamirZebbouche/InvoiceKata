@@ -82,6 +82,9 @@ chaque pull request.
   - une version volontairement naïve du calcul (arrondi au pair, TVA arrondie ligne par ligne) a fait
     échouer les deux tests des règles de calcul : 0,12 au lieu de 0,13, et 0,02 au lieu de 0,01.
 - **La documentation et les décisions** : Samir les relit, pull request par pull request.
+- **Les rapports publics** : à chaque passage sur `main`, la CI publie sur GitHub Pages le rapport des
+  scénarios Gherkin et la couverture. Dans chaque PR, le résumé du job donne la synthèse des tests et de la
+  couverture. Samir a proposé GitHub Pages, puisque le dépôt est public.
 - **Le spike de rendu** : l'agent lit chaque PDF produit et en recalcule les totaux, plutôt que de se
   fier au code de retour.
 - **Factur-X** : un validateur indépendant, Mustang, juge le résultat, pas l'agent. Mustang a trouvé un
