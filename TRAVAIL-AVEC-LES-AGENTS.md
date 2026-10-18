@@ -52,7 +52,10 @@ chaque pull request.
   L'argument de l'agent contre cette idée (« plus personne ne garantit la complétude ») ne tenait plus
   depuis le validateur final. Samir a fixé deux règles : des gestionnaires fondés sur l'état, donc
   idempotents, et un validateur qui ne s'exécute qu'une fois toutes les réactions terminées (amendement
-  de l'[ADR-0003](docs/adr/ADR-0003-reactions-par-evenements-idempotentes.md)).
+  de l'[ADR-0003](docs/adr/ADR-0003-reactions-par-evenements-idempotentes.md)). Pour l'API, Samir a
+  retenu `quotes` et des routes préfixées par l'émetteur, et il a imposé deux points : l'émetteur est configurable, parce que Fimeco vend un SaaS
+  à plusieurs entreprises, et son identifiant doit être impossible à deviner. L'agent avait supposé une
+  instance par émetteur ([ADR-0007](docs/adr/ADR-0007-saas-multi-emetteur.md)).
 - **La roadmap.** L'agent a proposé un découpage en lots, et Samir l'a validé. Samir a ensuite validé la
   structure de la solution (projets et sens des dépendances), et l'agent a rédigé le détail PR par PR
   dans [docs/ROADMAP.md](docs/ROADMAP.md), avec les questions à trancher en chemin. L'agent a signalé un

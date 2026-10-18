@@ -21,13 +21,14 @@ est un incrément TDD.
 - **Mise en place**, sans comportement : la solution et ses projets (structure validée), et une CI
   GitHub Actions qui lance `dotnet test` et `dotnet format --verify-no-changes`.
 - **Scénarios** :
-  - enregistrer un client professionnel ;
+  - configurer un émetteur de type société ([ADR-0007](adr/ADR-0007-saas-multi-emetteur.md)) ;
+  - enregistrer un client professionnel pour cet émetteur ;
   - créer un devis brouillon pour ce client ;
   - ajouter une ligne, ce qui calcule le total HT, la TVA et le total TTC.
 - **Ce qui apparaît** :
   - les objets valeur `Money`, `Quantity` et `VatRate` ;
-  - `Customer`, `Quote` et `QuoteLine` ;
-  - les cas d'usage `RegisterCustomer`, `CreateQuote` et `AddQuoteLine` ;
+  - `Issuer`, `Customer`, `Quote` et `QuoteLine` ;
+  - les cas d'usage `ConfigureIssuer`, `RegisterCustomer`, `CreateQuote` et `AddQuoteLine` ;
   - l'adaptateur en mémoire ;
   - les premiers endpoints de l'API, avec leurs tests d'intégration.
 
@@ -124,7 +125,6 @@ PostgreSQL, l'authentification et le multi-utilisateur.
 
 | Quand | Question |
 |---|---|
-| PR 1.1 | Les ressources et les routes de l'API |
 | PR 2.1 | Le format du numéro de devis, et la durée de validité par défaut |
 | PR 3.1 | Faut-il l'acceptation du client (« bon pour accord ») avant de pouvoir facturer, ou un devis finalisé suffit-il ? |
 | PR 3.1 | Le format du numéro de facture et ses séries |

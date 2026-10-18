@@ -40,7 +40,8 @@ Stack : C# / .NET, avec `dotnet test` et `dotnet format --verify-no-changes` com
 
 ## Périmètre retenu
 
-La partie back d'un logiciel de devis et de factures, exposée par une **API**. On enregistre un client, on crée un devis, on y
+La partie back d'un logiciel de devis et de factures, exposée par une **API** ([docs/API.md](docs/API.md)) :
+un SaaS où chaque entreprise émettrice configure son profil. On enregistre un client, on crée un devis, on y
 ajoute ou on en retire des lignes, et la TVA est recalculée à chaque fois. On finalise ensuite le devis
 pour en rendre le PDF, puis on génère la facture à partir du devis. Les mentions légales dépendent de
 l'émetteur et du client, et tout contexte non pris en charge est refusé
@@ -56,6 +57,7 @@ l'émetteur et du client, et tout contexte non pris en charge est refusé
 | [0004](docs/adr/ADR-0004-atdd-et-bdd-par-cas-d-usage.md) | ATDD et BDD pour chaque cas d'usage |
 | [0005](docs/adr/ADR-0005-rendu-pdf-par-typst.md) | Le rendu PDF par Typst, à partir d'un document résolu |
 | [0006](docs/adr/ADR-0006-persistance-par-port-secondaire.md) | La persistance derrière un port secondaire, des fichiers pour le kata |
+| [0007](docs/adr/ADR-0007-saas-multi-emetteur.md) | Un SaaS multi-émetteur, l'émetteur dans la route |
 
 ## Roadmap
 
