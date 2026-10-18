@@ -31,7 +31,12 @@ result pattern (ADR-0002).
    | Action interdite par l'état du document | `409` | À venir |
    | Contexte de facturation non pris en charge | `422` | `UnsupportedBillingContextException`, levée par le devis à sa création |
 
-4. **Une ressource d'un autre émetteur répond `404`, jamais `403`** ([ADR-0007](../adr/ADR-0007-saas-multi-emetteur.md)).
+4. **La correspondance est exhaustive, et un test le prouve.** `DomainExceptionHandler.StatusFor` est une
+   fonction pure. Un test parcourt par réflexion toutes les exceptions définies dans le domaine et
+   l'application, et exige un code pour chacune : une nouvelle exception oubliée fait échouer le test, au
+   lieu de produire une `500` en silence. Les exceptions du framework (`ArgumentException`…) restent des
+   bugs, et répondent `500`.
+5. **Une ressource d'un autre émetteur répond `404`, jamais `403`** ([ADR-0007](../adr/ADR-0007-saas-multi-emetteur.md)).
 
 ## Options écartées
 

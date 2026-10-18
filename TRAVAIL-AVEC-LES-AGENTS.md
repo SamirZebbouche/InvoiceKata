@@ -93,6 +93,9 @@ chaque pull request.
   - une casse doit être ciblée : retirer `[ApiController]` faisait échouer une dizaine de tests à la
     fois, ce qui ne prouvait rien du test visé. L'agent a recommencé avec une casse précise (un seul champ
     rendu facultatif), qui ne fait échouer que ce test.
+  - l'exhaustivité se teste : Samir a relevé que rien ne garantissait la traduction d'une nouvelle
+    exception en code HTTP. Un test parcourt désormais toutes les exceptions du produit. L'agent l'a
+    vérifié en ajoutant un instant une exception oubliée, qui l'a fait échouer.
   - une casse doit aussi compiler : deux casses rendaient du code inaccessible, ce que
     `TreatWarningsAsErrors` refuse. Aucun test n'a tourné, et l'absence de sortie n'était pas une preuve.
     L'agent les a refaites, en vérifiant le build avant de lire les tests.
