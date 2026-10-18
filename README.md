@@ -38,6 +38,9 @@ le dépôt :
 
 Stack : C# / .NET, avec `dotnet test` et `dotnet format --verify-no-changes` comme preuves.
 
+**Rapports de test**, publiés par la CI à chaque passage sur `main` : <https://samirzebbouche.github.io/InvoiceKata/>.
+On y trouve les scénarios d'acceptation en français, avec le résultat de chaque étape, et la couverture du code.
+
 ## Périmètre retenu
 
 La partie back d'un logiciel de devis et de factures, exposée par une **API** ([docs/API.md](docs/API.md)) :

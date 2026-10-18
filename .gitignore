@@ -483,3 +483,6 @@ $RECYCLE.BIN/
 
 # Reqnroll generated code-behind
 *.feature.cs
+
+# CI reports built locally
+site/

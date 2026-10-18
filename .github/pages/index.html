@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>InvoiceKata — rapports de test</title>
+  <style>
+    :root { --fg: #1b1f24; --muted: #57606a; --bg: #ffffff; --card: #f6f8fa; --accent: #1f4e79; }
+    @media (prefers-color-scheme: dark) {
+      :root { --fg: #e6edf3; --muted: #8d96a0; --bg: #0d1117; --card: #161b22; --accent: #79b8ff; }
+    }
+    body { margin: 0; padding: 2rem 1rem; background: var(--bg); color: var(--fg);
+           font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+    main { max-width: 42rem; margin: 0 auto; }
+    h1 { margin: 0 0 .25rem; font-size: 1.6rem; }
+    p.meta { margin: 0 0 2rem; color: var(--muted); }
+    a.card { display: block; padding: 1rem 1.25rem; margin-bottom: 1rem; border-radius: .5rem;
+             background: var(--card); color: var(--fg); text-decoration: none; }
+    a.card strong { color: var(--accent); display: block; font-size: 1.1rem; }
+    a.card span { color: var(--muted); }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>InvoiceKata — rapports de test</h1>
+    <p class="meta">Générés par la CI sur <code>main</code>, commit <code>__COMMIT__</code>.</p>
+    <a class="card" href="scenarios.html">
+      <strong>Scénarios d'acceptation</strong>
+      <span>Les spécifications Gherkin en français, avec le résultat de chaque étape.</span>
+    </a>
+    <a class="card" href="coverage/index.html">
+      <strong>Couverture du code</strong>
+      <span>Par projet et par fichier, sans seuil bloquant.</span>
+    </a>
+    <a class="card" href="https://github.com/SamirZebbouche/InvoiceKata">
+      <strong>Le dépôt</strong>
+      <span>Le code, les ADR et la roadmap.</span>
+    </a>
+  </main>
+</body>
+</html>
