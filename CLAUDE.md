@@ -195,5 +195,7 @@ Always. The defaults hold until the project declares otherwise.
 - Code and comments: English.
 - Technical messages: English.
 - User-facing text: none (kata); no localisation.
+- Gherkin `.feature` files: French (`# language: fr`), written for the PO; step definitions in English
+  (ADR-0004).
 - Glossary: none while the domain vocabulary stays mainstream (quote, invoice, customer, VAT, credit note).
   The first non-standard term starts one.
