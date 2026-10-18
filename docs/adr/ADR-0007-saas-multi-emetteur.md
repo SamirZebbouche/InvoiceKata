@@ -22,6 +22,13 @@ clients, ses devis et ses factures.
 4. **Une ressource d'un autre émetteur renvoie `404`**, jamais `403`, pour ne pas révéler qu'elle existe.
 5. **Les données et la numérotation sont isolées par émetteur.** Chaque émetteur a sa propre séquence de
    numéros sans trou ([ADR-0006](ADR-0006-persistance-par-port-secondaire.md)).
+6. **Un client est la fiche d'un émetteur, pas une personne du monde réel.** La même entreprise, ou le
+   même particulier, cliente de deux émetteurs, a deux fiches indépendantes, sans registre commun. Trois
+   raisons :
+   - le cloisonnement : un émetteur ne doit ni voir ni deviner les clients d'un autre ;
+   - les données personnelles : un particulier les confie à une entreprise, pas à l'éditeur du SaaS ;
+   - des cycles de vie indépendants : chaque émetteur corrige, archive ou supprime sa fiche, avec ses
+     propres conditions.
 
 ## Options écartées
 
@@ -30,9 +37,12 @@ clients, ses devis et ses factures.
 | L'émetteur dans un en-tête (`X-Issuer-Id`) | C'est implicite : un en-tête oublié devient une erreur de configuration, et les ressources ne disent plus à qui elles appartiennent. |
 | Une instance par émetteur, configurée par fichier | Contraire au SaaS multi-émetteur. |
 | Des identifiants séquentiels, ou des GUID v7 | Ils sont énumérables ou en partie prévisibles. |
+| Un registre de clients partagé entre émetteurs (une personne réelle, une fiche) | Il exposerait à un émetteur les clients des autres, croiserait des données personnelles confiées à des entreprises différentes, et lierait des cycles de vie qui doivent rester indépendants. |
 
 ## Conséquences
 
+- Le même SIREN peut exister chez deux émetteurs. Une éventuelle unicité des clients ne vaudrait qu'à
+  l'intérieur d'un émetteur ; elle n'est pas contrôlée aujourd'hui.
 - Un identifiant imprévisible empêche l'énumération, mais ce n'est pas une autorisation. Le jour où
   l'authentification arrive, elle vérifie qu'un utilisateur a le droit d'agir sur l'`issuerId` de la
   route.
