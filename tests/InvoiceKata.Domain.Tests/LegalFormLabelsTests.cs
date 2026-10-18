@@ -1,7 +1,4 @@
-using InvoiceKata.Api.Issuers;
-using InvoiceKata.Domain;
-
-namespace InvoiceKata.Api.Tests;
+namespace InvoiceKata.Domain.Tests;
 
 public sealed class LegalFormLabelsTests
 {

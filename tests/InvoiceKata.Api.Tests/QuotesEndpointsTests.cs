@@ -134,6 +134,19 @@ public sealed class QuotesEndpointsTests(WebApplicationFactory<Program> factory)
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
     }
 
+    [Fact]
+    public async Task Should_ExposeTheIssuerLegalIdentityMention_When_ReadingANewQuote()
+    {
+        var client = factory.CreateClient();
+        var (issuerId, quoteId) = await DraftQuoteAsync(client);
+
+        var quote = await client.GetFromJsonAsync<QuoteWithMentionsBody>($"/issuers/{issuerId}/quotes/{quoteId}");
+
+        var mention = Assert.Single(quote!.Mentions);
+        Assert.Equal("IssuerLegalIdentity", mention.Code);
+        Assert.StartsWith("Batifolio, SAS au capital de", mention.Text, StringComparison.Ordinal);
+    }
+
     private static async Task<(Guid IssuerId, Guid QuoteId)> DraftQuoteAsync(HttpClient client)
     {
         var issuerId = await ConfigureIssuerAsync(client);
@@ -194,6 +207,10 @@ public sealed class QuotesEndpointsTests(WebApplicationFactory<Program> factory)
     private sealed record DiscountedLineBody(decimal DiscountRate, decimal NetUnitPriceExcludingVat, decimal TotalExcludingVat);
 
     private sealed record DiscountedQuoteBody(IReadOnlyList<DiscountedLineBody> Lines);
+
+    private sealed record MentionBody(string Code, string Text);
+
+    private sealed record QuoteWithMentionsBody(IReadOnlyList<MentionBody> Mentions);
 
     private sealed record QuoteWithTotalsBody(IReadOnlyList<LineBody> Lines, TotalsBody Totals, IReadOnlyList<VatBreakdownBody> VatBreakdown);
 }

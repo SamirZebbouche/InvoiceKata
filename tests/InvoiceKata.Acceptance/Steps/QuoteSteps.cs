@@ -32,6 +32,22 @@ public sealed class QuoteSteps(AcceptanceContext context)
         Assert.Equal(context.CustomersByName[customer], quote.CustomerId);
     }
 
+    [Then("le devis porte la mention {string}")]
+    public async Task ThenTheQuoteCarriesTheMention(string text)
+    {
+        var quote = await QuoteAsync();
+
+        Assert.Contains(text, quote.Mentions.Select(mention => WithPlainSpaces(mention.Text)));
+    }
+
+    [Then("le devis ne porte pas de mention contenant {string}")]
+    public async Task ThenTheQuoteCarriesNoMentionContaining(string fragment)
+    {
+        var quote = await QuoteAsync();
+
+        Assert.DoesNotContain(quote.Mentions, mention => WithPlainSpaces(mention.Text).Contains(fragment, StringComparison.Ordinal));
+    }
+
     [Then("le contexte de facturation n'est pas pris en charge")]
     public void ThenTheBillingContextIsNotSupported() => Assert.IsType<UnsupportedBillingContextException>(context.LastFailure);
 
@@ -85,6 +101,9 @@ public sealed class QuoteSteps(AcceptanceContext context)
     }
 
     private Task<Quote> QuoteAsync() => context.GetQuote.HandleAsync(_issuerId, _quoteId, CancellationToken.None);
+
+    // Mention texts use French non-breaking spaces ("20 000 €"); scenarios are typed with plain ones.
+    private static string WithPlainSpaces(string text) => text.Replace(' ', ' ').Replace(' ', ' ');
 
     // Scenarios write amounts the French way ("1600,00").
     private static decimal Amount(string text) => decimal.Parse(text, CultureInfo.GetCultureInfo("fr-FR"));

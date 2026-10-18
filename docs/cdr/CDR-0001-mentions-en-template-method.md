@@ -1,6 +1,6 @@
 # CDR-0001 : Une mention légale = une règle en Template Method
 
-- **Statut** : accepté le 2026-10-18 · pas encore mis en œuvre
+- **Statut** : accepté le 2026-10-18 · en place (`LegalMentionRule`, première règle : `IssuerLegalIdentityMention`)
 - **Décideur** : Samir
 
 ## Problème
@@ -19,13 +19,15 @@ gestionnaire qui ne serait pas fondé sur l'état.
    d'application et sa composition.
 
    ```csharp
-   public sealed class ReducedVatRateMention : LegalMentionRule
+   public sealed class IssuerLegalIdentityMention(IMentionTexts texts) : LegalMentionRule(texts)
    {
-       protected override MentionCode Code => MentionCode.ReducedVatRate;
-       protected override bool AppliesTo(Quote quote, BillingContext context) => quote.Lines.Any(l => l.VatRate.Percent == 10m);
-       protected override LegalMention Compose(Quote quote, BillingContext context, IMentionTexts texts) => new(Code, texts.ReducedVatRate());
+       protected override MentionCode Code => MentionCode.IssuerLegalIdentity;
+       protected override bool AppliesTo(QuoteScope scope) => scope.Issuer.Kind == IssuerKind.Company;
+       protected override string Compose(QuoteScope scope) => Texts.IssuerLegalIdentity(scope.Issuer);
    }
    ```
+
+   `QuoteScope` donne au gestionnaire le devis, son émetteur et son client.
 
 3. **Une mention stockée est `LegalMention(Code, Text)`.**
    - Le **code** identifie la mention. Il sert aussi à Factur-X, qui exige des mentions codées.

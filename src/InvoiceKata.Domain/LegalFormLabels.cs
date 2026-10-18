@@ -1,8 +1,7 @@
-using InvoiceKata.Domain;
 
-namespace InvoiceKata.Api.Issuers;
+namespace InvoiceKata.Domain;
 
-// Translates the domain enum to and from the labels the API exchanges ("SAS", "SARL"…).
+// The legal abbreviations ("SAS", "SARL"…), shared by the API contract and the mention texts.
 public static class LegalFormLabels
 {
     public static string Of(LegalForm legalForm) => legalForm switch

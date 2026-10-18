@@ -63,13 +63,16 @@ public sealed record TotalsResponse(decimal ExcludingVat, decimal Vat, decimal I
 
 public sealed record VatBreakdownResponse(decimal Rate, decimal BaseExcludingVat, decimal Vat);
 
+public sealed record MentionResponse(string Code, string Text);
+
 public sealed record QuoteResponse(
     Guid Id,
     Guid CustomerId,
     string Status,
     IReadOnlyList<QuoteLineResponse> Lines,
     TotalsResponse Totals,
-    IReadOnlyList<VatBreakdownResponse> VatBreakdown)
+    IReadOnlyList<VatBreakdownResponse> VatBreakdown,
+    IReadOnlyList<MentionResponse> Mentions)
 {
     public static QuoteResponse From(Quote quote) => new(
         quote.Id.Value,
@@ -77,5 +80,6 @@ public sealed record QuoteResponse(
         quote.Status.ToString(),
         [.. quote.Lines.Select(QuoteLineResponse.From)],
         new TotalsResponse(quote.TotalExcludingVat.Amount, quote.TotalVat.Amount, quote.TotalIncludingVat.Amount),
-        [.. quote.VatBreakdown.Select(rate => new VatBreakdownResponse(rate.Rate.Percent, rate.BaseExcludingVat.Amount, rate.Vat.Amount))]);
+        [.. quote.VatBreakdown.Select(rate => new VatBreakdownResponse(rate.Rate.Percent, rate.BaseExcludingVat.Amount, rate.Vat.Amount))],
+        [.. quote.Mentions.Select(mention => new MentionResponse(mention.Code.ToString(), mention.Text))]);
 }

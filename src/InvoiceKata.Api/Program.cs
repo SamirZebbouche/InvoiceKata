@@ -3,6 +3,7 @@ using InvoiceKata.Api;
 using InvoiceKata.Application.Customers;
 using InvoiceKata.Application.Issuers;
 using InvoiceKata.Application.Quotes;
+using InvoiceKata.Application.Quotes.Mentions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +23,12 @@ builder.Services.AddTransient<CreateQuote>();
 builder.Services.AddTransient<GetQuote>();
 builder.Services.AddTransient<AddQuoteLine>();
 builder.Services.AddTransient<RemoveQuoteLine>();
+builder.Services.AddTransient<QuoteScopes>();
+builder.Services.AddTransient<QuoteEventDispatcher>();
+builder.Services.AddSingleton<IMentionTexts, FrenchMentionTexts>();
+
+// Each legal mention is a handler of its own: adding a mention is adding a line here (CDR-0001).
+builder.Services.AddTransient<IQuoteEventHandler, IssuerLegalIdentityMention>();
 
 var app = builder.Build();
 

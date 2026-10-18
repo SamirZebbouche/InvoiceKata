@@ -1,0 +1,9 @@
+using InvoiceKata.Domain;
+
+namespace InvoiceKata.Application.Quotes.Mentions;
+
+// The single place where mention texts are written: the future translation table (language rule of CLAUDE.md).
+public interface IMentionTexts
+{
+    string IssuerLegalIdentity(Issuer issuer);
+}

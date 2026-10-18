@@ -1,6 +1,7 @@
 # CDR-0002 : Les événements levés par l'agrégat, dispatchés jusqu'à épuisement
 
-- **Statut** : accepté le 2026-10-18 · pas encore mis en œuvre
+- **Statut** : accepté le 2026-10-18 · en place, en un seul passage (`QuoteEventDispatcher`) ; la boucle
+  d'épuisement viendra avec le premier gestionnaire qui lèvera lui-même un événement
 - **Décideur** : Samir
 
 ## Problème
