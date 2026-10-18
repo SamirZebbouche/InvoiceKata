@@ -28,6 +28,17 @@ public sealed class FrenchMentionTextsTests
         Assert.Contains($"au capital de {written}{Space}€,", identity, StringComparison.Ordinal);
     }
 
+    // A capital converted from francs keeps its cents (50 000 F = 7 622,45 €): a legal mention must not round it.
+    [Theory]
+    [InlineData(7622.45, "7 622,45")]
+    [InlineData(1000.5, "1 000,50")]
+    public void Should_KeepTheCents_When_TheShareCapitalHasSome(decimal shareCapital, string written)
+    {
+        var identity = _texts.IssuerLegalIdentity(Issuer(LegalForm.Sarl, shareCapital));
+
+        Assert.Contains($"SARL au capital de {written}{Space}€,", identity, StringComparison.Ordinal);
+    }
+
     private static Issuer Issuer(LegalForm legalForm, decimal shareCapital) => InvoiceKata.Domain.Issuer.ConfigureCompany(
         "Batifolio", legalForm, shareCapital, new Siren("912345678"), new VatNumber("FR12912345678"),
         new Address { Street = "12 rue des Artisans", PostalCode = "47000", City = "Agen" });
