@@ -1,6 +1,6 @@
 # ADR-0001 : Un spike de rendu jetable, puis des lots livrables
 
-- **Statut** : proposé, ratifié par le merge de la PR qui l'introduit
+- **Statut** : accepté le 2026-10-18
 - **Date** : 2026-10-18
 - **Décideur** : Samir
 

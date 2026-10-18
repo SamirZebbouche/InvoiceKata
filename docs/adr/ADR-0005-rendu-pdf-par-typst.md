@@ -1,6 +1,6 @@
 # ADR-0005 : Le rendu PDF par Typst, à partir d'un document résolu
 
-- **Statut** : proposé, ratifié par le merge de la PR qui l'introduit
+- **Statut** : accepté le 2026-10-18
 - **Date** : 2026-10-18
 - **Décideur** : Samir
 
