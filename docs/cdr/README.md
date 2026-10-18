@@ -17,7 +17,7 @@ Chaque CDR suit la même trame : le problème, le motif retenu, où il s'appliqu
 | [0004](CDR-0004-erreurs-et-codes-http.md) | Les erreurs du domaine traduites en codes HTTP | En place |
 | [0005](CDR-0005-controleurs-plutot-que-minimal-apis.md) | Des contrôleurs plutôt que des minimal APIs | En place |
 | [0006](CDR-0006-etat-persistant-des-agregats.md) | L'état persistant des agrégats, garanti par une interface | En place |
-| [0007](CDR-0007-numerotation-des-devis.md) | La numérotation des devis, calculée par le domaine et bloquée par le port | À venir |
+| [0007](CDR-0007-numerotation-des-devis.md) | La numérotation des devis, calculée par le domaine et bloquée par le port | En place |
 
 ## Carte des motifs en usage
 
@@ -30,4 +30,4 @@ Chaque CDR suit la même trame : le problème, le motif retenu, où il s'appliqu
 | Composite | Le validateur final du document résolu | [ADR-0005](../adr/ADR-0005-rendu-pdf-par-typst.md) |
 | Port et adaptateur | La persistance, filtrée par émetteur | [ADR-0006](../adr/ADR-0006-persistance-par-port-secondaire.md) |
 | Objets valeur, identifiants typés | `Money`, `Quantity`, `VatRate`, `Siren`, `VatNumber`, `IssuerId`… | [CDR-0003](CDR-0003-objets-valeur-et-proprietes-requises.md), [ADR-0007](../adr/ADR-0007-saas-multi-emetteur.md) |
-| Hiérarchie d'exceptions de domaine | `ResourceNotFoundException` et ses dérivées | [CDR-0004](CDR-0004-erreurs-et-codes-http.md) |
+| Hiérarchie d'exceptions de domaine | `ResourceNotFoundException` (`404`), `DocumentStateConflictException` (`409`) et leurs dérivées | [CDR-0004](CDR-0004-erreurs-et-codes-http.md) |

@@ -1,6 +1,6 @@
 # CDR-0004 : Les erreurs du domaine traduites en codes HTTP
 
-- **Statut** : accepté le 2026-10-18 · en place pour `400`, `404` et `422`
+- **Statut** : accepté le 2026-10-18 · en place pour `400`, `404`, `409` et `422`
 - **Décideur** : Samir
 
 ## Problème
@@ -28,7 +28,7 @@ result pattern (ADR-0002).
    |---|---|---|
    | Ressource inconnue, ou appartenant à un autre émetteur | `404` | `ResourceNotFoundException` |
    | Donnée invalide à la frontière (forme juridique inconnue…) | `400` | La validation de l'endpoint |
-   | Action interdite par l'état du document | `409` | À venir |
+   | Action interdite par l'état du document | `409` | `DocumentStateConflictException`, dont dérivent `QuoteAlreadyFinalizedException`, `QuoteWithoutLinesException` et `QuoteNumberAlreadyTakenException` |
    | Contexte de facturation non pris en charge | `422` | `UnsupportedBillingContextException`, levée par le devis à sa création |
 
 4. **La correspondance est exhaustive, et un test le prouve.** `DomainExceptionHandler.StatusFor` est une
