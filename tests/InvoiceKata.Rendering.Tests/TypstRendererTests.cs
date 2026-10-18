@@ -76,6 +76,23 @@ public sealed class TypstRendererTests
         }
     }
 
+    // The rendering works under the folder it is given: a folder that cannot be created makes it fail.
+    [Fact]
+    public async Task Should_WorkUnderTheGivenFolder_When_OneIsGiven()
+    {
+        var file = Path.GetTempFileName();
+        try
+        {
+            var refusal = await Record.ExceptionAsync(() => new TypstRenderer("typst", file).RenderAsync(Quote(lines: 1), CancellationToken.None));
+
+            Assert.IsAssignableFrom<IOException>(refusal);
+        }
+        finally
+        {
+            File.Delete(file);
+        }
+    }
+
     [Fact]
     public async Task Should_FailAndSayWhy_When_TypstCannotBeRun()
     {
