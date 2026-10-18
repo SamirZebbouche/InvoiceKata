@@ -21,13 +21,20 @@ public sealed class JsonFileStore(string directory)
     // A single writer at a time: the API is one process (ADR-0006).
     private readonly SemaphoreSlim _writer = new(1, 1);
 
-    public async Task SaveAsync<TAggregate, TState>(string relativePath, TAggregate aggregate, CancellationToken cancellationToken)
+    public Task SaveAsync<TAggregate, TState>(string relativePath, TAggregate aggregate, CancellationToken cancellationToken)
+        where TAggregate : IPersistable<TAggregate, TState> =>
+        SaveAsync<TAggregate, TState>(relativePath, aggregate, _ => Task.CompletedTask, cancellationToken);
+
+    // The guard runs under the writer lock, just before the write: what it checks cannot change in between.
+    public async Task SaveAsync<TAggregate, TState>(
+        string relativePath, TAggregate aggregate, Func<CancellationToken, Task> guard, CancellationToken cancellationToken)
         where TAggregate : IPersistable<TAggregate, TState>
     {
         var path = Path.Combine(directory, relativePath);
         await _writer.WaitAsync(cancellationToken);
         try
         {
+            await guard(cancellationToken);
             Directory.CreateDirectory(Path.GetDirectoryName(path)!);
             // Atomic write: a crash leaves either the old file or the new one, never half a file.
             var temporary = $"{path}.{Guid.NewGuid():N}.tmp";

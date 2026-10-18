@@ -85,6 +85,43 @@ public abstract class QuoteRepositoryContract
         Assert.Equal([new QuoteNumber(2026, 1), new QuoteNumber(2026, 2)], taken.OrderBy(number => number.Sequence));
     }
 
+    // The port's half of the guarantee (CDR-0007): a concurrent finalization could have computed the same number.
+    [Fact]
+    public async Task Should_RefuseToSaveAFinalizedQuoteAndKeepItsDraft_When_AnotherQuoteOfTheIssuerHasItsNumber()
+    {
+        var repository = CreateRepository();
+        var issuer = Samples.Issuer();
+        await FinalizedAsync(repository, issuer, new QuoteNumber(2026, 1));
+        var quote = DraftQuote(issuer);
+        quote.AddLine(Samples.Line("Faïence", 33.33m, 10m));
+        await repository.AddAsync(quote, CancellationToken.None);
+
+        quote.Finalize(new QuoteNumber(2026, 1), new DateOnly(2026, 10, 18), new DateOnly(2026, 11, 17), "Devis valable 30 jours, jusqu'au 17/11/2026.");
+        await Assert.ThrowsAsync<QuoteNumberAlreadyTakenException>(() => repository.SaveAsync(quote, CancellationToken.None));
+
+        Assert.Equal(QuoteStatus.Draft, (await repository.GetAsync(issuer.Id, quote.Id, CancellationToken.None)).Status);
+    }
+
+    [Fact]
+    public async Task Should_AcceptTheSameNumber_When_TheQuotesBelongToDifferentIssuers()
+    {
+        var repository = CreateRepository();
+        await FinalizedAsync(repository, Samples.Issuer(), new QuoteNumber(2026, 1));
+
+        await FinalizedAsync(repository, Samples.Issuer(), new QuoteNumber(2026, 1));
+    }
+
+    // A finalized quote is a frozen document: it is never written over (ADR-0006), even with itself.
+    [Fact]
+    public async Task Should_RefuseToWriteOverAFinalizedQuote_When_ItIsSavedAgain()
+    {
+        var repository = CreateRepository();
+        var issuer = Samples.Issuer();
+        var finalized = await FinalizedAsync(repository, issuer, new QuoteNumber(2026, 1));
+
+        await Assert.ThrowsAsync<QuoteAlreadyFinalizedException>(() => repository.SaveAsync(finalized, CancellationToken.None));
+    }
+
     [Fact]
     public async Task Should_GiveNoNumber_When_TheIssuerHasNoQuote()
     {
@@ -112,12 +149,13 @@ public abstract class QuoteRepositoryContract
         return quote;
     }
 
-    private static async Task FinalizedAsync(IQuoteRepository repository, Issuer issuer, QuoteNumber number)
+    private static async Task<Quote> FinalizedAsync(IQuoteRepository repository, Issuer issuer, QuoteNumber number)
     {
         var quote = DraftQuote(issuer);
         quote.AddLine(Samples.Line("Faïence", 33.33m, 10m));
         quote.Finalize(number, new DateOnly(2026, 10, 18), new DateOnly(2026, 11, 17), "Devis valable 30 jours, jusqu'au 17/11/2026.");
         await repository.AddAsync(quote, CancellationToken.None);
+        return quote;
     }
 
     private static IEnumerable<object> LinesOf(Quote quote) => quote.Lines.Select(line =>

@@ -40,8 +40,23 @@ public sealed class FileQuoteRepository(JsonFileStore store) : IQuoteRepository
 {
     public Task AddAsync(Quote quote, CancellationToken cancellationToken) => SaveAsync(quote, cancellationToken);
 
+    /// <exception cref="QuoteAlreadyFinalizedException">The stored quote is finalized: a frozen document is never written over.</exception>
+    /// <exception cref="QuoteNumberAlreadyTakenException">Another quote of the issuer has this number.</exception>
     public Task SaveAsync(Quote quote, CancellationToken cancellationToken) =>
-        store.SaveAsync<Quote, QuoteState>(PathOf(quote.IssuerId, quote.Id), quote, cancellationToken);
+        store.SaveAsync<Quote, QuoteState>(PathOf(quote.IssuerId, quote.Id), quote, async guarded =>
+        {
+            var stored = await store.LoadAsync<Quote, QuoteState>(PathOf(quote.IssuerId, quote.Id), guarded);
+            if (stored?.Status == QuoteStatus.Finalized)
+            {
+                throw new QuoteAlreadyFinalizedException(quote.Id);
+            }
+
+            if (quote.Number is { } number
+                && (await store.LoadAllAsync<Quote, QuoteState>(FolderOf(quote.IssuerId), guarded)).Any(other => other.Id != quote.Id && other.Number == number))
+            {
+                throw new QuoteNumberAlreadyTakenException(quote.IssuerId, number);
+            }
+        }, cancellationToken);
 
     public async Task<Quote> GetAsync(IssuerId issuerId, QuoteId quoteId, CancellationToken cancellationToken) =>
         await store.LoadAsync<Quote, QuoteState>(PathOf(issuerId, quoteId), cancellationToken)
