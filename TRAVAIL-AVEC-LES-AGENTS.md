@@ -14,6 +14,8 @@ chaque pull request.
 - Le spike de rendu, de bout en bout : les données, le template Typst, la console .NET et les constats.
   Samir avait fixé le cadre : Typst, un YAML résolu en entrée, un PDF en sortie, un template par type
   d'entreprise.
+- Le code, lot par lot : le squelette de la solution, la CI, puis chaque cas d'usage en ATDD et en TDD.
+  Samir valide la structure et les routes avant, et relit tous les deux commits.
 - Les gestes git : commits, push de branche et ouverture des pull requests (niveau `autonomous-pr`). Le
   merge reste à Samir.
 
@@ -52,7 +54,10 @@ chaque pull request.
   L'argument de l'agent contre cette idée (« plus personne ne garantit la complétude ») ne tenait plus
   depuis le validateur final. Samir a fixé deux règles : des gestionnaires fondés sur l'état, donc
   idempotents, et un validateur qui ne s'exécute qu'une fois toutes les réactions terminées (amendement
-  de l'[ADR-0003](docs/adr/ADR-0003-reactions-par-evenements-idempotentes.md)).
+  de l'[ADR-0003](docs/adr/ADR-0003-reactions-par-evenements-idempotentes.md)). Pour l'API, Samir a
+  retenu `quotes` et des routes préfixées par l'émetteur, et il a imposé deux points : l'émetteur est configurable, parce que l'éditeur de l'application vend un SaaS
+  à plusieurs entreprises, et son identifiant doit être impossible à deviner. L'agent avait supposé une
+  instance par émetteur ([ADR-0007](docs/adr/ADR-0007-saas-multi-emetteur.md)).
 - **La roadmap.** L'agent a proposé un découpage en lots, et Samir l'a validé. Samir a ensuite validé la
   structure de la solution (projets et sens des dépendances), et l'agent a rédigé le détail PR par PR
   dans [docs/ROADMAP.md](docs/ROADMAP.md), avec les questions à trancher en chemin. L'agent a signalé un
@@ -63,9 +68,16 @@ chaque pull request.
 
 ## Comment c'est vérifié
 
-- **Le code** : en TDD, chaque test est vu en échec avant d'écrire le code. `dotnet test` et
-  `dotnet format --verify-no-changes` sont relancés après la dernière modification. Il n'y a pas encore
-  de code.
+- **Le code** : en ATDD et en TDD, chaque test est vu en échec avant d'écrire le code. `dotnet test` et
+  `dotnet format --verify-no-changes` sont relancés après la dernière modification, puis par la CI sur
+  chaque PR. Quand un simple échec de compilation ne prouverait rien, l'agent casse exprès le code pour
+  voir le test échouer pour la bonne raison :
+  - un identifiant volontairement généré en GUID v7 a fait échouer le test qui exige un v4 ;
+  - le filtre par émetteur, retiré un instant de l'adaptateur, a fait échouer le scénario d'isolation ;
+  - un test de `404` passait déjà parce que la route n'existait pas : il exige désormais une réponse
+    Problem Details.
+  - une version volontairement naïve du calcul (arrondi au pair, TVA arrondie ligne par ligne) a fait
+    échouer les deux tests des règles de calcul : 0,12 au lieu de 0,13, et 0,02 au lieu de 0,01.
 - **La documentation et les décisions** : Samir les relit, pull request par pull request.
 - **Le spike de rendu** : l'agent lit chaque PDF produit et en recalcule les totaux, plutôt que de se
   fier au code de retour.
@@ -100,3 +112,19 @@ chaque pull request.
   que le spike lui a fait faire. L'ADR vient ensuite. Le débrief a produit deux décisions de Samir : les
   totaux, les mentions et la signature toujours sur la même page, et un devis court pour tester l'autre
   extrême.
+- **Une obsession des types primitifs.** L'agent avait écrit `Address(string, string, string)` et des
+  commandes qui alignaient quatre `string` (dénomination, forme juridique, SIREN, n° de TVA) : un SIREN
+  pouvait prendre en silence la place du n° de TVA. Samir l'a relevé en relecture. La règle existait dans
+  `ai-core` (`arch-no-uniform-patterns` : un objet valeur seulement si des primitives peuvent être
+  inversées ou s'il porte du comportement), mais elle n'était pas installée dans le projet, et l'agent
+  ne l'avait donc pas sous les yeux. Samir l'a installée, et l'agent a appliqué la règle dans les deux
+  sens : `Siren` et `VatNumber` deviennent des types, `Address` reçoit des propriétés nommées à chaque
+  appel, sans un type par champ, et les DTO de l'API restent primitifs. Une règle qu'on n'installe pas
+  ne protège pas.
+- **Un fichier généré commité.** Le code produit par Reqnroll (`*.feature.cs`) est entré dans un commit.
+  L'agent l'a vu en relisant le commit, l'a ajouté au `.gitignore` et a corrigé le commit, qui n'était
+  pas encore poussé.
+- **Une DLL périmée.** Après avoir restauré l'adaptateur qu'il avait cassé exprès, l'agent a vu le test
+  rester rouge. La copie de sauvegarde avait gardé une date antérieure à la dernière compilation, si bien
+  que la compilation incrémentale n'avait pas repris le fichier. Une reconstruction complète a corrigé
+  le problème. Depuis, les preuves sont lancées avec `--no-incremental`.
