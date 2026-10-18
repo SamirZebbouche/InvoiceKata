@@ -2,6 +2,7 @@ using InvoiceKata.Adapters.Persistence.Files;
 using InvoiceKata.Application.Customers;
 using InvoiceKata.Application.Issuers;
 using InvoiceKata.Application.Quotes;
+using InvoiceKata.Application.Rendering;
 using InvoiceKata.Persistence.ContractTests.Contracts;
 
 namespace InvoiceKata.Persistence.ContractTests.Files;
@@ -51,6 +52,15 @@ public sealed class FileQuoteRepositoryTests : QuoteRepositoryContract, IDisposa
 
         Assert.Empty(taken);
     }
+
+    public void Dispose() => _directory.Dispose();
+}
+
+public sealed class FilePdfStoreTests : PdfStoreContract, IDisposable
+{
+    private readonly TemporaryDirectory _directory = new();
+
+    protected override IPdfStore CreateStore() => new FilePdfStore(_directory.Path);
 
     public void Dispose() => _directory.Dispose();
 }
