@@ -15,6 +15,12 @@ public sealed class InMemoryQuoteRepository : IQuoteRepository
         return Task.CompletedTask;
     }
 
+    public Task SaveAsync(Quote quote, CancellationToken cancellationToken)
+    {
+        _quotes[quote.Id] = quote;
+        return Task.CompletedTask;
+    }
+
     public Task<Quote> GetAsync(IssuerId issuerId, QuoteId quoteId, CancellationToken cancellationToken) =>
         _quotes.TryGetValue(quoteId, out var quote) && quote.IssuerId == issuerId
             ? Task.FromResult(quote)

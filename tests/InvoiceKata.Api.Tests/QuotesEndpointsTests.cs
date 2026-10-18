@@ -40,6 +40,32 @@ public sealed class QuotesEndpointsTests(WebApplicationFactory<Program> factory)
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
     }
 
+    [Fact]
+    public async Task Should_ReturnTheRecalculatedQuote_When_AddingALine()
+    {
+        var client = factory.CreateClient();
+        var issuerId = await ConfigureIssuerAsync(client);
+        var customerId = await RegisterCustomerAsync(client, issuerId);
+        var quoteId = IdFrom(await client.PostAsJsonAsync($"/issuers/{issuerId}/quotes", new { customerId }));
+
+        var added = await client.PostAsJsonAsync($"/issuers/{issuerId}/quotes/{quoteId}/lines", new
+        {
+            designation = "Audit",
+            quantity = 2m,
+            unit = "jour",
+            unitPriceExcludingVat = 800m,
+            vatRate = 20m,
+        });
+
+        Assert.Equal(HttpStatusCode.Created, added.StatusCode);
+        var quote = await added.Content.ReadFromJsonAsync<QuoteWithTotalsBody>();
+        var line = Assert.Single(quote!.Lines);
+        Assert.Equal($"/issuers/{issuerId}/quotes/{quoteId}/lines/{line.Id}", added.Headers.Location!.OriginalString);
+        Assert.Equal(1600m, line.TotalExcludingVat);
+        Assert.Equal(new TotalsBody(1600m, 320m, 1920m), quote.Totals);
+        Assert.Equal([new VatBreakdownBody(20m, 1600m, 320m)], quote.VatBreakdown);
+    }
+
     private static async Task<Guid> ConfigureIssuerAsync(HttpClient client)
     {
         var response = await client.PostAsJsonAsync("/issuers", new
@@ -69,4 +95,12 @@ public sealed class QuotesEndpointsTests(WebApplicationFactory<Program> factory)
     private static Guid IdFrom(HttpResponseMessage created) => Guid.Parse(created.Headers.Location!.OriginalString.Split('/')[^1]);
 
     private sealed record QuoteBody(Guid Id, Guid CustomerId, string Status, IReadOnlyList<object> Lines);
+
+    private sealed record LineBody(Guid Id, decimal TotalExcludingVat);
+
+    private sealed record TotalsBody(decimal ExcludingVat, decimal Vat, decimal IncludingVat);
+
+    private sealed record VatBreakdownBody(decimal Rate, decimal BaseExcludingVat, decimal Vat);
+
+    private sealed record QuoteWithTotalsBody(IReadOnlyList<LineBody> Lines, TotalsBody Totals, IReadOnlyList<VatBreakdownBody> VatBreakdown);
 }

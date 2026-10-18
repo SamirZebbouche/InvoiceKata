@@ -7,6 +7,8 @@ public interface IQuoteRepository
 {
     Task AddAsync(Quote quote, CancellationToken cancellationToken);
 
+    Task SaveAsync(Quote quote, CancellationToken cancellationToken);
+
     /// <exception cref="QuoteNotFoundException">No quote with this identifier belongs to this issuer.</exception>
     Task<Quote> GetAsync(IssuerId issuerId, QuoteId quoteId, CancellationToken cancellationToken);
 }

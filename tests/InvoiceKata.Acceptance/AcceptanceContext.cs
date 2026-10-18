@@ -25,6 +25,8 @@ public sealed class AcceptanceContext
 
     public GetQuote GetQuote => new(_quotes);
 
+    public AddQuoteLine AddQuoteLine => new(_quotes);
+
     // Scenarios name issuers ("Batifolio"); the steps resolve those names to identifiers.
     public Dictionary<string, IssuerId> IssuersByName { get; } = [];
 

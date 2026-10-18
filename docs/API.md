@@ -33,8 +33,10 @@ Cette documentation vit avec le code : chaque nouvelle route y entre avec son di
 | `POST /issuers/{issuerId}/customers` | Enregistrer un client professionnel : nom, SIREN, n° de TVA, adresse | `201`, avec `Location: /issuers/{issuerId}/customers/{id}` |
 | `GET /issuers/{issuerId}/customers/{id}` | Lire un client | `200` |
 | `POST /issuers/{issuerId}/quotes` `{ customerId }` | Créer un devis brouillon pour ce client | `201`, avec `Location: /issuers/{issuerId}/quotes/{id}` |
-| `POST /issuers/{issuerId}/quotes/{id}/lines` | Ajouter une ligne : désignation, quantité, unité, prix unitaire HT, taux de TVA | `201`, avec le devis recalculé |
-| `GET /issuers/{issuerId}/quotes/{id}` | Lire le devis : lignes, total HT, TVA par taux, total TTC | `200` |
+| `POST /issuers/{issuerId}/quotes/{id}/lines` | Ajouter une ligne : désignation, quantité, unité, prix unitaire HT, taux de TVA | `201`, avec `Location: …/lines/{lineId}` et le devis recalculé dans le corps |
+| `GET /issuers/{issuerId}/quotes/{id}` | Lire le devis : lignes, totaux (HT, TVA, TTC), ventilation de la TVA par taux | `200` |
+
+Les montants sont arrondis au centime, à mi-chemin vers le haut (0,125 donne 0,13). La TVA est calculée une fois par taux, sur le total HT de ce taux, et non ligne par ligne.
 
 ```mermaid
 sequenceDiagram
