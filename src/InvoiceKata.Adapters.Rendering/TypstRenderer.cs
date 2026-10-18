@@ -25,7 +25,10 @@ public sealed class TypstRenderer(string executable, string? workRoot = null) : 
     /// <exception cref="InvalidOperationException">Typst cannot be run, or fails to compile the document.</exception>
     public async Task<byte[]> RenderAsync(ResolvedDocument document, CancellationToken cancellationToken)
     {
-        var work = Directory.CreateDirectory(Path.Combine(workRoot ?? Path.GetTempPath(), $"invoicekata-render-{Guid.NewGuid():N}"));
+        // A concatenation, not an interpolated string: emptying the literal still leaves a folder of its own, so no
+        // mutant can turn the working folder into its root, which the finally block would then delete.
+        // Stryker disable once String : equivalent, an emptied prefix or GUID format still names a folder of its own
+        var work = Directory.CreateDirectory(Path.Combine(workRoot ?? Path.GetTempPath(), "invoicekata-render-" + Guid.NewGuid().ToString("N")));
         try
         {
             await using (var template = File.Create(Path.Combine(work.FullName, Template)))

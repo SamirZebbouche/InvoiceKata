@@ -76,6 +76,28 @@ public sealed class TypstRendererTests
         }
     }
 
+    // The rendering deletes its own working folder only, never the folder around it.
+    [Fact]
+    public async Task Should_DeleteOnlyItsOwnWorkingFolder_When_TheRenderingEnds()
+    {
+        var root = Directory.CreateTempSubdirectory("invoicekata-render-root-");
+        var witness = Path.Combine(root.FullName, "witness.txt");
+        await File.WriteAllTextAsync(witness, "still here");
+        try
+        {
+            await new TypstRenderer("typst", root.FullName).RenderAsync(Quote(lines: 1), CancellationToken.None);
+
+            Assert.True(File.Exists(witness), "The rendering deleted more than its own working folder.");
+        }
+        finally
+        {
+            if (root.Exists)
+            {
+                root.Delete(recursive: true);
+            }
+        }
+    }
+
     // The rendering works under the folder it is given: a folder that cannot be created makes it fail.
     [Fact]
     public async Task Should_WorkUnderTheGivenFolder_When_OneIsGiven()
