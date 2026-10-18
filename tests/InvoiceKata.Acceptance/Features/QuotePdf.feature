@@ -1,4 +1,5 @@
 # language: fr
+@pdf
 Fonctionnalité: Le PDF du devis
   Un devis finalisé a son PDF : c'est le document que l'émetteur envoie à son client.
 

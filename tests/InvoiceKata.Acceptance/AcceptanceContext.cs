@@ -10,6 +10,7 @@ using InvoiceKata.Domain;
 namespace InvoiceKata.Acceptance;
 
 // One instance per scenario (Reqnroll context injection): the use cases wired on in-memory adapters.
+// The PDF is rendered by Typst for the scenarios tagged @pdf, which read it, and by a fake for the others.
 public sealed class AcceptanceContext
 {
     private readonly InMemoryIssuerRepository _issuers = new();
@@ -19,7 +20,7 @@ public sealed class AcceptanceContext
     private readonly QuoteScopes _scopes;
     private readonly FrenchMentionTexts _texts = new();
 
-    public AcceptanceContext()
+    public AcceptanceContext(Reqnroll.ScenarioInfo scenario)
     {
         QuoteEventHandlers = [new IssuerLegalIdentityMention(_texts), new ReducedVatRateMention(_texts)];
         _events = new QuoteEventDispatcher(QuoteEventHandlers);
@@ -28,7 +29,7 @@ public sealed class AcceptanceContext
         RenderQuotePdf = new RenderQuotePdf(
             _quotes, _scopes,
             new FinalDocumentValidator([new HeaderValidator(), new IssuerValidator(), new CustomerValidator(), new LinesValidator(), new TotalsValidator(), new MentionsValidator()]),
-            new TypstRenderer("typst"),
+            scenario.CombinedTags.Contains("pdf") ? new TypstRenderer("typst") : new FakeRenderer(),
             new InMemoryPdfStore());
         QuoteReactions = new QuoteReactions([RenderQuotePdf], Microsoft.Extensions.Logging.Abstractions.NullLogger<QuoteReactions>.Instance);
     }
@@ -70,4 +71,10 @@ public sealed class AcceptanceContext
 
     // The failure of the last "When" step, for the "Then … introuvable" steps.
     public Exception? LastFailure { get; set; }
+
+    private sealed class FakeRenderer : IDocumentRenderer
+    {
+        public Task<byte[]> RenderAsync(ResolvedDocument document, CancellationToken cancellationToken) =>
+            Task.FromResult(System.Text.Encoding.UTF8.GetBytes($"%PDF-fake {document.Document.Number}"));
+    }
 }

@@ -283,7 +283,8 @@ public sealed class QuotesEndpointsTests(ApiFactory factory) : IClassFixture<Api
     [Fact]
     public async Task Should_ReturnThePdfNamedAfterTheQuoteNumber_When_TheQuoteIsFinalized()
     {
-        var client = factory.CreateClient();
+        using var typst = ApiFactory.WithTypst();
+        var client = typst.CreateClient();
         var (issuerId, quoteId) = await DraftQuoteAsync(client);
         await AddLineAsync(client, issuerId, quoteId, "Audit", 800m);
         await client.PostAsync($"/issuers/{issuerId}/quotes/{quoteId}/finalization", content: null);
@@ -293,7 +294,7 @@ public sealed class QuotesEndpointsTests(ApiFactory factory) : IClassFixture<Api
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal("application/pdf", response.Content.Headers.ContentType?.MediaType);
         Assert.Equal("D-2026-0001.pdf", response.Content.Headers.ContentDisposition?.FileName);
-        Assert.Equal("%PDF"u8.ToArray(), (await response.Content.ReadAsByteArrayAsync())[..4]);
+        Assert.Equal("%PDF-1."u8.ToArray(), (await response.Content.ReadAsByteArrayAsync())[..7]);
     }
 
     [Fact]
