@@ -1,6 +1,7 @@
 using InvoiceKata.Adapters.Persistence.InMemory;
 using InvoiceKata.Application.Customers;
 using InvoiceKata.Application.Issuers;
+using InvoiceKata.Application.Quotes;
 using InvoiceKata.Domain;
 
 namespace InvoiceKata.Acceptance;
@@ -10,6 +11,7 @@ public sealed class AcceptanceContext
 {
     private readonly InMemoryIssuerRepository _issuers = new();
     private readonly InMemoryCustomerRepository _customers = new();
+    private readonly InMemoryQuoteRepository _quotes = new();
 
     public ConfigureIssuer ConfigureIssuer => new(_issuers);
 
@@ -19,6 +21,15 @@ public sealed class AcceptanceContext
 
     public GetCustomer GetCustomer => new(_customers);
 
+    public CreateQuote CreateQuote => new(_customers, _quotes);
+
+    public GetQuote GetQuote => new(_quotes);
+
     // Scenarios name issuers ("Batifolio"); the steps resolve those names to identifiers.
     public Dictionary<string, IssuerId> IssuersByName { get; } = [];
+
+    public Dictionary<string, CustomerId> CustomersByName { get; } = [];
+
+    // The failure of the last "When" step, for the "Then … introuvable" steps.
+    public Exception? LastFailure { get; set; }
 }

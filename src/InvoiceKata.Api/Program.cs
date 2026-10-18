@@ -2,8 +2,10 @@ using InvoiceKata.Adapters.Persistence.InMemory;
 using InvoiceKata.Api;
 using InvoiceKata.Api.Customers;
 using InvoiceKata.Api.Issuers;
+using InvoiceKata.Api.Quotes;
 using InvoiceKata.Application.Customers;
 using InvoiceKata.Application.Issuers;
+using InvoiceKata.Application.Quotes;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,12 +18,16 @@ builder.Services.AddTransient<GetIssuer>();
 builder.Services.AddSingleton<ICustomerRepository, InMemoryCustomerRepository>();
 builder.Services.AddTransient<RegisterCustomer>();
 builder.Services.AddTransient<GetCustomer>();
+builder.Services.AddSingleton<IQuoteRepository, InMemoryQuoteRepository>();
+builder.Services.AddTransient<CreateQuote>();
+builder.Services.AddTransient<GetQuote>();
 
 var app = builder.Build();
 
 app.UseExceptionHandler();
 app.MapIssuerEndpoints();
 app.MapCustomerEndpoints();
+app.MapQuoteEndpoints();
 
 app.Run();
 

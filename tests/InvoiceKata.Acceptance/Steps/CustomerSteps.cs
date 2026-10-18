@@ -11,7 +11,6 @@ public sealed class CustomerSteps(AcceptanceContext context)
 {
     private RegisterCustomerCommand? _command;
     private CustomerId _customerId;
-    private Exception? _lookupFailure;
 
     [Given("l'émetteur de type société {string} configuré")]
     public async Task GivenACompanyIssuer(string name)
@@ -54,16 +53,17 @@ public sealed class CustomerSteps(AcceptanceContext context)
     [When("{string} cherche ce client")]
     public async Task WhenTheIssuerLooksForThisCustomer(string issuer)
     {
-        _lookupFailure = await Record.ExceptionAsync(() =>
+        context.LastFailure = await Record.ExceptionAsync(() =>
             context.GetCustomer.HandleAsync(context.IssuersByName[issuer], _customerId, CancellationToken.None));
     }
 
     [Then("le client est introuvable")]
-    public void ThenTheCustomerIsNotFound() => Assert.IsType<CustomerNotFoundException>(_lookupFailure);
+    public void ThenTheCustomerIsNotFound() => Assert.IsType<CustomerNotFoundException>(context.LastFailure);
 
     private async Task RegisterAsync(string issuer, RegisterCustomerCommand command)
     {
         _command = command;
         _customerId = await context.RegisterCustomer.HandleAsync(context.IssuersByName[issuer], command, CancellationToken.None);
+        context.CustomersByName[command.Name] = _customerId;
     }
 }
