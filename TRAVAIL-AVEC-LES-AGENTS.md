@@ -69,5 +69,7 @@ sera condensé à la fin pour que l'ensemble tienne en une page.
 4. **La règle git et le dépôt se contredisent.** D'après le `CLAUDE.md`, il n'y a « pas encore de remote
    ni de forge, les commits restent locaux ». Or `origin` pointe vers un dépôt GitHub. Dans le doute,
    l'agent n'a rien poussé et a posé la question.
+   - *Résolution* : Samir confirme que la phrase est dépassée. L'agent met à jour la règle (la forge
+     est GitHub), puis pousse la branche et ouvre la pull request comme le permet `autonomous-pr`.
 5. **Cette page est déléguée.** Samir confie à l'agent, en autonomie, la tenue de la page sur le travail
    avec les agents.
