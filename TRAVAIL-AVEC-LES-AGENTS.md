@@ -73,3 +73,10 @@ chaque pull request.
   Samir l'a relevé.
 - **Un chemin déformé dans le spike.** Git Bash a converti le chemin passé à Typst en chemin Windows, et
   la première compilation a échoué. L'agent a diagnostiqué la cause, puis l'a contournée.
+- **Un spike conclu trop vite.** Samir avait annoncé « POC, discutons ». L'agent a pourtant enchaîné le
+  spike, ses conclusions, un ADR, une PR et même la proposition du lot suivant, en tranchant seul le
+  contrat YAML entre le domaine et le rendu. Samir l'a arrêté : « tu es parti trop vite du spike ». La
+  leçon retenue : un spike se termine par un débrief, où l'agent montre les résultats et liste les choix
+  que le spike lui a fait faire. L'ADR vient ensuite. Le débrief a produit deux décisions de Samir : les
+  totaux, les mentions et la signature toujours sur la même page, et un devis court pour tester l'autre
+  extrême.
