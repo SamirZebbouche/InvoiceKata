@@ -75,7 +75,27 @@ public sealed class FinalizeQuoteTests
         Assert.Equal(QuoteStatus.Draft, (await _quotes.GetAsync(quote.IssuerId, quote.Id, CancellationToken.None)).Status);
     }
 
-    private FinalizeQuote UseCase(string at) => new(_quotes, _texts, new FixedClock(DateTimeOffset.Parse(at, System.Globalization.CultureInfo.InvariantCulture)));
+    // The quote finalized is already saved when its reactions hear of it (ADR-0003): none starts from an unrecorded fact.
+    [Fact]
+    public async Task Should_PublishQuoteFinalizedAfterTheSave_When_TheQuoteIsFinalized()
+    {
+        var quote = await StoredDraftWithALineAsync();
+        var heard = new List<(IQuoteEvent Event, QuoteStatus Stored)>();
+        var reaction = new ReadingReaction(async quoteEvent => heard.Add((quoteEvent, (await _quotes.GetAsync(quote.IssuerId, quote.Id, CancellationToken.None)).Status)));
+
+        await UseCase(at: "2026-10-18T10:00:00Z", reaction).HandleAsync(quote.IssuerId, quote.Id, FinalizeQuote.DefaultValidityDays, CancellationToken.None);
+
+        Assert.Equal([(new QuoteFinalized(quote.Id, quote.IssuerId, new QuoteNumber(2026, 1)), QuoteStatus.Finalized)], heard.Select(entry => ((IQuoteEvent)entry.Event, entry.Stored)));
+    }
+
+    private FinalizeQuote UseCase(string at, params IQuoteReaction[] reactions) => new(
+        _quotes, _texts, new FixedClock(DateTimeOffset.Parse(at, System.Globalization.CultureInfo.InvariantCulture)),
+        new QuoteReactions(reactions, Microsoft.Extensions.Logging.Abstractions.NullLogger<QuoteReactions>.Instance));
+
+    private sealed class ReadingReaction(Func<IQuoteEvent, Task> react) : IQuoteReaction
+    {
+        public Task ReactAsync(IQuoteEvent quoteEvent, CancellationToken cancellationToken) => react(quoteEvent);
+    }
 
     private async Task<Quote> StoredDraftWithALineAsync()
     {
@@ -83,32 +103,5 @@ public sealed class FinalizeQuoteTests
         quote.AddLine(Scopes.Line(vatRate: 20m));
         await _quotes.AddAsync(quote, CancellationToken.None);
         return quote;
-    }
-
-    private sealed class FixedClock(DateTimeOffset now) : TimeProvider
-    {
-        public override DateTimeOffset GetUtcNow() => now;
-    }
-
-    // The port, faked: it stores states, as the real adapters do, so an unsaved change is not kept.
-    private sealed class StoredQuotes : IQuoteRepository
-    {
-        private readonly Dictionary<Guid, QuoteState> _states = [];
-
-        public Task AddAsync(Quote quote, CancellationToken cancellationToken) => SaveAsync(quote, cancellationToken);
-
-        public Task SaveAsync(Quote quote, CancellationToken cancellationToken)
-        {
-            _states[quote.Id.Value] = quote.ToState();
-            return Task.CompletedTask;
-        }
-
-        public Task<Quote> GetAsync(IssuerId issuerId, QuoteId quoteId, CancellationToken cancellationToken) =>
-            Task.FromResult(Quote.FromState(_states[quoteId.Value]));
-
-        public Task<IReadOnlyList<QuoteNumber>> TakenNumbersAsync(IssuerId issuerId, CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<QuoteNumber>>(
-                [.. _states.Values.Where(state => state.IssuerId == issuerId.Value && state.Finalization is not null)
-                    .Select(state => QuoteNumber.Parse(state.Finalization!.Number))]);
     }
 }

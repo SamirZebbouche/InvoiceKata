@@ -46,7 +46,7 @@ public sealed class AcceptanceContext
 
     public RemoveQuoteLine RemoveQuoteLine => new(_quotes, _scopes, _events);
 
-    public FinalizeQuote FinalizeQuote => new(_quotes, _texts, Clock);
+    public FinalizeQuote FinalizeQuote => new(_quotes, _texts, Clock, new QuoteReactions([], Microsoft.Extensions.Logging.Abstractions.NullLogger<QuoteReactions>.Instance));
 
     public FixedClock Clock { get; } = new();
 

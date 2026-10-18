@@ -6,6 +6,23 @@ namespace InvoiceKata.Api.Tests;
 
 public sealed class StartupTests
 {
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("  ")]
+    public void Should_RefuseToStart_When_TypstIsNotConfigured(string? typst)
+    {
+        using var api = ApiFactory.On(Directory.CreateTempSubdirectory("invoicekata-startup-").FullName);
+        using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder => builder
+            .UseSetting("Persistence:Directory", api.DataDirectory)
+            .UseSetting("Rendering:Typst", typst));
+
+        var refusal = Record.Exception(() => factory.CreateClient());
+
+        Assert.IsType<InvalidOperationException>(refusal);
+        Assert.Contains("Rendering:Typst", refusal.Message, StringComparison.Ordinal);
+    }
+
     // The other API tests fix the clock; without them, quotes are dated by the system clock.
     [Fact]
     public void Should_DateQuotesWithTheSystemClock_When_NothingReplacesIt()
