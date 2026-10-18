@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
 
+using InvoiceKata.Domain;
+
 using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace InvoiceKata.Api.Tests;
@@ -58,6 +60,81 @@ public sealed class CustomersEndpointsTests(WebApplicationFactory<Program> facto
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
     }
 
+    [Fact]
+    public async Task Should_RegisterAnIndividualCustomerWithoutSirenNorVatNumber()
+    {
+        var client = factory.CreateClient();
+        var issuerId = await ConfigureIssuerAsync(client);
+
+        var created = await client.PostAsJsonAsync($"/issuers/{issuerId}/customers", new
+        {
+            kind = "Individual",
+            name = "Jeanne Martin",
+            address = new { street = "3 rue des Lilas", postalCode = "33000", city = "Bordeaux" },
+        });
+        var customer = await client.GetFromJsonAsync<IndividualBody>(created.Headers.Location);
+
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+        Assert.Equal(new IndividualBody("Individual", null, null), customer);
+    }
+
+    [Fact]
+    public async Task Should_ReturnBadRequestAsProblemDetails_When_AProfessionalCustomerHasNoSiren()
+    {
+        var client = factory.CreateClient();
+        var issuerId = await ConfigureIssuerAsync(client);
+
+        var response = await client.PostAsJsonAsync($"/issuers/{issuerId}/customers", new
+        {
+            name = "Les Toits Rouges SARL",
+            vatNumber = "FR45834567890",
+            address = new { street = "4 place du Marché", postalCode = "33000", city = "Bordeaux" },
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+    }
+
+    [Fact]
+    public async Task Should_ReturnBadRequestAsProblemDetails_When_TheCustomerKindIsUnknown()
+    {
+        var client = factory.CreateClient();
+        var issuerId = await ConfigureIssuerAsync(client);
+
+        var response = await client.PostAsJsonAsync($"/issuers/{issuerId}/customers", new
+        {
+            kind = "Wholesaler",
+            name = "Les Toits Rouges SARL",
+            siren = "834567890",
+            vatNumber = "FR45834567890",
+            address = new { street = "4 place du Marché", postalCode = "33000", city = "Bordeaux" },
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+    }
+
+    public static TheoryData<CustomerKind> AllCustomerKinds => [.. Enum.GetValues<CustomerKind>()];
+
+    [Theory]
+    [MemberData(nameof(AllCustomerKinds))]
+    public async Task Should_RegisterTheCustomer_When_GivenAnyCustomerKind(CustomerKind kind)
+    {
+        var client = factory.CreateClient();
+        var issuerId = await ConfigureIssuerAsync(client);
+
+        var response = await client.PostAsJsonAsync($"/issuers/{issuerId}/customers", new
+        {
+            kind = kind.ToString(),
+            name = "Client",
+            siren = "834567890",
+            vatNumber = "FR45834567890",
+            address = new { street = "4 place du Marché", postalCode = "33000", city = "Bordeaux" },
+        });
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+    }
+
     private static async Task<Guid> ConfigureIssuerAsync(HttpClient client)
     {
         var response = await client.PostAsJsonAsync("/issuers", new
@@ -73,4 +150,6 @@ public sealed class CustomersEndpointsTests(WebApplicationFactory<Program> facto
     }
 
     private sealed record CustomerBody(Guid Id, string Kind, string Name);
+
+    private sealed record IndividualBody(string Kind, string? Siren, string? VatNumber);
 }

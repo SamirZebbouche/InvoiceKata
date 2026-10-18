@@ -36,10 +36,11 @@ le dépôt :
 - [.claude/skills/](.claude/skills/) pour les compétences à la demande : architecture, conception
   objet, idiomes C# et .NET, tests, git.
 
-Stack : C# / .NET, avec `dotnet test` et `dotnet format --verify-no-changes` comme preuves.
+Stack : C# / .NET, avec `dotnet test`, `dotnet format --verify-no-changes` et `dotnet stryker` comme preuves.
 
 **Rapports de test**, publiés par la CI à chaque passage sur `main` : <https://samirzebbouche.github.io/InvoiceKata/>.
-On y trouve les scénarios d'acceptation en français, avec le résultat de chaque étape, et la couverture du code.
+On y trouve les scénarios d'acceptation en français, avec le résultat de chaque étape, la couverture du code et
+le rapport des tests par mutation (Stryker.NET), dont le score bloque la CI sous 70 %.
 
 ## Périmètre retenu
 

@@ -16,6 +16,8 @@ public sealed class Issuer
 
     public IssuerId Id { get; }
 
+    public IssuerKind Kind => IssuerKind.Company;
+
     public string Name { get; }
 
     public LegalForm LegalForm { get; }

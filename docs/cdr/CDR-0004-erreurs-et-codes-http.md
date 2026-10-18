@@ -1,6 +1,6 @@
 # CDR-0004 : Les erreurs du domaine traduites en codes HTTP
 
-- **Statut** : accepté le 2026-10-18 · en place pour `400` et `404`
+- **Statut** : accepté le 2026-10-18 · en place pour `400`, `404` et `422`
 - **Décideur** : Samir
 
 ## Problème
@@ -12,11 +12,15 @@ result pattern (ADR-0002).
 
 ## Décision
 
-1. **Une exception par raison métier**, regroupée sous une classe de base quand plusieurs partagent la
-   même réponse : `ResourceNotFoundException`, dont dérivent `IssuerNotFoundException`,
-   `CustomerNotFoundException` et `QuoteNotFoundException`.
+1. **Une exception par raison métier**, regroupée sous une exception de base quand plusieurs partagent
+   la même réponse : `ResourceNotFoundException`, dont dérivent `IssuerNotFoundException`,
+   `CustomerNotFoundException`, `QuoteNotFoundException` (application) et `QuoteLineNotFoundException`
+   (domaine). L'exception de base vit dans le domaine : le devis peut ainsi refuser
+   lui-même de retirer une ligne qu'il ne contient pas (« tell, don't ask »), et l'API répond `404`
+   comme pour toute ressource introuvable. Le domaine ne voit pas l'application, et une exception du
+   domaine ne pourrait pas dériver d'une exception de base définie dans l'application.
 2. **La traduction se fait à un seul endroit, au plus haut niveau** : un gestionnaire d'exceptions de
-   l'API (`IExceptionHandler`) traduit chaque classe en code HTTP, au format Problem Details. Aucune
+   l'API (`DomainExceptionHandler`, un `IExceptionHandler`) traduit chaque classe en code HTTP, au format Problem Details. Aucune
    exception générique n'est attrapée ailleurs (règle `dotnet-error-handling`).
 3. **La correspondance :**
 
@@ -25,9 +29,14 @@ result pattern (ADR-0002).
    | Ressource inconnue, ou appartenant à un autre émetteur | `404` | `ResourceNotFoundException` |
    | Donnée invalide à la frontière (forme juridique inconnue…) | `400` | La validation de l'endpoint |
    | Action interdite par l'état du document | `409` | À venir |
-   | Contexte de facturation non pris en charge | `422` | À venir (`UnsupportedBillingContextException`) |
+   | Contexte de facturation non pris en charge | `422` | `UnsupportedBillingContextException`, levée par le devis à sa création |
 
-4. **Une ressource d'un autre émetteur répond `404`, jamais `403`** ([ADR-0007](../adr/ADR-0007-saas-multi-emetteur.md)).
+4. **La correspondance est exhaustive, et un test le prouve.** `DomainExceptionHandler.StatusFor` est une
+   fonction pure. Un test parcourt par réflexion toutes les exceptions définies dans le domaine et
+   l'application, et exige un code pour chacune : une nouvelle exception oubliée fait échouer le test, au
+   lieu de produire une `500` en silence. Les exceptions du framework (`ArgumentException`…) restent des
+   bugs, et répondent `500`.
+5. **Une ressource d'un autre émetteur répond `404`, jamais `403`** ([ADR-0007](../adr/ADR-0007-saas-multi-emetteur.md)).
 
 ## Options écartées
 

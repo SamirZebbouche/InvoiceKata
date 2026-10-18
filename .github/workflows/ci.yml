@@ -23,6 +23,8 @@ jobs:
           --collect:"XPlat Code Coverage"
           --results-directory TestResults
       - run: dotnet format --verify-no-changes --no-restore
+      - name: Mutation testing, blocking below the threshold of stryker-config.json
+        run: dotnet stryker --output StrykerOutput
 
       - name: Build the reports
         if: always()
@@ -33,6 +35,11 @@ jobs:
             -reporttypes:"Html;MarkdownSummaryGithub" \
             -assemblyfilters:"+InvoiceKata.Domain;+InvoiceKata.Application;+InvoiceKata.Adapters.Persistence;+InvoiceKata.Api"
           cat site/coverage/SummaryGithub.md >> "$GITHUB_STEP_SUMMARY"
+          if [ -f StrykerOutput/reports/mutation-report.html ]; then
+            mkdir -p site/mutation
+            cp StrykerOutput/reports/mutation-report.html site/mutation/index.html
+            cat StrykerOutput/reports/mutation-report.md >> "$GITHUB_STEP_SUMMARY"
+          fi
           cp tests/InvoiceKata.Acceptance/bin/Debug/net10.0/reports/scenarios.html site/scenarios.html
           sed "s/__COMMIT__/${GITHUB_SHA::7}/" .github/pages/index.html > site/index.html
       - uses: actions/upload-artifact@v4

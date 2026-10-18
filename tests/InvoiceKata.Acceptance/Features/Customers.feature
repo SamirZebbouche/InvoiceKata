@@ -21,3 +21,12 @@ Fonctionnalité: Enregistrer un client
     Et "Batifolio" a enregistré le client professionnel "Les Toits Rouges SARL"
     Quand "Atelier Martin" cherche ce client
     Alors le client est introuvable
+
+  Scénario: Enregistrer un client particulier
+    Quand "Batifolio" enregistre le client particulier suivant :
+      | champ       | valeur             |
+      | nom         | Jeanne Martin      |
+      | adresse     | 3 rue des Lilas    |
+      | code postal | 33000              |
+      | ville       | Bordeaux           |
+    Alors "Batifolio" retrouve ce client particulier, sans SIREN ni numéro de TVA

@@ -1,6 +1,7 @@
 # CDR-0001 : Une mention légale = une règle en Template Method
 
-- **Statut** : accepté le 2026-10-18 · pas encore mis en œuvre
+- **Statut** : accepté le 2026-10-18 · en place (`LegalMentionRule` ; règles : `IssuerLegalIdentityMention`,
+  `ReducedVatRateMention`)
 - **Décideur** : Samir
 
 ## Problème
@@ -19,13 +20,15 @@ gestionnaire qui ne serait pas fondé sur l'état.
    d'application et sa composition.
 
    ```csharp
-   public sealed class ReducedVatRateMention : LegalMentionRule
+   public sealed class IssuerLegalIdentityMention(IMentionTexts texts) : LegalMentionRule(texts)
    {
-       protected override MentionCode Code => MentionCode.ReducedVatRate;
-       protected override bool AppliesTo(Quote quote, BillingContext context) => quote.Lines.Any(l => l.VatRate.Percent == 10m);
-       protected override LegalMention Compose(Quote quote, BillingContext context, IMentionTexts texts) => new(Code, texts.ReducedVatRate());
+       protected override MentionCode Code => MentionCode.IssuerLegalIdentity;
+       protected override bool AppliesTo(QuoteScope scope) => scope.Issuer.Kind == IssuerKind.Company;
+       protected override string Compose(QuoteScope scope) => Texts.IssuerLegalIdentity(scope.Issuer);
    }
    ```
+
+   `QuoteScope` donne au gestionnaire le devis, son émetteur et son client.
 
 3. **Une mention stockée est `LegalMention(Code, Text)`.**
    - Le **code** identifie la mention. Il sert aussi à Factur-X, qui exige des mentions codées.
@@ -47,7 +50,11 @@ gestionnaire qui ne serait pas fondé sur l'état.
 
 ## Conséquences
 
-- La base est le seul endroit où vivent l'approche fondée sur l'état et l'idempotence. Un test de rejeu
-  sur la base les couvre pour toutes les mentions.
+- La classe de base `LegalMentionRule` est le seul endroit où vivent l'approche fondée sur l'état et
+  l'idempotence. Un scénario de rejeu les couvre pour toutes les mentions : rejouer deux fois toute
+  l'histoire d'un devis ne change pas ses mentions. Il attrape une règle qui garderait un état d'un
+  événement à l'autre, par exemple un compteur.
+- La version fondée sur le delta a été écrite, puis vue en échec, avant la vraie règle du taux réduit :
+  elle retirait la mention au retrait de la première ligne à 10 %, alors qu'une autre restait.
 - Le catalogue des textes grandit avec chaque mention : c'est voulu, puisqu'il est la future table de
   traduction.

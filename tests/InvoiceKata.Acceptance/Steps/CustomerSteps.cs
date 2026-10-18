@@ -38,6 +38,28 @@ public sealed class CustomerSteps(AcceptanceContext context)
             name, new Siren("834567890"), new VatNumber("FR45834567890"),
             new Address { Street = "4 place du Marché", PostalCode = "33000", City = "Bordeaux" }));
 
+    [When("{string} enregistre le client particulier suivant :")]
+    public async Task WhenTheIssuerRegistersAnIndividualCustomer(string issuer, DataTable table)
+    {
+        var fields = table.Rows.ToDictionary(row => row["champ"], row => row["valeur"]);
+        await RegisterIndividualAsync(issuer, fields["nom"],
+            new Address { Street = fields["adresse"], PostalCode = fields["code postal"], City = fields["ville"] });
+    }
+
+    [Given("{string} a enregistré le client particulier {string}")]
+    public Task GivenTheIssuerRegisteredAnIndividualCustomer(string issuer, string name) =>
+        RegisterIndividualAsync(issuer, name, new Address { Street = "3 rue des Lilas", PostalCode = "33000", City = "Bordeaux" });
+
+    [Then("{string} retrouve ce client particulier, sans SIREN ni numéro de TVA")]
+    public async Task ThenTheIssuerFindsThisIndividualCustomer(string issuer)
+    {
+        var customer = await context.GetCustomer.HandleAsync(context.IssuersByName[issuer], _customerId, CancellationToken.None);
+
+        Assert.Equal(CustomerKind.Individual, customer.Kind);
+        Assert.Null(customer.Siren);
+        Assert.Null(customer.VatNumber);
+    }
+
     [Then("{string} retrouve ce client professionnel avec ces informations")]
     public async Task ThenTheIssuerFindsThisProfessionalCustomer(string issuer)
     {
@@ -59,6 +81,13 @@ public sealed class CustomerSteps(AcceptanceContext context)
 
     [Then("le client est introuvable")]
     public void ThenTheCustomerIsNotFound() => Assert.IsType<CustomerNotFoundException>(context.LastFailure);
+
+    private async Task RegisterIndividualAsync(string issuer, string name, Address address)
+    {
+        _customerId = await context.RegisterIndividualCustomer.HandleAsync(
+            context.IssuersByName[issuer], new RegisterIndividualCustomerCommand(name, address), CancellationToken.None);
+        context.CustomersByName[name] = _customerId;
+    }
 
     private async Task RegisterAsync(string issuer, RegisterCustomerCommand command)
     {

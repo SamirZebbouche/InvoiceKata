@@ -24,6 +24,16 @@ chaque pull request.
 - **Le cadre.** Samir installe sa base de pratiques personnelle, `ai-core`, dans le dépôt : six règles
   dans le [CLAUDE.md](CLAUDE.md) et quinze skills. Il choisit ces règles d'emblée, sans attendre les
   frictions : « je vois à peu près où je veux aller ».
+- **Un cadre qui évolue dans les deux sens.** Le cadre n'est pas figé au départ :
+  - **de `ai-core` vers le projet**, quand une friction montre un manque. Après l'obsession des types
+    primitifs relevée en relecture, Samir a installé la règle `arch-no-uniform-patterns`, qui existait
+    dans sa base mais pas dans le projet ;
+  - **du projet vers `ai-core`**, quand le projet invente une pratique qui vaut ailleurs. Les tests par
+    mutation, nés ici des casses ciblées de l'agent puis outillés avec Stryker.NET, ont été récoltés par
+    Samir dans sa base, sous l'identifiant `test-mutation-testing`, pour servir à ses autres projets.
+
+  Le projet complète aussi ses propres notes : le ruleset de `main`, l'exception de langue des
+  scénarios Gherkin, la zone des spikes, et maintenant Stryker parmi les preuves.
 - **Les décisions de conception.** L'agent propose des options et réfute celles qui ne tiennent pas ;
   Samir tranche.
 - **La démarche.** Samir décrit d'abord un cadre large, que l'on conçoit ensemble par ADR. On construit
@@ -57,7 +67,9 @@ chaque pull request.
   de l'[ADR-0003](docs/adr/ADR-0003-reactions-par-evenements-idempotentes.md)). Pour l'API, Samir a
   retenu `quotes` et des routes préfixées par l'émetteur, et il a imposé deux points : l'émetteur est configurable, parce que l'éditeur de l'application vend un SaaS
   à plusieurs entreprises, et son identifiant doit être impossible à deviner. L'agent avait supposé une
-  instance par émetteur ([ADR-0007](docs/adr/ADR-0007-saas-multi-emetteur.md)). Sur les arrondis, Samir
+  instance par émetteur ([ADR-0007](docs/adr/ADR-0007-saas-multi-emetteur.md)). Samir a ensuite
+  relevé qu'un même client réel, s'il l'est de deux entreprises, doit avoir deux fiches indépendantes ; le
+  code le faisait déjà, l'ADR-0007 en fait une décision explicite. Sur les arrondis, Samir
   pensait que tout devait se faire au rendu. L'agent a montré, sources à l'appui, que les montants légaux
   doivent être arrondis au centime dans le domaine, sinon le PDF et le XML se contrediraient. Samir a
   demandé que cette règle soit écrite dans un ADR ([ADR-0008](docs/adr/ADR-0008-arrondis.md)).
@@ -66,6 +78,8 @@ chaque pull request.
   proposé par l'agent imposait de modifier une structure commune à chaque nouvelle mention, et il
   demandait si un builder aiderait. L'agent a écarté le builder, qui règle la construction et non
   l'extension, au profit du Template Method : une mention, une classe ([docs/cdr](docs/cdr/README.md)).
+  En relecture, Samir a aussi écarté les minimal APIs de l'agent (« on appelle des `Map` dans tous les
+  sens ») au profit de contrôleurs ([CDR-0005](docs/cdr/CDR-0005-controleurs-plutot-que-minimal-apis.md)).
 - **La roadmap.** L'agent a proposé un découpage en lots, et Samir l'a validé. Samir a ensuite validé la
   structure de la solution (projets et sens des dépendances), et l'agent a rédigé le détail PR par PR
   dans [docs/ROADMAP.md](docs/ROADMAP.md), avec les questions à trancher en chemin. L'agent a signalé un
@@ -86,6 +100,22 @@ chaque pull request.
     Problem Details.
   - une version volontairement naïve du calcul (arrondi au pair, TVA arrondie ligne par ligne) a fait
     échouer les deux tests des règles de calcul : 0,12 au lieu de 0,13, et 0,02 au lieu de 0,01.
+  - une casse doit être ciblée : retirer `[ApiController]` faisait échouer une dizaine de tests à la
+    fois, ce qui ne prouvait rien du test visé. L'agent a recommencé avec une casse précise (un seul champ
+    rendu facultatif), qui ne fait échouer que ce test.
+  - l'exhaustivité se teste : Samir a relevé que rien ne garantissait la traduction d'une nouvelle
+    exception en code HTTP. Un test parcourt désormais toutes les exceptions du produit. L'agent l'a
+    vérifié en ajoutant un instant une exception oubliée, qui l'a fait échouer.
+  - les tests par mutation automatisent ces casses : Samir a proposé Stryker.NET. Le premier passage a
+    trouvé trois vrais trous (des libellés de forme juridique non figés, un cas d'échec non couvert, un
+    constructeur de devis vidable sans qu'aucun test du domaine ne le voie). Stryker fait désormais partie
+    des preuves, au même titre que `dotnet format`, avec un seuil bloquant de 70 % ; le score est de 80 %.
+  - l'argument d'un CDR se démontre : avant d'écrire la règle du taux réduit, l'agent a écrit la version
+    fondée sur le delta que le CDR-0001 écarte, et le scénario l'a fait échouer au retrait de la première
+    ligne à 10 %.
+  - une casse doit aussi compiler : deux casses rendaient du code inaccessible, ce que
+    `TreatWarningsAsErrors` refuse. Aucun test n'a tourné, et l'absence de sortie n'était pas une preuve.
+    L'agent les a refaites, en vérifiant le build avant de lire les tests.
 - **La documentation et les décisions** : Samir les relit, pull request par pull request.
 - **Les rapports publics** : à chaque passage sur `main`, la CI publie sur GitHub Pages le rapport des
   scénarios Gherkin et la couverture. Dans chaque PR, le résumé du job donne la synthèse des tests et de la
@@ -135,6 +165,8 @@ chaque pull request.
 - **Un fichier généré commité.** Le code produit par Reqnroll (`*.feature.cs`) est entré dans un commit.
   L'agent l'a vu en relisant le commit, l'a ajouté au `.gitignore` et a corrigé le commit, qui n'était
   pas encore poussé.
+- **Un écart à la règle TDD.** Pour le client particulier, l'agent a écrit le contrôleur avant ses tests
+  d'API. Il l'a signalé, puis a rattrapé l'écart en faisant échouer chaque test par une casse ciblée.
 - **Une DLL périmée.** Après avoir restauré l'adaptateur qu'il avait cassé exprès, l'agent a vu le test
   rester rouge. La copie de sauvegarde avait gardé une date antérieure à la dernière compilation, si bien
   que la compilation incrémentale n'avait pas repris le fichier. Une reconstruction complète a corrigé

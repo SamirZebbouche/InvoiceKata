@@ -66,6 +66,108 @@ public sealed class QuotesEndpointsTests(WebApplicationFactory<Program> factory)
         Assert.Equal([new VatBreakdownBody(20m, 1600m, 320m)], quote.VatBreakdown);
     }
 
+    [Fact]
+    public async Task Should_ReturnTheRecalculatedQuote_When_RemovingALine()
+    {
+        var client = factory.CreateClient();
+        var (issuerId, quoteId) = await DraftQuoteAsync(client);
+        await AddLineAsync(client, issuerId, quoteId, "Audit", 800m);
+        var formation = await AddLineAsync(client, issuerId, quoteId, "Formation", 500m);
+
+        var removed = await client.DeleteAsync($"/issuers/{issuerId}/quotes/{quoteId}/lines/{formation}");
+
+        Assert.Equal(HttpStatusCode.OK, removed.StatusCode);
+        var quote = await removed.Content.ReadFromJsonAsync<QuoteWithTotalsBody>();
+        Assert.Single(quote!.Lines);
+        Assert.Equal(new TotalsBody(800m, 160m, 960m), quote.Totals);
+    }
+
+    [Fact]
+    public async Task Should_ReturnNotFoundAsProblemDetails_When_RemovingAnUnknownLine()
+    {
+        var client = factory.CreateClient();
+        var (issuerId, quoteId) = await DraftQuoteAsync(client);
+
+        var response = await client.DeleteAsync($"/issuers/{issuerId}/quotes/{quoteId}/lines/{Guid.NewGuid()}");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+    }
+
+    [Fact]
+    public async Task Should_ApplyTheDiscountWithoutRoundingTheNetPrice_When_AddingADiscountedLine()
+    {
+        var client = factory.CreateClient();
+        var (issuerId, quoteId) = await DraftQuoteAsync(client);
+
+        var added = await client.PostAsJsonAsync($"/issuers/{issuerId}/quotes/{quoteId}/lines", new
+        {
+            designation = "Faïence",
+            quantity = 18.72m,
+            unit = "u",
+            unitPriceExcludingVat = 33.33m,
+            discountRate = 10m,
+            vatRate = 10m,
+        });
+
+        var line = Assert.Single((await added.Content.ReadFromJsonAsync<DiscountedQuoteBody>())!.Lines);
+        Assert.Equal(10m, line.DiscountRate);
+        Assert.Equal(29.997m, line.NetUnitPriceExcludingVat);
+        Assert.Equal(561.54m, line.TotalExcludingVat);
+    }
+
+    [Fact]
+    public async Task Should_ReturnUnprocessableEntityAsProblemDetails_When_QuotingAnIndividualCustomer()
+    {
+        var client = factory.CreateClient();
+        var issuerId = await ConfigureIssuerAsync(client);
+        var customerId = IdFrom(await client.PostAsJsonAsync($"/issuers/{issuerId}/customers", new
+        {
+            kind = "Individual",
+            name = "Jeanne Martin",
+            address = new { street = "3 rue des Lilas", postalCode = "33000", city = "Bordeaux" },
+        }));
+
+        var response = await client.PostAsJsonAsync($"/issuers/{issuerId}/quotes", new { customerId });
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+    }
+
+    [Fact]
+    public async Task Should_ExposeTheIssuerLegalIdentityMention_When_ReadingANewQuote()
+    {
+        var client = factory.CreateClient();
+        var (issuerId, quoteId) = await DraftQuoteAsync(client);
+
+        var quote = await client.GetFromJsonAsync<QuoteWithMentionsBody>($"/issuers/{issuerId}/quotes/{quoteId}");
+
+        var mention = Assert.Single(quote!.Mentions);
+        Assert.Equal("IssuerLegalIdentity", mention.Code);
+        Assert.StartsWith("Batifolio, SAS au capital de", mention.Text, StringComparison.Ordinal);
+    }
+
+    private static async Task<(Guid IssuerId, Guid QuoteId)> DraftQuoteAsync(HttpClient client)
+    {
+        var issuerId = await ConfigureIssuerAsync(client);
+        var customerId = await RegisterCustomerAsync(client, issuerId);
+        var quoteId = IdFrom(await client.PostAsJsonAsync($"/issuers/{issuerId}/quotes", new { customerId }));
+        return (issuerId, quoteId);
+    }
+
+    private static async Task<Guid> AddLineAsync(HttpClient client, Guid issuerId, Guid quoteId, string designation, decimal unitPrice)
+    {
+        var response = await client.PostAsJsonAsync($"/issuers/{issuerId}/quotes/{quoteId}/lines", new
+        {
+            designation,
+            quantity = 1m,
+            unit = "forfait",
+            unitPriceExcludingVat = unitPrice,
+            vatRate = 20m,
+        });
+        return IdFrom(response);
+    }
+
     private static async Task<Guid> ConfigureIssuerAsync(HttpClient client)
     {
         var response = await client.PostAsJsonAsync("/issuers", new
@@ -101,6 +203,14 @@ public sealed class QuotesEndpointsTests(WebApplicationFactory<Program> factory)
     private sealed record TotalsBody(decimal ExcludingVat, decimal Vat, decimal IncludingVat);
 
     private sealed record VatBreakdownBody(decimal Rate, decimal BaseExcludingVat, decimal Vat);
+
+    private sealed record DiscountedLineBody(decimal DiscountRate, decimal NetUnitPriceExcludingVat, decimal TotalExcludingVat);
+
+    private sealed record DiscountedQuoteBody(IReadOnlyList<DiscountedLineBody> Lines);
+
+    private sealed record MentionBody(string Code, string Text);
+
+    private sealed record QuoteWithMentionsBody(IReadOnlyList<MentionBody> Mentions);
 
     private sealed record QuoteWithTotalsBody(IReadOnlyList<LineBody> Lines, TotalsBody Totals, IReadOnlyList<VatBreakdownBody> VatBreakdown);
 }

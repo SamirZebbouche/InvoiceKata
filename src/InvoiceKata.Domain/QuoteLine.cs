@@ -12,6 +12,8 @@ public sealed record NewQuoteLine
     public required Money UnitPriceExcludingVat { get; init; }
 
     public required VatRate VatRate { get; init; }
+
+    public DiscountRate Discount { get; init; } = DiscountRate.None;
 }
 
 public sealed class QuoteLine
@@ -24,6 +26,7 @@ public sealed class QuoteLine
         Unit = line.Unit;
         UnitPriceExcludingVat = line.UnitPriceExcludingVat;
         VatRate = line.VatRate;
+        Discount = line.Discount;
     }
 
     public QuoteLineId Id { get; }
@@ -38,7 +41,11 @@ public sealed class QuoteLine
 
     public VatRate VatRate { get; }
 
-    public Money TotalExcludingVat => new Money(Quantity.Value * UnitPriceExcludingVat.Amount).RoundedToTheCent();
+    public DiscountRate Discount { get; }
+
+    public Money NetUnitPriceExcludingVat => Discount.AppliedTo(UnitPriceExcludingVat);
+
+    public Money TotalExcludingVat => new Money(Quantity.Value * NetUnitPriceExcludingVat.Amount).RoundedToTheCent();
 }
 
 public sealed record VatBreakdownLine(VatRate Rate, Money BaseExcludingVat, Money Vat);
