@@ -38,10 +38,17 @@ est un incrément TDD.
   - un devis à deux taux de TVA, ventilée par taux (la TVA est calculée sur le total HT de chaque taux,
     pas ligne par ligne) ;
   - une remise sur une ligne ;
-  - un contexte non pris en charge (par exemple un client particulier), refusé à la création du devis.
+  - un contexte non pris en charge (par exemple un client particulier), refusé à la création du devis ;
+  - une mention de contexte (l'identité légale de l'émetteur) présente dès la création du devis ;
+  - une mention déclenchée par une ligne (le taux réduit de 10 %) : elle apparaît avec la première ligne
+    concernée, et ne disparaît qu'au retrait de la dernière.
 - **Ce qui apparaît** :
   - la liste blanche des contextes de facturation ;
-  - `UnsupportedBillingContextException` ([ADR-0002](adr/ADR-0002-variations-selon-emetteur-et-client.md)).
+  - `UnsupportedBillingContextException` ([ADR-0002](adr/ADR-0002-variations-selon-emetteur-et-client.md)) ;
+  - les événements `QuoteDrafted`, `QuoteLineAdded` et `QuoteLineRemoved`, et le dispatcher en mémoire,
+    exécuté dans l'unité de travail ([ADR-0003](adr/ADR-0003-reactions-par-evenements-idempotentes.md),
+    amendement) ;
+  - les premiers gestionnaires de mentions, fondés sur l'état et couverts par des tests de rejeu.
 
 ### PR 1.3 — La persistance en fichiers
 
@@ -58,8 +65,8 @@ est un incrément TDD.
   - finaliser un devis, qui reçoit alors un numéro et une date de validité ;
   - toute modification d'un devis finalisé est refusée.
 - **Ce qui apparaît** :
-  - l'événement `QuoteFinalized` et le dispatcher en mémoire ([ADR-0003](adr/ADR-0003-reactions-par-evenements-idempotentes.md)) ;
-  - les mentions légales du devis, résolues par des règles qui s'additionnent.
+  - l'événement `QuoteFinalized` ;
+  - les mentions qui dépendent de la finalisation, comme la durée de validité.
 
 ### PR 2.2 — Le rendu du PDF
 

@@ -47,7 +47,12 @@ chaque pull request.
   L'agent a d'abord écarté les fichiers, faute de transactions. Samir les a proposés, et l'agent a montré
   à quelles conditions ils tiennent : un numéro déduit des factures stockées, des écritures atomiques et
   une suite de contrat commune à tous les adaptateurs
-  ([ADR-0006](docs/adr/ADR-0006-persistance-par-port-secondaire.md)).
+  ([ADR-0006](docs/adr/ADR-0006-persistance-par-port-secondaire.md)). Samir a ensuite fait chorégraphier
+  les mentions légales, parce que certaines ne se déclenchent qu'à l'ajout de certaines lignes.
+  L'argument de l'agent contre cette idée (« plus personne ne garantit la complétude ») ne tenait plus
+  depuis le validateur final. Samir a fixé deux règles : des gestionnaires fondés sur l'état, donc
+  idempotents, et un validateur qui ne s'exécute qu'une fois toutes les réactions terminées (amendement
+  de l'[ADR-0003](docs/adr/ADR-0003-reactions-par-evenements-idempotentes.md)).
 - **La roadmap.** L'agent a proposé un découpage en lots, et Samir l'a validé. Samir a ensuite validé la
   structure de la solution (projets et sens des dépendances), et l'agent a rédigé le détail PR par PR
   dans [docs/ROADMAP.md](docs/ROADMAP.md), avec les questions à trancher en chemin. L'agent a signalé un
