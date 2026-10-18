@@ -12,6 +12,7 @@ public sealed class DomainExceptionHandler(IProblemDetailsService problemDetails
     {
         ResourceNotFoundException => StatusCodes.Status404NotFound,
         UnsupportedBillingContextException => StatusCodes.Status422UnprocessableEntity,
+        DocumentStateConflictException => StatusCodes.Status409Conflict,
         _ => null,
     };
 
