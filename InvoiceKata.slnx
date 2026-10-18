@@ -8,6 +8,7 @@
   <Folder Name="/tests/">
     <Project Path="tests/InvoiceKata.Acceptance/InvoiceKata.Acceptance.csproj" />
     <Project Path="tests/InvoiceKata.Api.Tests/InvoiceKata.Api.Tests.csproj" />
+    <Project Path="tests/InvoiceKata.Application.Tests/InvoiceKata.Application.Tests.csproj" />
     <Project Path="tests/InvoiceKata.Domain.Tests/InvoiceKata.Domain.Tests.csproj" />
     <Project Path="tests/InvoiceKata.Persistence.ContractTests/InvoiceKata.Persistence.ContractTests.csproj" />
   </Folder>
