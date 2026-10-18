@@ -69,6 +69,30 @@ public abstract class QuoteRepositoryContract
         Assert.Equivalent(quote.ToState(), found.ToState(), strict: true);
     }
 
+    // Only this issuer's finalized quotes have a number: drafts have none, and another issuer counts on its own.
+    [Fact]
+    public async Task Should_GiveTheNumbersOfThisIssuersFinalizedQuotesOnly_When_AskedForTheTakenNumbers()
+    {
+        var repository = CreateRepository();
+        var issuer = Samples.Issuer();
+        await FinalizedAsync(repository, issuer, new QuoteNumber(2026, 1));
+        await FinalizedAsync(repository, issuer, new QuoteNumber(2026, 2));
+        await repository.AddAsync(DraftQuote(issuer), CancellationToken.None);
+        await FinalizedAsync(repository, Samples.Issuer(), new QuoteNumber(2026, 3));
+
+        var taken = await repository.TakenNumbersAsync(issuer.Id, CancellationToken.None);
+
+        Assert.Equal([new QuoteNumber(2026, 1), new QuoteNumber(2026, 2)], taken.OrderBy(number => number.Sequence));
+    }
+
+    [Fact]
+    public async Task Should_GiveNoNumber_When_TheIssuerHasNoQuote()
+    {
+        var taken = await CreateRepository().TakenNumbersAsync(IssuerId.New(), CancellationToken.None);
+
+        Assert.Empty(taken);
+    }
+
     [Fact]
     public async Task Should_RefuseToGiveAQuote_When_AnotherIssuerAsksForIt()
     {
@@ -79,12 +103,21 @@ public abstract class QuoteRepositoryContract
         await Assert.ThrowsAsync<QuoteNotFoundException>(() => repository.GetAsync(IssuerId.New(), quote.Id, CancellationToken.None));
     }
 
-    private static Quote DraftQuote()
+    private static Quote DraftQuote() => DraftQuote(Samples.Issuer());
+
+    private static Quote DraftQuote(Issuer issuer)
     {
-        var issuer = Samples.Issuer();
         var quote = Quote.DraftFor(issuer, Samples.ProfessionalOf(issuer));
         quote.TakeEvents();
         return quote;
+    }
+
+    private static async Task FinalizedAsync(IQuoteRepository repository, Issuer issuer, QuoteNumber number)
+    {
+        var quote = DraftQuote(issuer);
+        quote.AddLine(Samples.Line("Faïence", 33.33m, 10m));
+        quote.Finalize(number, new DateOnly(2026, 10, 18), new DateOnly(2026, 11, 17), "Devis valable 30 jours, jusqu'au 17/11/2026.");
+        await repository.AddAsync(quote, CancellationToken.None);
     }
 
     private static IEnumerable<object> LinesOf(Quote quote) => quote.Lines.Select(line =>

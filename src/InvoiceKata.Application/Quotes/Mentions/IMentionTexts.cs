@@ -8,4 +8,6 @@ public interface IMentionTexts
     string IssuerLegalIdentity(Issuer issuer);
 
     string ReducedVatRate();
+
+    string QuoteValidity(int validityDays, DateOnly validUntil);
 }

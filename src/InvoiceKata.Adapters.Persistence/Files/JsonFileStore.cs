@@ -58,4 +58,23 @@ public sealed class JsonFileStore(string directory)
             ?? throw new InvalidDataException($"'{path}' holds no state.");
         return TAggregate.FromState(state);
     }
+
+    // Every aggregate stored directly under a directory; an absent directory holds none.
+    public async Task<IReadOnlyList<TAggregate>> LoadAllAsync<TAggregate, TState>(string relativeDirectory, CancellationToken cancellationToken)
+        where TAggregate : class, IPersistable<TAggregate, TState>
+    {
+        var folder = Path.Combine(directory, relativeDirectory);
+        if (!Directory.Exists(folder))
+        {
+            return [];
+        }
+
+        var loaded = new List<TAggregate>();
+        foreach (var path in Directory.EnumerateFiles(folder).Where(path => path.EndsWith(".json", StringComparison.Ordinal)))
+        {
+            loaded.Add((await LoadAsync<TAggregate, TState>(Path.GetRelativePath(directory, path), cancellationToken))!);
+        }
+
+        return loaded;
+    }
 }

@@ -47,6 +47,13 @@ public sealed class FileQuoteRepository(JsonFileStore store) : IQuoteRepository
         await store.LoadAsync<Quote, QuoteState>(PathOf(issuerId, quoteId), cancellationToken)
         ?? throw new QuoteNotFoundException(issuerId, quoteId);
 
+    public async Task<IReadOnlyList<QuoteNumber>> TakenNumbersAsync(IssuerId issuerId, CancellationToken cancellationToken) =>
+        [.. (await store.LoadAllAsync<Quote, QuoteState>(FolderOf(issuerId), cancellationToken))
+            .Select(quote => quote.Number)
+            .OfType<QuoteNumber>()];
+
+    private static string FolderOf(IssuerId issuerId) => Path.Combine(IssuerFolder.Of(issuerId), "quotes");
+
     private static string PathOf(IssuerId issuerId, QuoteId quoteId) =>
         Path.Combine(IssuerFolder.Of(issuerId), "quotes", $"{quoteId.Value}.json");
 }
