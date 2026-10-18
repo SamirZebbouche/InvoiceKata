@@ -1,13 +1,16 @@
 using InvoiceKata.Adapters.Persistence.InMemory;
+using InvoiceKata.Adapters.Rendering;
 using InvoiceKata.Application.Customers;
 using InvoiceKata.Application.Issuers;
 using InvoiceKata.Application.Quotes;
 using InvoiceKata.Application.Quotes.Mentions;
+using InvoiceKata.Application.Rendering;
 using InvoiceKata.Domain;
 
 namespace InvoiceKata.Acceptance;
 
 // One instance per scenario (Reqnroll context injection): the use cases wired on in-memory adapters.
+// The PDF is rendered by Typst for the scenarios tagged @pdf, which read it, and by a fake for the others.
 public sealed class AcceptanceContext
 {
     private readonly InMemoryIssuerRepository _issuers = new();
@@ -17,11 +20,18 @@ public sealed class AcceptanceContext
     private readonly QuoteScopes _scopes;
     private readonly FrenchMentionTexts _texts = new();
 
-    public AcceptanceContext()
+    public AcceptanceContext(Reqnroll.ScenarioInfo scenario)
     {
         QuoteEventHandlers = [new IssuerLegalIdentityMention(_texts), new ReducedVatRateMention(_texts)];
         _events = new QuoteEventDispatcher(QuoteEventHandlers);
         _scopes = new QuoteScopes(_issuers, _customers);
+        // The real Typst rendering: the scenarios read the PDF the reader would get.
+        RenderQuotePdf = new RenderQuotePdf(
+            _quotes, _scopes,
+            new FinalDocumentValidator([new HeaderValidator(), new IssuerValidator(), new CustomerValidator(), new LinesValidator(), new TotalsValidator(), new MentionsValidator()]),
+            scenario.CombinedTags.Contains("pdf") ? new TypstRenderer("typst") : new FakeRenderer(),
+            new InMemoryPdfStore());
+        QuoteReactions = new QuoteReactions([RenderQuotePdf], Microsoft.Extensions.Logging.Abstractions.NullLogger<QuoteReactions>.Instance);
     }
 
     public ConfigureIssuer ConfigureIssuer => new(_issuers);
@@ -46,7 +56,11 @@ public sealed class AcceptanceContext
 
     public RemoveQuoteLine RemoveQuoteLine => new(_quotes, _scopes, _events);
 
-    public FinalizeQuote FinalizeQuote => new(_quotes, _texts, Clock);
+    public FinalizeQuote FinalizeQuote => new(_quotes, _texts, Clock, QuoteReactions);
+
+    public RenderQuotePdf RenderQuotePdf { get; }
+
+    public QuoteReactions QuoteReactions { get; }
 
     public FixedClock Clock { get; } = new();
 
@@ -57,4 +71,10 @@ public sealed class AcceptanceContext
 
     // The failure of the last "When" step, for the "Then … introuvable" steps.
     public Exception? LastFailure { get; set; }
+
+    private sealed class FakeRenderer : IDocumentRenderer
+    {
+        public Task<byte[]> RenderAsync(ResolvedDocument document, CancellationToken cancellationToken) =>
+            Task.FromResult(System.Text.Encoding.UTF8.GetBytes($"%PDF-fake {document.Document.Number}"));
+    }
 }

@@ -127,7 +127,7 @@ public sealed partial class Quote
         _issued = new IssuedAmounts(TotalExcludingVat, VatBreakdown);
         _mentions[MentionCode.QuoteValidity] = new LegalMention(MentionCode.QuoteValidity, validity);
         (Status, Number, IssuedOn, ValidUntil) = (QuoteStatus.Finalized, number, issuedOn, validUntil);
-        _events.Add(new QuoteFinalized(Id, number));
+        _events.Add(new QuoteFinalized(Id, IssuerId, number));
     }
 
     /// <exception cref="QuoteAlreadyFinalizedException">The quote is finalized.</exception>

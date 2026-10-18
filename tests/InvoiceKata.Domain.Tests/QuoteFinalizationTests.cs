@@ -34,7 +34,7 @@ public sealed class QuoteFinalizationTests
 
         quote.Finalize(Number, IssuedOn, ValidUntil, Validity);
 
-        Assert.Equal([new QuoteFinalized(quote.Id, Number)], quote.TakeEvents());
+        Assert.Equal([new QuoteFinalized(quote.Id, quote.IssuerId, Number)], quote.TakeEvents());
     }
 
     [Fact]

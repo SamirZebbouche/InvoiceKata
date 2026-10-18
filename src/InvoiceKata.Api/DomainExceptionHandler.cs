@@ -1,3 +1,4 @@
+using InvoiceKata.Application.Rendering;
 using InvoiceKata.Domain;
 
 using Microsoft.AspNetCore.Diagnostics;
@@ -13,6 +14,8 @@ public sealed class DomainExceptionHandler(IProblemDetailsService problemDetails
         ResourceNotFoundException => StatusCodes.Status404NotFound,
         UnsupportedBillingContextException => StatusCodes.Status422UnprocessableEntity,
         DocumentStateConflictException => StatusCodes.Status409Conflict,
+        // A defect of the product, answered explicitly: the product refuses to render a wrong document (ADR-0005).
+        InvalidDocumentException => StatusCodes.Status500InternalServerError,
         _ => null,
     };
 

@@ -14,3 +14,9 @@ public sealed class QuoteWithoutLinesException(QuoteId quoteId)
 {
     public QuoteId QuoteId { get; } = quoteId;
 }
+
+public sealed class QuoteNotFinalizedException(QuoteId quoteId)
+    : DocumentStateConflictException($"Quote {quoteId.Value} is a draft: it has no PDF until it is finalized.")
+{
+    public QuoteId QuoteId { get; } = quoteId;
+}

@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\InvoiceKata.Application\InvoiceKata.Application.csproj" />
     <ProjectReference Include="..\InvoiceKata.Adapters.Persistence\InvoiceKata.Adapters.Persistence.csproj" />
+    <ProjectReference Include="..\InvoiceKata.Adapters.Rendering\InvoiceKata.Adapters.Rendering.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

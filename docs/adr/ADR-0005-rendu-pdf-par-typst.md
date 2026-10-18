@@ -1,6 +1,6 @@
 # ADR-0005 : Le rendu PDF par Typst, à partir d'un document résolu
 
-- **Statut** : accepté le 2026-10-18
+- **Statut** : accepté le 2026-10-18 · amendé le 2026-10-18 (contrat JSON, rendu après l'enregistrement)
 - **Date** : 2026-10-18
 - **Décideur** : Samir
 
@@ -54,6 +54,32 @@ document en XML CII. Le juge était un validateur indépendant, Mustang 2.26.0. 
    l'[ADR-0002](ADR-0002-variations-selon-emetteur-et-client.md) jusqu'à la frontière du rendu.
 10. **Les sections sont facultatives.** Le template suit la structure du YAML : des lignes regroupées en
     sections si le document en a, une liste à plat sinon.
+
+## Amendement du 2026-10-18 : le contrat et le moment du rendu
+
+Décisions de Samir, avant d'écrire le rendu dans le produit :
+
+1. **Le document résolu est en JSON**, et non en YAML (décision 1). Il est généré, jamais écrit à la main :
+   la lisibilité du YAML n'apporte plus rien, alors que `System.Text.Json` est déjà là et que Typst lit le
+   JSON avec `json()`. La structure ne change pas, et les montants restent des chaînes (décision 4).
+2. **Le template affiche les mentions telles que le domaine les a résolues.** Il ne recompose pas
+   l'identité légale de l'émetteur, qui est déjà une mention. Cela répond à l'une des questions ouvertes.
+3. **Le rendu réagit à `QuoteFinalized`, juste après l'enregistrement, dans la même requête.** Le
+   gestionnaire est idempotent : le PDF est identifié par le devis, et un PDF déjà stocké n'est jamais
+   réécrit. Si le rendu échoue, le devis reste finalisé, et la lecture du PDF relance le même rendu.
+4. **Un document refusé par le validateur final répond `500`**, avec la liste des violations : c'est un
+   défaut du produit, pas une erreur du client.
+5. **Où vit le code** : le document résolu, sa construction, le validateur et les ports du rendu et du
+   stockage des PDF sont dans la couche Application. L'adaptateur Typst et son template forment un projet
+   à part, `InvoiceKata.Adapters.Rendering`. Le stockage des PDF rejoint `InvoiceKata.Adapters.Persistence`.
+
+| Option écartée | Raison |
+|---|---|
+| Un rendu en tâche de fond | La lecture du PDF devrait répondre « pas encore prêt », et les tests devraient attendre. |
+| Un rendu à la demande seulement | Il contourne la réaction à `QuoteFinalized` prévue par l'[ADR-0003](ADR-0003-reactions-par-evenements-idempotentes.md). |
+| Garder le YAML, avec YamlDotNet | Une dépendance de plus, pour la lisibilité d'un fichier que personne n'écrit. |
+| Un `422` pour un document invalide | Le client lirait que sa demande est en cause, alors que c'est le produit. |
+| L'adaptateur Typst dans `Adapters.Persistence` | Le rendu n'est pas de la persistance. |
 
 ## Options écartées
 

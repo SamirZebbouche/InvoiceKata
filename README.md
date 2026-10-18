@@ -51,6 +51,10 @@ dotnet run --project src/InvoiceKata.Api
 Les données sont des fichiers JSON, un dossier par émetteur, sous `src/InvoiceKata.Api/data`
 (réglage `Persistence:Directory`). Elles survivent au redémarrage.
 
+Le PDF d'un devis finalisé est rendu par [Typst](https://typst.app) 0.15.1, qui doit être installé et
+accessible sous le nom `typst` (réglage `Rendering:Typst`). Il est rangé à côté du devis, et se télécharge par
+`GET /issuers/{issuerId}/quotes/{id}/pdf`.
+
 ## Périmètre retenu
 
 La partie back d'un logiciel de devis et de factures, exposée par une **API** ([docs/API.md](docs/API.md)) :

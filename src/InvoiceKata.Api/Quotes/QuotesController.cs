@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 
 using InvoiceKata.Application.Quotes;
+using InvoiceKata.Application.Rendering;
 using InvoiceKata.Domain;
 
 using Microsoft.AspNetCore.Mvc;
@@ -11,7 +12,8 @@ namespace InvoiceKata.Api.Quotes;
 [ApiController]
 [Route("issuers/{issuerId:guid}/quotes")]
 public sealed class QuotesController(
-    CreateQuote createQuote, GetQuote getQuote, AddQuoteLine addQuoteLine, RemoveQuoteLine removeQuoteLine, FinalizeQuote finalizeQuote)
+    CreateQuote createQuote, GetQuote getQuote, AddQuoteLine addQuoteLine, RemoveQuoteLine removeQuoteLine, FinalizeQuote finalizeQuote,
+    RenderQuotePdf renderQuotePdf)
     : ControllerBase
 {
     [HttpPost]
@@ -48,6 +50,15 @@ public sealed class QuotesController(
         var validityDays = request?.ValidityDays ?? FinalizeQuote.DefaultValidityDays;
         await finalizeQuote.HandleAsync(new IssuerId(issuerId), new QuoteId(quoteId), validityDays, cancellationToken);
         return QuoteResponse.From(await getQuote.HandleAsync(new IssuerId(issuerId), new QuoteId(quoteId), cancellationToken));
+    }
+
+    // The PDF rendered at the finalization, or rendered now if that rendering failed; named after the quote number.
+    [HttpGet("{quoteId:guid}/pdf")]
+    public async Task<IActionResult> GetPdfAsync(Guid issuerId, Guid quoteId, CancellationToken cancellationToken)
+    {
+        var pdf = await renderQuotePdf.PdfOfAsync(new IssuerId(issuerId), new QuoteId(quoteId), cancellationToken);
+        var quote = await getQuote.HandleAsync(new IssuerId(issuerId), new QuoteId(quoteId), cancellationToken);
+        return File(pdf, "application/pdf", $"{quote.Number}.pdf");
     }
 }
 

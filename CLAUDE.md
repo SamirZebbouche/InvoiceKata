@@ -87,9 +87,13 @@ explanation makes no claim to verify.
 <!-- /ai-core:method-verify-before-claiming -->
 
 ### In this project
-Proofs here: `dotnet test` and `dotnet format --verify-no-changes` after every change, and `dotnet stryker`
-(mutation testing, configured in `stryker-config.json`, blocking below its `break` threshold) at the end of
-each batch. The CI runs all three. A surviving mutant is a test gap to report, not to hide.
+Proofs here, in the fast feedback loop: `dotnet test` and `dotnet format --verify-no-changes` after every
+change (about 10 seconds). Mutation testing stays out of that loop: `dotnet stryker --since:origin/main`
+(the C# files the branch changed, configured in `stryker-config.json`, blocking below its `break` threshold)
+runs in the background at the end of each pull request, while the docs and the pull request are written, and
+its result comes before the pull request opens. The CI runs the tests and the format in `build-and-test`, the
+fast signal, and mutation in a `mutation` job beside it: the changed files on a pull request, everything on
+`main` (about 10 minutes). A surviving mutant is a test gap to report, not to hide.
 
 <!-- ai-core:git-action-gate@v3 -->
 ## Git and remote action gate

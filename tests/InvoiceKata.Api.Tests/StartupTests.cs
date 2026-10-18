@@ -6,6 +6,38 @@ namespace InvoiceKata.Api.Tests;
 
 public sealed class StartupTests
 {
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("  ")]
+    public void Should_RefuseToStart_When_TypstIsNotConfigured(string? typst)
+    {
+        using var api = ApiFactory.On(Directory.CreateTempSubdirectory("invoicekata-startup-").FullName);
+        using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder => builder
+            .UseSetting("Persistence:Directory", api.DataDirectory)
+            .UseSetting("Rendering:Typst", typst));
+
+        var refusal = Record.Exception(() => factory.CreateClient());
+
+        Assert.IsType<InvalidOperationException>(refusal);
+        Assert.Contains("Rendering:Typst", refusal.Message, StringComparison.Ordinal);
+    }
+
+    // A part left out would weaken the final validator in silence (ADR-0005, decision 9): the API composes them all.
+    [Fact]
+    public void Should_ComposeTheFinalValidatorOfEveryPartValidator_When_Starting()
+    {
+        using var api = ApiFactory.On(Directory.CreateTempSubdirectory("invoicekata-startup-").FullName);
+        using var factory = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(builder => builder.UseSetting("Persistence:Directory", api.DataDirectory));
+        var every = typeof(InvoiceKata.Application.Rendering.IDocumentPartValidator).Assembly.GetTypes()
+            .Where(type => typeof(InvoiceKata.Application.Rendering.IDocumentPartValidator).IsAssignableFrom(type) && type is { IsAbstract: false, IsInterface: false });
+
+        var composed = factory.Services.GetServices<InvoiceKata.Application.Rendering.IDocumentPartValidator>().Select(part => part.GetType());
+
+        Assert.Equal(every.OrderBy(type => type.Name), composed.OrderBy(type => type.Name));
+    }
+
     // The other API tests fix the clock; without them, quotes are dated by the system clock.
     [Fact]
     public void Should_DateQuotesWithTheSystemClock_When_NothingReplacesIt()

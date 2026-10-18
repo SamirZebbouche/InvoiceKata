@@ -2,6 +2,7 @@ using InvoiceKata.Adapters.Persistence.Files;
 using InvoiceKata.Application.Customers;
 using InvoiceKata.Application.Issuers;
 using InvoiceKata.Application.Quotes;
+using InvoiceKata.Application.Rendering;
 using InvoiceKata.Persistence.ContractTests.Contracts;
 
 namespace InvoiceKata.Persistence.ContractTests.Files;
@@ -50,6 +51,28 @@ public sealed class FileQuoteRepositoryTests : QuoteRepositoryContract, IDisposa
         var taken = await CreateRepository().TakenNumbersAsync(issuerId, CancellationToken.None);
 
         Assert.Empty(taken);
+    }
+
+    public void Dispose() => _directory.Dispose();
+}
+
+public sealed class FilePdfStoreTests : PdfStoreContract, IDisposable
+{
+    private readonly TemporaryDirectory _directory = new();
+
+    protected override IPdfStore CreateStore() => new FilePdfStore(_directory.Path);
+
+    [Fact]
+    public async Task Should_LeaveOnlyThePdf_When_ASecondOneIsRefused()
+    {
+        var store = CreateStore();
+        var (issuerId, quoteId) = (InvoiceKata.Domain.IssuerId.New(), InvoiceKata.Domain.QuoteId.New());
+        await store.SaveIfAbsentAsync(issuerId, quoteId, "%PDF first"u8.ToArray(), CancellationToken.None);
+
+        await store.SaveIfAbsentAsync(issuerId, quoteId, "%PDF second"u8.ToArray(), CancellationToken.None);
+
+        var folder = System.IO.Path.Combine(_directory.Path, "issuers", issuerId.Value.ToString(), "quotes");
+        Assert.Equal([$"{quoteId.Value}.pdf"], Directory.EnumerateFiles(folder).Select(System.IO.Path.GetFileName));
     }
 
     public void Dispose() => _directory.Dispose();

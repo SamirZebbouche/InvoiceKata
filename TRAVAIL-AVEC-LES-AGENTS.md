@@ -33,7 +33,13 @@ chaque pull request.
     Samir dans sa base, sous l'identifiant `test-mutation-testing`, pour servir à ses autres projets.
 
   Le projet complète aussi ses propres notes : le ruleset de `main`, l'exception de langue des
-  scénarios Gherkin, la zone des spikes, et maintenant Stryker parmi les preuves.
+  scénarios Gherkin, la zone des spikes, et maintenant Stryker parmi les preuves. Quand le rendu des PDF
+  a fait passer un passage complet de Stryker de 3 à 25 minutes, Samir a demandé s'il ralentissait le
+  développement, puis a posé la règle : « on ne peut pas se permettre des tests de 10 minutes dans la boucle
+  de feedback rapide ». La boucle rapide se limite aux tests et au format (10 secondes). Stryker en sort : il
+  tourne en arrière-plan en fin de PR, sur les seuls fichiers modifiés, et dans un job de CI à part, complet
+  sur `main`. Un faux moteur de rendu dans les tests qui ne parlent pas du PDF a aussi ramené le passage
+  complet de 25 à 10 minutes.
 - **Les décisions de conception.** L'agent propose des options et réfute celles qui ne tiennent pas ;
   Samir tranche.
 - **La démarche.** Samir décrit d'abord un cadre large, que l'on conçoit ensemble par ADR. On construit
@@ -91,7 +97,11 @@ chaque pull request.
   exigé « ceinture et bretelles » : le domaine doit aussi empêcher la collision. Il a demandé si un
   *interlock* conviendrait. L'agent l'a placé dans l'adaptateur, où un verrou existait déjà, et a laissé
   au domaine un calcul pur à partir des numéros déjà pris. Samir a demandé que ce partage soit consigné
-  dans un CDR ([CDR-0007](docs/cdr/CDR-0007-numerotation-des-devis.md)).
+  dans un CDR ([CDR-0007](docs/cdr/CDR-0007-numerotation-des-devis.md)). Pour le PDF, Samir a retenu les
+  quatre propositions de l'agent : un contrat en JSON plutôt qu'en YAML, un rendu en réaction à la
+  finalisation juste après l'enregistrement, un `500` explicite pour un document que le validateur final
+  refuse, et un projet à part pour l'adaptateur Typst (amendement de
+  l'[ADR-0005](docs/adr/ADR-0005-rendu-pdf-par-typst.md)).
 - **La roadmap.** L'agent a proposé un découpage en lots, et Samir l'a validé. Samir a ensuite validé la
   structure de la solution (projets et sens des dépendances), et l'agent a rédigé le détail PR par PR
   dans [docs/ROADMAP.md](docs/ROADMAP.md), avec les questions à trancher en chemin. L'agent a signalé un
@@ -133,6 +143,11 @@ chaque pull request.
     ligne à 10 %.
   - un fichier de référence prouve sa valeur : en renommant un champ de l'état d'une ligne, tous les
     tests d'aller-retour passaient encore, et seul le fichier de référence v1 a échoué.
+  - un test peut passer pour une mauvaise raison : le test du bloc insécable (totaux, mentions et « Bon pour
+    accord » sur une même page) passait avec un bloc sécable, parce qu'avec 60 lignes le bloc tenait de toute
+    façon sur la dernière page. Il parcourt désormais plusieurs longueurs de devis, et deux d'entre elles
+    cassent le bloc dès qu'il devient sécable. Les PDF des tests sont relus par PdfPig, et l'agent les a aussi
+    regardés lui-même.
   - une casse doit aussi compiler : deux casses rendaient du code inaccessible, ce que
     `TreatWarningsAsErrors` refuse. Aucun test n'a tourné, et l'absence de sortie n'était pas une preuve.
     L'agent les a refaites, en vérifiant le build avant de lire les tests.
@@ -198,6 +213,10 @@ chaque pull request.
   comparer des états dans les tests, et des invariants de reconstruction non testés un par un. L'égalité
   a été supprimée, et chaque invariant a maintenant son cas : le score de mutation est remonté de 76,5 %
   à 82,6 %.
+- **Un écart à l'ATDD.** Pour le PDF du devis, l'agent a écrit la réaction et ses tests unitaires avant les
+  scénarios Gherkin, qui sont donc passés dès leur premier lancement. Il a rattrapé l'écart en faisant
+  échouer chaque scénario par une casse ciblée : le cadre « Bon pour accord » retiré, un brouillon rendu,
+  un PDF rendu à nouveau à chaque lecture.
 - **Un écart à la règle TDD.** Pour le client particulier, l'agent a écrit le contrôleur avant ses tests
   d'API. Il l'a signalé, puis a rattrapé l'écart en faisant échouer chaque test par une casse ciblée.
 - **Une DLL périmée.** Après avoir restauré l'adaptateur qu'il avait cassé exprès, l'agent a vu le test

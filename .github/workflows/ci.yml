@@ -6,6 +6,7 @@ on:
     branches: [main]
 
 jobs:
+  # The fast signal: build, tests and format, in a few minutes.
   build-and-test:
     runs-on: ubuntu-latest
     steps:
@@ -13,6 +14,11 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
+      - name: Install Typst, at the pinned version (ADR-0005)
+        run: |
+          curl -sSL https://github.com/typst/typst/releases/download/v0.15.1/typst-x86_64-unknown-linux-musl.tar.xz | tar -xJ
+          sudo mv typst-x86_64-unknown-linux-musl/typst /usr/local/bin/typst
+          typst --version
       - run: dotnet restore
       - run: dotnet tool restore
       - run: dotnet build --no-restore
@@ -23,38 +29,92 @@ jobs:
           --collect:"XPlat Code Coverage"
           --results-directory TestResults
       - run: dotnet format --verify-no-changes --no-restore
-      - name: Mutation testing, blocking below the threshold of stryker-config.json
-        run: dotnet stryker --output StrykerOutput
 
-      - name: Build the reports
+      - name: Build the test reports
         if: always()
         run: |
           dotnet tool run reportgenerator \
             -reports:"TestResults/**/coverage.cobertura.xml" \
             -targetdir:site/coverage \
             -reporttypes:"Html;MarkdownSummaryGithub" \
-            -assemblyfilters:"+InvoiceKata.Domain;+InvoiceKata.Application;+InvoiceKata.Adapters.Persistence;+InvoiceKata.Api"
+            -assemblyfilters:"+InvoiceKata.Domain;+InvoiceKata.Application;+InvoiceKata.Adapters.Persistence;+InvoiceKata.Adapters.Rendering;+InvoiceKata.Api"
           cat site/coverage/SummaryGithub.md >> "$GITHUB_STEP_SUMMARY"
-          if [ -f StrykerOutput/reports/mutation-report.html ]; then
-            mkdir -p site/mutation
-            cp StrykerOutput/reports/mutation-report.html site/mutation/index.html
-            cat StrykerOutput/reports/mutation-report.md >> "$GITHUB_STEP_SUMMARY"
-          fi
           cp tests/InvoiceKata.Acceptance/bin/Debug/net10.0/reports/scenarios.html site/scenarios.html
-          sed "s/__COMMIT__/${GITHUB_SHA::7}/" .github/pages/index.html > site/index.html
+          mkdir -p site/pdf
+          cp tests/InvoiceKata.Rendering.Tests/bin/Debug/net10.0/rendered/*.pdf site/pdf/ || true
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: test-reports
           path: site
+      - name: Publish the PDFs the tests rendered, to download and look at
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pdf
+          path: tests/InvoiceKata.Rendering.Tests/bin/Debug/net10.0/rendered/*.pdf
+
+  # The slow guard, beside the fast signal: a pull request mutates the C# files it changed, main everything.
+  mutation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The whole history: the mutation run of a pull request compares with its base branch.
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Install Typst, at the pinned version (ADR-0005)
+        run: |
+          curl -sSL https://github.com/typst/typst/releases/download/v0.15.1/typst-x86_64-unknown-linux-musl.tar.xz | tar -xJ
+          sudo mv typst-x86_64-unknown-linux-musl/typst /usr/local/bin/typst
+      - run: dotnet tool restore
+      - name: Mutation testing, blocking below the threshold of stryker-config.json
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            dotnet stryker --since:origin/${{ github.base_ref }} --output StrykerOutput
+          else
+            dotnet stryker --output StrykerOutput
+          fi
+      - name: Summarize the mutation report
+        if: always()
+        run: |
+          if [ -f StrykerOutput/reports/mutation-report.md ]; then
+            cat StrykerOutput/reports/mutation-report.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mutation-report
+          path: StrykerOutput/reports
+
+  # On main only, once both are done: the published reports.
+  assemble-reports:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [build-and-test, mutation]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: test-reports
+          path: site
+      - uses: actions/download-artifact@v4
+        with:
+          name: mutation-report
+          path: mutation
+      - run: |
+          mkdir -p site/mutation
+          cp mutation/mutation-report.html site/mutation/index.html
+          sed "s/__COMMIT__/${GITHUB_SHA::7}/" .github/pages/index.html > site/index.html
       - uses: actions/upload-pages-artifact@v3
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         with:
           path: site
 
   publish-reports:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: build-and-test
+    needs: assemble-reports
     runs-on: ubuntu-latest
     permissions:
       pages: write

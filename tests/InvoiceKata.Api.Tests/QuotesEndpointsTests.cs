@@ -266,6 +266,64 @@ public sealed class QuotesEndpointsTests(ApiFactory factory) : IClassFixture<Api
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
     }
 
+    // The PDF is rendered as a reaction to the finalization, in the same request (ADR-0005 amendment).
+    [Fact]
+    public async Task Should_StoreThePdfNextToTheQuote_When_Finalizing()
+    {
+        var client = factory.CreateClient();
+        var (issuerId, quoteId) = await DraftQuoteAsync(client);
+        await AddLineAsync(client, issuerId, quoteId, "Audit", 800m);
+
+        await client.PostAsync($"/issuers/{issuerId}/quotes/{quoteId}/finalization", content: null);
+
+        Assert.True(File.Exists(Path.Combine(factory.DataDirectory, "issuers", issuerId.ToString(), "quotes", $"{quoteId}.pdf")),
+            "The finalization did not render the PDF.");
+    }
+
+    [Fact]
+    public async Task Should_ReturnThePdfNamedAfterTheQuoteNumber_When_TheQuoteIsFinalized()
+    {
+        using var typst = ApiFactory.WithTypst();
+        var client = typst.CreateClient();
+        var (issuerId, quoteId) = await DraftQuoteAsync(client);
+        await AddLineAsync(client, issuerId, quoteId, "Audit", 800m);
+        await client.PostAsync($"/issuers/{issuerId}/quotes/{quoteId}/finalization", content: null);
+
+        var response = await client.GetAsync($"/issuers/{issuerId}/quotes/{quoteId}/pdf");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("application/pdf", response.Content.Headers.ContentType?.MediaType);
+        Assert.Equal("D-2026-0001.pdf", response.Content.Headers.ContentDisposition?.FileName);
+        Assert.Equal("%PDF-1."u8.ToArray(), (await response.Content.ReadAsByteArrayAsync())[..7]);
+    }
+
+    [Fact]
+    public async Task Should_ReturnConflict_When_AskingForThePdfOfADraft()
+    {
+        var client = factory.CreateClient();
+        var (issuerId, quoteId) = await DraftQuoteAsync(client);
+
+        var response = await client.GetAsync($"/issuers/{issuerId}/quotes/{quoteId}/pdf");
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+    }
+
+    [Fact]
+    public async Task Should_ReturnNotFound_When_AnotherIssuerAsksForThePdf()
+    {
+        var client = factory.CreateClient();
+        var (issuerId, quoteId) = await DraftQuoteAsync(client);
+        await AddLineAsync(client, issuerId, quoteId, "Audit", 800m);
+        await client.PostAsync($"/issuers/{issuerId}/quotes/{quoteId}/finalization", content: null);
+        var other = await ConfigureIssuerAsync(client);
+
+        var response = await client.GetAsync($"/issuers/{other}/quotes/{quoteId}/pdf");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+    }
+
     private static async Task<(Guid IssuerId, Guid QuoteId)> DraftQuoteAsync(HttpClient client)
     {
         var issuerId = await ConfigureIssuerAsync(client);
