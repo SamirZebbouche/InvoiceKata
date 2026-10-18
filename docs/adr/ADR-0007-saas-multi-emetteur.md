@@ -6,7 +6,7 @@
 
 ## Contexte
 
-Fimeco propose ses solutions à des entreprises clientes : l'application est un SaaS, et une même instance
+L'éditeur de l'application propose ses solutions à des entreprises clientes : l'application est un SaaS, et une même instance
 sert plusieurs **émetteurs**, c'est-à-dire plusieurs entreprises qui facturent. Chaque émetteur a sa
 propre configuration (identité légale, type d'entreprise, régime de TVA, séries de numérotation), ses
 clients, ses devis et ses factures.

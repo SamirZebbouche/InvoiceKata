@@ -1,6 +1,6 @@
 # InvoiceKata
 
-Exercice technique proposé par Fimeco dans le cadre d'un processus de recrutement : développer un petit
+Exercice technique proposé par un recruteur dans le cadre d'un processus de recrutement : développer un petit
 logiciel qui établit des **devis** et des **factures**.
 
 ## L'énoncé
