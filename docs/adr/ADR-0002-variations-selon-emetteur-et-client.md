@@ -23,6 +23,8 @@ serait une **facture fausse**. Il vaut mieux ne pas en produire du tout.
 2. **Les mentions légales sont une variation additive** : plusieurs s'appliquent à la fois (forme
    juridique, « EI », indemnité de 40 € en B2B, garantie de conformité en B2C…). Elles prennent la forme
    d'une **liste de règles** : chaque règle dit si elle s'applique au contexte et ajoute ses mentions.
+   *(Amendé le 2026-10-18 : ces règles sont des gestionnaires d'événements fondés sur l'état, voir
+   l'[ADR-0003](ADR-0003-reactions-par-evenements-idempotentes.md).)*
 3. **Le monde est fermé.** Une liste blanche énumère les contextes pris en charge. Tout autre contexte est
    refusé par une **exception de domaine**, levée à la **création du devis**, pour qu'un devis qui ne
    pourra pas être facturé ne soit jamais rédigé. Cette liste blanche documente ce que le produit sait

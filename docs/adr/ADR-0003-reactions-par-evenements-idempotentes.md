@@ -31,7 +31,7 @@ contrainte de l'ADR-0002 s'applique toujours : jamais de facture fausse.
 
 | Option | Raison |
 |---|---|
-| Chorégraphier le calcul (chaque règle de mention réagit à un événement) | Plus personne ne garantit que le document est complet. Le monde fermé de l'ADR-0002 ne tient plus, et une mention manquante passerait inaperçue. |
+| Chorégraphier le calcul (chaque règle de mention réagit à un événement) | *Option reprise par l'amendement du 2026-10-18, pour les mentions légales.* La raison invoquée ici, « plus personne ne garantit que le document est complet », ne tient plus depuis le validateur final de l'ADR-0005. |
 | Chorégraphier l'émission de la facture | Une étape qui échoue après l'attribution du numéro laisse un trou ou une facture à moitié faite, ce qui impose des compensations sur un document immuable. |
 | Tout orchestrer, sans événements | Chaque nouvelle réaction modifierait le noyau. |
 | Un broker de messages dès le départ | Une porte à sens unique, alors qu'il n'y a ni second processus ni besoin de durabilité. |
@@ -42,3 +42,36 @@ contrainte de l'ADR-0002 s'applique toujours : jamais de facture fausse.
 - Une réaction qui échoue se rejoue sans remettre en cause le fait qui l'a déclenchée.
 - Le jour où une réaction devra survivre à un redémarrage, on ajoutera un outbox ou un broker, ce qui
   passera par un nouvel ADR.
+
+## Amendement du 2026-10-18 : les mentions légales sont chorégraphiées
+
+Samir a observé que les mentions légales ne dépendent pas toutes des mêmes faits. Certaines ne dépendent
+que du contexte et sont connues dès la création du devis ; d'autres ne se déclenchent qu'à l'ajout de
+certaines lignes (taux réduit, nature des opérations, éco-participation…). Faire de chaque mention une
+réaction indépendante allège le modèle : il n'y a plus de résolveur central qui connaisse toutes les
+règles.
+
+1. **Chaque règle de mention est un gestionnaire d'événements.** Elle réagit aux événements qui la
+   concernent : `QuoteDrafted` (le contexte est fixé), `QuoteLineAdded`, `QuoteLineRemoved`, puis
+   `QuoteFinalized`.
+2. **Un gestionnaire est fondé sur l'état, pas sur le delta.** À chaque événement, il réévalue sa règle
+   sur l'état courant du document, puis pose ou retire sa mention. Il est donc **idempotent** par
+   construction, et il reste juste quand deux lignes déclenchent la même mention et qu'on n'en retire
+   qu'une.
+3. **Il y a deux moments de dispatch.**
+   - Les gestionnaires de mentions s'exécutent **dans la même unité de travail, avant
+     l'enregistrement** : le document est complet chaque fois qu'on le relit, et le noyau légal n'est
+     jamais cohérent seulement à terme.
+   - Les réactions à un fait acquis (PDF, envoi, archivage) s'exécutent **après l'enregistrement**,
+     comme le prévoit la décision 2.
+4. **Le validateur final ne s'exécute qu'une fois terminées toutes les réactions déclenchées.** Le
+   dispatcher traite les événements jusqu'à épuisement, y compris ceux que lèvent les gestionnaires, et
+   le validateur ([ADR-0005](ADR-0005-rendu-pdf-par-typst.md)) ne passe qu'ensuite.
+
+Options écartées par cet amendement :
+
+| Option | Raison |
+|---|---|
+| Des gestionnaires fondés sur le delta (ajouter la mention à l'ajout de la ligne, la retirer au retrait) | Ils deviennent faux dès que deux lignes déclenchent la même mention. |
+| Des mentions résolues après l'enregistrement | Le noyau légal ne serait plus cohérent qu'à terme : un devis relu juste après une modification pourrait être incomplet. |
+| Un résolveur central, avec des conditions sur le profil et les lignes | Chaque nouvelle mention toucherait le même code, et les cas particuliers y signaleraient un mauvais modèle. |
