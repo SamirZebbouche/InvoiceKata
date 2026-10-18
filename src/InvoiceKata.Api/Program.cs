@@ -1,14 +1,12 @@
 using InvoiceKata.Adapters.Persistence.InMemory;
 using InvoiceKata.Api;
-using InvoiceKata.Api.Customers;
-using InvoiceKata.Api.Issuers;
-using InvoiceKata.Api.Quotes;
 using InvoiceKata.Application.Customers;
 using InvoiceKata.Application.Issuers;
 using InvoiceKata.Application.Quotes;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddControllers();
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<NotFoundExceptionHandler>();
 
@@ -27,9 +25,7 @@ builder.Services.AddTransient<RemoveQuoteLine>();
 var app = builder.Build();
 
 app.UseExceptionHandler();
-app.MapIssuerEndpoints();
-app.MapCustomerEndpoints();
-app.MapQuoteEndpoints();
+app.MapControllers();
 
 app.Run();
 

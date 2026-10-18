@@ -1,41 +1,39 @@
 using InvoiceKata.Application.Quotes;
 using InvoiceKata.Domain;
 
+using Microsoft.AspNetCore.Mvc;
+
 namespace InvoiceKata.Api.Quotes;
 
-public static class QuoteEndpoints
+[ApiController]
+[Route("issuers/{issuerId:guid}/quotes")]
+public sealed class QuotesController(CreateQuote createQuote, GetQuote getQuote, AddQuoteLine addQuoteLine, RemoveQuoteLine removeQuoteLine)
+    : ControllerBase
 {
-    public static IEndpointRouteBuilder MapQuoteEndpoints(this IEndpointRouteBuilder routes)
+    [HttpPost]
+    public async Task<IActionResult> CreateAsync(Guid issuerId, CreateQuoteRequest request, CancellationToken cancellationToken)
     {
-        var quotes = routes.MapGroup("/issuers/{issuerId:guid}/quotes");
+        var id = await createQuote.HandleAsync(new IssuerId(issuerId), new CustomerId(request.CustomerId), cancellationToken);
+        return Created($"/issuers/{issuerId}/quotes/{id.Value}", new { id = id.Value });
+    }
 
-        quotes.MapPost("/", async (Guid issuerId, CreateQuoteRequest request, CreateQuote createQuote, CancellationToken cancellationToken) =>
-        {
-            var id = await createQuote.HandleAsync(new IssuerId(issuerId), new CustomerId(request.CustomerId), cancellationToken);
-            return Results.Created($"/issuers/{issuerId}/quotes/{id.Value}", new { id = id.Value });
-        });
+    [HttpGet("{quoteId:guid}")]
+    public async Task<QuoteResponse> GetAsync(Guid issuerId, Guid quoteId, CancellationToken cancellationToken) =>
+        QuoteResponse.From(await getQuote.HandleAsync(new IssuerId(issuerId), new QuoteId(quoteId), cancellationToken));
 
-        quotes.MapGet("/{quoteId:guid}", async (Guid issuerId, Guid quoteId, GetQuote getQuote, CancellationToken cancellationToken) =>
-        {
-            var quote = await getQuote.HandleAsync(new IssuerId(issuerId), new QuoteId(quoteId), cancellationToken);
-            return Results.Ok(QuoteResponse.From(quote));
-        });
+    [HttpPost("{quoteId:guid}/lines")]
+    public async Task<IActionResult> AddLineAsync(Guid issuerId, Guid quoteId, AddQuoteLineRequest request, CancellationToken cancellationToken)
+    {
+        var lineId = await addQuoteLine.HandleAsync(new IssuerId(issuerId), new QuoteId(quoteId), request.ToNewLine(), cancellationToken);
+        var quote = await getQuote.HandleAsync(new IssuerId(issuerId), new QuoteId(quoteId), cancellationToken);
+        return Created($"/issuers/{issuerId}/quotes/{quoteId}/lines/{lineId.Value}", QuoteResponse.From(quote));
+    }
 
-        quotes.MapPost("/{quoteId:guid}/lines", async (Guid issuerId, Guid quoteId, AddQuoteLineRequest request, AddQuoteLine addQuoteLine, GetQuote getQuote, CancellationToken cancellationToken) =>
-        {
-            var lineId = await addQuoteLine.HandleAsync(new IssuerId(issuerId), new QuoteId(quoteId), request.ToNewLine(), cancellationToken);
-            var quote = await getQuote.HandleAsync(new IssuerId(issuerId), new QuoteId(quoteId), cancellationToken);
-            return Results.Created($"/issuers/{issuerId}/quotes/{quoteId}/lines/{lineId.Value}", QuoteResponse.From(quote));
-        });
-
-        quotes.MapDelete("/{quoteId:guid}/lines/{lineId:guid}", async (Guid issuerId, Guid quoteId, Guid lineId, RemoveQuoteLine removeQuoteLine, GetQuote getQuote, CancellationToken cancellationToken) =>
-        {
-            await removeQuoteLine.HandleAsync(new IssuerId(issuerId), new QuoteId(quoteId), new QuoteLineId(lineId), cancellationToken);
-            var quote = await getQuote.HandleAsync(new IssuerId(issuerId), new QuoteId(quoteId), cancellationToken);
-            return Results.Ok(QuoteResponse.From(quote));
-        });
-
-        return routes;
+    [HttpDelete("{quoteId:guid}/lines/{lineId:guid}")]
+    public async Task<QuoteResponse> RemoveLineAsync(Guid issuerId, Guid quoteId, Guid lineId, CancellationToken cancellationToken)
+    {
+        await removeQuoteLine.HandleAsync(new IssuerId(issuerId), new QuoteId(quoteId), new QuoteLineId(lineId), cancellationToken);
+        return QuoteResponse.From(await getQuote.HandleAsync(new IssuerId(issuerId), new QuoteId(quoteId), cancellationToken));
     }
 }
 
