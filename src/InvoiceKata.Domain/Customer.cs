@@ -7,7 +7,7 @@ public enum CustomerKind
 }
 
 // A customer belongs to exactly one issuer (ADR-0007).
-public sealed class Customer
+public sealed partial class Customer
 {
     private Customer(CustomerId id, IssuerId issuerId, CustomerKind kind, string name, Siren? siren, VatNumber? vatNumber, Address address)
     {

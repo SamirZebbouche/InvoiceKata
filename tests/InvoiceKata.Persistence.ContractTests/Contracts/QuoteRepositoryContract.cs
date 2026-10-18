@@ -41,6 +41,20 @@ public abstract class QuoteRepositoryContract
     }
 
     [Fact]
+    public async Task Should_NotKeepAChange_When_TheQuoteWasNotSavedAgain()
+    {
+        var repository = CreateRepository();
+        var quote = DraftQuote();
+        await repository.AddAsync(quote, CancellationToken.None);
+
+        var stored = await repository.GetAsync(quote.IssuerId, quote.Id, CancellationToken.None);
+        stored.AddLine(Samples.Line("Audit", 800m, 20m));
+        var found = await repository.GetAsync(quote.IssuerId, quote.Id, CancellationToken.None);
+
+        Assert.Empty(found.Lines);
+    }
+
+    [Fact]
     public async Task Should_RefuseToGiveAQuote_When_AnotherIssuerAsksForIt()
     {
         var repository = CreateRepository();

@@ -7,16 +7,16 @@ namespace InvoiceKata.Adapters.Persistence.InMemory;
 
 public sealed class InMemoryCustomerRepository : ICustomerRepository
 {
-    private readonly ConcurrentDictionary<CustomerId, Customer> _customers = new();
+    private readonly ConcurrentDictionary<Guid, CustomerState> _customers = new();
 
     public Task AddAsync(Customer customer, CancellationToken cancellationToken)
     {
-        _customers[customer.Id] = customer;
+        _customers[customer.Id.Value] = customer.ToState();
         return Task.CompletedTask;
     }
 
     public Task<Customer> GetAsync(IssuerId issuerId, CustomerId customerId, CancellationToken cancellationToken) =>
-        _customers.TryGetValue(customerId, out var customer) && customer.IssuerId == issuerId
-            ? Task.FromResult(customer)
+        _customers.TryGetValue(customerId.Value, out var state) && state.IssuerId == issuerId.Value
+            ? Task.FromResult(Customer.FromState(state))
             : Task.FromException<Customer>(new CustomerNotFoundException(issuerId, customerId));
 }

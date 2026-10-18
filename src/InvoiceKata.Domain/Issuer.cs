@@ -1,7 +1,7 @@
 namespace InvoiceKata.Domain;
 
 // A company that issues quotes and invoices; one SaaS instance serves many of them (ADR-0007).
-public sealed class Issuer
+public sealed partial class Issuer
 {
     private Issuer(IssuerId id, string name, LegalForm legalForm, decimal shareCapital, Siren siren, VatNumber vatNumber, Address address)
     {

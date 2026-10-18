@@ -23,4 +23,8 @@
     <ProjectReference Include="..\..\src\InvoiceKata.Adapters.Persistence\InvoiceKata.Adapters.Persistence.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Files\Golden\*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>
