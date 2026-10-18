@@ -489,3 +489,6 @@ site/
 
 # Mutation testing output
 StrykerOutput/
+
+# Data written by the API when run locally
+src/InvoiceKata.Api/data/

@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace InvoiceKata.Api.Tests;
 
-public sealed class QuotesEndpointsTests(WebApplicationFactory<Program> factory) : IClassFixture<WebApplicationFactory<Program>>
+public sealed class QuotesEndpointsTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
     [Fact]
     public async Task Should_ReturnAnEmptyDraftAtItsLocation_When_CreatingAQuote()
