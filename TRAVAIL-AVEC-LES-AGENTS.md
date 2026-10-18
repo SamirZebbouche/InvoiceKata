@@ -48,7 +48,9 @@ chaque pull request.
   à quelles conditions ils tiennent : un numéro déduit des factures stockées, des écritures atomiques et
   une suite de contrat commune à tous les adaptateurs
   ([ADR-0006](docs/adr/ADR-0006-persistance-par-port-secondaire.md)).
-- **La roadmap.** L'agent a proposé un découpage en lots, et Samir l'a validé. L'agent a signalé un
+- **La roadmap.** L'agent a proposé un découpage en lots, et Samir l'a validé. Samir a ensuite validé la
+  structure de la solution (projets et sens des dépendances), et l'agent a rédigé le détail PR par PR
+  dans [docs/ROADMAP.md](docs/ROADMAP.md), avec les questions à trancher en chemin. L'agent a signalé un
   risque : à J-2, toujours aucune ligne de code, alors que l'énoncé demande « quelques heures ». La suite
   doit donc surtout être de l'exécution.
 - **Le rôle de PO.** Dans la réalité, les règles légales viendraient d'un PO ou d'un juriste. Ici, Samir
