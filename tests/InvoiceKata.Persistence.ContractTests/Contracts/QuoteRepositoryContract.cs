@@ -55,6 +55,21 @@ public abstract class QuoteRepositoryContract
     }
 
     [Fact]
+    public async Task Should_GiveBackAFinalizedQuoteAsIssued_When_ItWasSaved()
+    {
+        var repository = CreateRepository();
+        var quote = DraftQuote();
+        quote.AddLine(Samples.Line("Faïence", 33.33m, 10m, discount: 10m));
+        await repository.AddAsync(quote, CancellationToken.None);
+
+        quote.Finalize(new QuoteNumber(2026, 1), new DateOnly(2026, 10, 18), new DateOnly(2026, 11, 17), "Devis valable 30 jours, jusqu'au 17/11/2026.");
+        await repository.SaveAsync(quote, CancellationToken.None);
+        var found = await repository.GetAsync(quote.IssuerId, quote.Id, CancellationToken.None);
+
+        Assert.Equivalent(quote.ToState(), found.ToState(), strict: true);
+    }
+
+    [Fact]
     public async Task Should_RefuseToGiveAQuote_When_AnotherIssuerAsksForIt()
     {
         var repository = CreateRepository();

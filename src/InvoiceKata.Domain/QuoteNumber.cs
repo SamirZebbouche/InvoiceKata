@@ -20,17 +20,15 @@ public readonly partial record struct QuoteNumber
     public int Sequence { get; }
 
     /// <exception cref="FormatException">The text is not a quote number.</exception>
-    public static QuoteNumber Parse(string text)
+    public static QuoteNumber Parse(string text) =>
+        TryParse(text, out var number) ? number : throw new FormatException($"'{text}' is not a quote number.");
+
+    public static bool TryParse(string text, out QuoteNumber number)
     {
         var match = Pattern().Match(text);
-        if (!match.Success || int.Parse(match.Groups["sequence"].Value, CultureInfo.InvariantCulture) == 0)
-        {
-            throw new FormatException($"'{text}' is not a quote number.");
-        }
-
-        return new QuoteNumber(
-            int.Parse(match.Groups["year"].Value, CultureInfo.InvariantCulture),
-            int.Parse(match.Groups["sequence"].Value, CultureInfo.InvariantCulture));
+        var sequence = match.Success ? int.Parse(match.Groups["sequence"].Value, CultureInfo.InvariantCulture) : 0;
+        number = sequence > 0 ? new QuoteNumber(int.Parse(match.Groups["year"].Value, CultureInfo.InvariantCulture), sequence) : default;
+        return sequence > 0;
     }
 
     public override string ToString() => string.Create(CultureInfo.InvariantCulture, $"D-{Year}-{Sequence:D4}");

@@ -1,6 +1,6 @@
 # CDR-0006 : L'état persistant des agrégats, garanti par une interface
 
-- **Statut** : accepté le 2026-10-18 · en place pour l'émetteur, le client et le devis brouillon
+- **Statut** : accepté le 2026-10-18 · en place pour l'émetteur, le client et le devis (brouillon et finalisé, état v2)
 - **Décideur** : Samir
 
 ## Problème
@@ -48,6 +48,12 @@ sans repasser par les règles de création. Samir voulait trois garanties :
 | Une reconstruction par réflexion | Un couplage caché qui casse à chaque renommage. |
 
 ## Conséquences
+
+- **Le premier convertisseur est v1 → v2** : la version 2 du devis ajoute sa finalisation (numéro, dates et
+  montants tels qu'émis). Comme elle n'ajoute qu'un champ facultatif, un fichier v1 se lit dans l'état
+  courant, et le convertisseur vérifie seulement qu'il s'agit d'un brouillon avant de monter la version.
+  Le jour où une version renommera ou retirera un champ, l'ancienne forme aura son propre `record`.
+  Les fichiers de référence v1 et v2 sont tous deux lus par les tests.
 
 - Avec PostgreSQL, l'état se stocke en JSONB, presque comme un fichier, ou sert de modèle de persistance à
   des tables relationnelles (EF Core ou Dapper). La suite de contrat garantit que rien ne change pour le

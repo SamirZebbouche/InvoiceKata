@@ -12,6 +12,7 @@ public sealed partial class Quote
     private readonly List<QuoteLine> _lines = [];
     private readonly SortedDictionary<MentionCode, LegalMention> _mentions = [];
     private readonly List<IQuoteEvent> _events = [];
+    private IssuedAmounts? _issued;
 
     private Quote(QuoteId id, IssuerId issuerId, CustomerId customerId)
     {
@@ -40,10 +41,11 @@ public sealed partial class Quote
     // One mention per code: putting the same mention again replaces it, so mention handlers stay idempotent.
     public IReadOnlyList<LegalMention> Mentions => [.. _mentions.Values];
 
-    public Money TotalExcludingVat => _lines.Aggregate(Money.Zero, (total, line) => total + line.TotalExcludingVat);
+    // A draft computes its amounts; a finalized quote keeps them as issued, even if a rule changes later (ADR-0009).
+    public Money TotalExcludingVat => _issued?.TotalExcludingVat ?? _lines.Aggregate(Money.Zero, (total, line) => total + line.TotalExcludingVat);
 
     // VAT is computed once per rate, on the total excluding VAT of that rate, never line by line.
-    public IReadOnlyList<VatBreakdownLine> VatBreakdown =>
+    public IReadOnlyList<VatBreakdownLine> VatBreakdown => _issued?.VatBreakdown ??
         [.. _lines
             .GroupBy(line => line.VatRate)
             .OrderBy(group => group.Key.Percent)
@@ -53,9 +55,9 @@ public sealed partial class Quote
                 return new VatBreakdownLine(group.Key, baseExcludingVat, group.Key.VatOn(baseExcludingVat));
             })];
 
-    public Money TotalVat => VatBreakdown.Aggregate(Money.Zero, (total, rate) => total + rate.Vat);
+    public Money TotalVat => _issued?.TotalVat ?? VatBreakdown.Aggregate(Money.Zero, (total, rate) => total + rate.Vat);
 
-    public Money TotalIncludingVat => TotalExcludingVat + TotalVat;
+    public Money TotalIncludingVat => _issued?.TotalIncludingVat ?? TotalExcludingVat + TotalVat;
 
     /// <exception cref="UnsupportedBillingContextException">The product does not handle this issuer and customer pair.</exception>
     public static Quote DraftFor(Issuer issuer, Customer customer)
@@ -121,6 +123,7 @@ public sealed partial class Quote
             throw new ArgumentException("The validity must end after the issue date.", nameof(validUntil));
         }
 
+        _issued = new IssuedAmounts(TotalExcludingVat, VatBreakdown, TotalVat, TotalIncludingVat);
         _mentions[MentionCode.QuoteValidity] = new LegalMention(MentionCode.QuoteValidity, validity);
         (Status, Number, IssuedOn, ValidUntil) = (QuoteStatus.Finalized, number, issuedOn, validUntil);
         _events.Add(new QuoteFinalized(Id, number));
@@ -147,6 +150,8 @@ public sealed partial class Quote
             throw new QuoteAlreadyFinalizedException(Id);
         }
     }
+
+    private sealed record IssuedAmounts(Money TotalExcludingVat, IReadOnlyList<VatBreakdownLine> VatBreakdown, Money TotalVat, Money TotalIncludingVat);
 
     // Hands the recorded events over to the application, once.
     public IReadOnlyList<IQuoteEvent> TakeEvents()

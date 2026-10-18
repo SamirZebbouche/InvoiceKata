@@ -65,7 +65,45 @@ public sealed class GoldenFilesTests : IDisposable
         Assert.Equal(Normalized(golden), Normalized(written));
     }
 
+    [Fact]
+    public async Task Should_ReadAVersion2FinalizedQuoteWithItsAmountsAsIssued()
+    {
+        Install("quote.v2.json", $"issuers/{IssuerId}/quotes/{QuoteId}.json");
+
+        var quote = await new FileQuoteRepository(new JsonFileStore(_directory.Path))
+            .GetAsync(new IssuerId(IssuerId), new QuoteId(QuoteId), CancellationToken.None);
+
+        Assert.Equal((QuoteStatus.Finalized, (QuoteNumber?)new QuoteNumber(2026, 42), (DateOnly?)new DateOnly(2026, 10, 18), (DateOnly?)new DateOnly(2026, 11, 17)),
+            (quote.Status, quote.Number, quote.IssuedOn, quote.ValidUntil));
+        Assert.Equal((new Money(561.54m), new Money(56.15m), new Money(617.69m)), (quote.TotalExcludingVat, quote.TotalVat, quote.TotalIncludingVat));
+        Assert.Contains(new LegalMention(MentionCode.QuoteValidity, "Devis valable 30 jours, jusqu'au 17/11/2026."), quote.Mentions);
+    }
+
+    // A finalized quote is written in the version 2 format, its amounts included, byte for byte apart from line endings.
+    [Fact]
+    public async Task Should_WriteAFinalizedQuoteInTheVersion2Format()
+    {
+        var golden = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "Files", "Golden", "quote.v2.json"));
+        var quote = Quote.FromState(FinalizedQuoteState());
+
+        await new FileQuoteRepository(new JsonFileStore(_directory.Path)).AddAsync(quote, CancellationToken.None);
+
+        var written = await File.ReadAllTextAsync(Path.Combine(_directory.Path, "issuers", IssuerId.ToString(), "quotes", $"{QuoteId}.json"));
+        Assert.Equal(Normalized(golden), Normalized(written));
+    }
+
     public void Dispose() => _directory.Dispose();
+
+    private static QuoteState FinalizedQuoteState() => new(
+        2, QuoteId, IssuerId, CustomerId, QuoteStatus.Finalized,
+        [new QuoteLineState(LineId, "Faïence", 18.72m, "m²", 33.33m, 10m, 10m)],
+        [
+            new LegalMention(MentionCode.ReducedVatRate, "Taux de TVA réduit de 10 %."),
+            new LegalMention(MentionCode.QuoteValidity, "Devis valable 30 jours, jusqu'au 17/11/2026."),
+        ],
+        new QuoteFinalizationState(
+            "D-2026-0042", new DateOnly(2026, 10, 18), new DateOnly(2026, 11, 17),
+            561.54m, [new VatBreakdownState(10m, 561.54m, 56.15m)], 56.15m, 617.69m));
 
     private static string Normalized(string json) => json.ReplaceLineEndings("\n").Trim();
 
