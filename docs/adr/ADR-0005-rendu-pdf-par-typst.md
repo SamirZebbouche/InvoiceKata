@@ -25,7 +25,9 @@ document en XML CII. Le juge était un validateur indépendant, Mustang 2.26.0. 
 3. **Un template par type d'entreprise émettrice.** Un même template sert pour le devis et pour la
    facture : du point de vue du rendu, une facture est un devis dont le titre, le numéro et les références
    sont différents.
-4. **Les montants sont transmis exacts**, et l'arrondi d'affichage relève du rendu. Le spike les passe
+4. **Les montants sont transmis exacts**, et l'arrondi d'affichage relève du rendu. Les montants légaux
+   (totaux de ligne, TVA par taux, totaux) arrivent déjà au centime : c'est le domaine qui les arrondit
+   ([ADR-0008](ADR-0008-arrondis.md)). Le spike les passe
    sous forme de chaînes, lues avec le type `decimal` de Typst : en nombres YAML, ils seraient lus comme
    des flottants.
 5. **Chaque page porte le numéro du document et une pagination n/N.** C'est une obligation pour la
