@@ -94,6 +94,28 @@ public sealed class QuotesEndpointsTests(WebApplicationFactory<Program> factory)
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
     }
 
+    [Fact]
+    public async Task Should_ApplyTheDiscountWithoutRoundingTheNetPrice_When_AddingADiscountedLine()
+    {
+        var client = factory.CreateClient();
+        var (issuerId, quoteId) = await DraftQuoteAsync(client);
+
+        var added = await client.PostAsJsonAsync($"/issuers/{issuerId}/quotes/{quoteId}/lines", new
+        {
+            designation = "Faïence",
+            quantity = 18.72m,
+            unit = "u",
+            unitPriceExcludingVat = 33.33m,
+            discountRate = 10m,
+            vatRate = 10m,
+        });
+
+        var line = Assert.Single((await added.Content.ReadFromJsonAsync<DiscountedQuoteBody>())!.Lines);
+        Assert.Equal(10m, line.DiscountRate);
+        Assert.Equal(29.997m, line.NetUnitPriceExcludingVat);
+        Assert.Equal(561.54m, line.TotalExcludingVat);
+    }
+
     private static async Task<(Guid IssuerId, Guid QuoteId)> DraftQuoteAsync(HttpClient client)
     {
         var issuerId = await ConfigureIssuerAsync(client);
@@ -150,6 +172,10 @@ public sealed class QuotesEndpointsTests(WebApplicationFactory<Program> factory)
     private sealed record TotalsBody(decimal ExcludingVat, decimal Vat, decimal IncludingVat);
 
     private sealed record VatBreakdownBody(decimal Rate, decimal BaseExcludingVat, decimal Vat);
+
+    private sealed record DiscountedLineBody(decimal DiscountRate, decimal NetUnitPriceExcludingVat, decimal TotalExcludingVat);
+
+    private sealed record DiscountedQuoteBody(IReadOnlyList<DiscountedLineBody> Lines);
 
     private sealed record QuoteWithTotalsBody(IReadOnlyList<LineBody> Lines, TotalsBody Totals, IReadOnlyList<VatBreakdownBody> VatBreakdown);
 }

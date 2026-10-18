@@ -41,7 +41,7 @@ public static class QuoteEndpoints
 
 public sealed record CreateQuoteRequest(Guid CustomerId);
 
-public sealed record AddQuoteLineRequest(string Designation, decimal Quantity, string Unit, decimal UnitPriceExcludingVat, decimal VatRate)
+public sealed record AddQuoteLineRequest(string Designation, decimal Quantity, string Unit, decimal UnitPriceExcludingVat, decimal VatRate, decimal? DiscountRate = null)
 {
     public NewQuoteLine ToNewLine() => new()
     {
@@ -50,14 +50,15 @@ public sealed record AddQuoteLineRequest(string Designation, decimal Quantity, s
         Unit = Unit,
         UnitPriceExcludingVat = new Money(UnitPriceExcludingVat),
         VatRate = new VatRate(VatRate),
+        Discount = DiscountRate is { } percent ? new DiscountRate(percent) : Domain.DiscountRate.None,
     };
 }
 
-public sealed record QuoteLineResponse(Guid Id, string Designation, decimal Quantity, string Unit, decimal UnitPriceExcludingVat, decimal VatRate, decimal TotalExcludingVat)
+public sealed record QuoteLineResponse(Guid Id, string Designation, decimal Quantity, string Unit, decimal UnitPriceExcludingVat, decimal DiscountRate, decimal NetUnitPriceExcludingVat, decimal VatRate, decimal TotalExcludingVat)
 {
     public static QuoteLineResponse From(QuoteLine line) => new(
         line.Id.Value, line.Designation, line.Quantity.Value, line.Unit,
-        line.UnitPriceExcludingVat.Amount, line.VatRate.Percent, line.TotalExcludingVat.Amount);
+        line.UnitPriceExcludingVat.Amount, line.Discount.Percent, line.NetUnitPriceExcludingVat.Amount, line.VatRate.Percent, line.TotalExcludingVat.Amount);
 }
 
 public sealed record TotalsResponse(decimal ExcludingVat, decimal Vat, decimal IncludingVat);

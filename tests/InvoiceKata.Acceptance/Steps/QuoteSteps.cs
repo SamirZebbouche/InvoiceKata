@@ -48,6 +48,7 @@ public sealed class QuoteSteps(AcceptanceContext context)
                 Unit = row["unité"],
                 UnitPriceExcludingVat = new Money(Amount(row["prix unitaire HT"])),
                 VatRate = new VatRate(Amount(row["taux de TVA"])),
+                Discount = table.ContainsColumn("remise") ? new DiscountRate(Amount(row["remise"])) : DiscountRate.None,
             };
             _lineIds[line.Designation] = await context.AddQuoteLine.HandleAsync(_issuerId, _quoteId, line, CancellationToken.None);
         }

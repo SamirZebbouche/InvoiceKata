@@ -18,7 +18,7 @@ des objets valeur partout, est tout aussi nuisible (règle `arch-no-uniform-patt
    |---|---|
    | `Siren`, `VatNumber` | Deux chaînes côte à côte, faciles à inverser. Ils porteront aussi la validation et la clé de TVA. |
    | `Money` | Il porte la règle d'arrondi ([ADR-0008](../adr/ADR-0008-arrondis.md)). |
-   | `Quantity`, `VatRate` | Trois décimaux côte à côte avec le prix. `VatRate` calcule la TVA d'une base. |
+   | `Quantity`, `VatRate`, `DiscountRate` | Des décimaux côte à côte avec le prix, et deux pourcentages faciles à inverser. `VatRate` calcule la TVA d'une base, `DiscountRate` le prix net, sans l'arrondir. |
    | `IssuerId`, `CustomerId`, `QuoteId`, `QuoteLineId` | Des GUID interchangeables sinon ([ADR-0007](../adr/ADR-0007-saas-multi-emetteur.md)). |
 
 2. **Un enregistrement à plusieurs champs de même type prend des propriétés `required`** construites par

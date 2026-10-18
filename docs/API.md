@@ -33,11 +33,11 @@ Cette documentation vit avec le code : chaque nouvelle route y entre avec son di
 | `POST /issuers/{issuerId}/customers` | Enregistrer un client professionnel : nom, SIREN, n° de TVA, adresse | `201`, avec `Location: /issuers/{issuerId}/customers/{id}` |
 | `GET /issuers/{issuerId}/customers/{id}` | Lire un client | `200` |
 | `POST /issuers/{issuerId}/quotes` `{ customerId }` | Créer un devis brouillon pour ce client | `201`, avec `Location: /issuers/{issuerId}/quotes/{id}` |
-| `POST /issuers/{issuerId}/quotes/{id}/lines` | Ajouter une ligne : désignation, quantité, unité, prix unitaire HT, taux de TVA | `201`, avec `Location: …/lines/{lineId}` et le devis recalculé dans le corps |
+| `POST /issuers/{issuerId}/quotes/{id}/lines` | Ajouter une ligne : désignation, quantité, unité, prix unitaire HT, taux de TVA, et une remise en % facultative | `201`, avec `Location: …/lines/{lineId}` et le devis recalculé dans le corps |
 | `DELETE /issuers/{issuerId}/quotes/{id}/lines/{lineId}` | Retirer une ligne | `200`, avec le devis recalculé ; `404` si la ligne n'est pas sur le devis |
 | `GET /issuers/{issuerId}/quotes/{id}` | Lire le devis : lignes, totaux (HT, TVA, TTC), ventilation de la TVA par taux | `200` |
 
-Les montants légaux (total de ligne, TVA par taux, totaux) sont arrondis au centime, à mi-chemin vers le haut (0,125 donne 0,13) ; les valeurs saisies, comme le prix unitaire, restent en pleine précision. La TVA est calculée une fois par taux, sur le total HT de ce taux, et non ligne par ligne ([ADR-0008](adr/ADR-0008-arrondis.md)).
+Les montants légaux (total de ligne, TVA par taux, totaux) sont arrondis au centime, à mi-chemin vers le haut (0,125 donne 0,13) ; les valeurs saisies, comme le prix unitaire et le prix net après remise (33,33 € − 10 % = 29,997 €), restent en pleine précision. La TVA est calculée une fois par taux, sur le total HT de ce taux, et non ligne par ligne ([ADR-0008](adr/ADR-0008-arrondis.md)).
 
 ```mermaid
 sequenceDiagram

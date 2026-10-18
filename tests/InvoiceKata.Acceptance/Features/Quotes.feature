@@ -39,3 +39,26 @@ Fonctionnalité: Créer un devis
     Et les totaux du devis sont :
       | total HT | total TVA | total TTC |
       | 1600,00  | 320,00    | 1920,00   |
+
+  Scénario: Un devis à deux taux de TVA ventile la TVA par taux
+    Étant donné un devis brouillon de "Batifolio" pour "Les Toits Rouges SARL"
+    Quand j'ajoute au devis la ligne suivante :
+      | désignation    | quantité | unité   | prix unitaire HT | taux de TVA |
+      | Audit          | 2        | jour    | 800,00           | 20          |
+      | Pose de faïence | 1        | forfait | 500,00           | 10          |
+    Alors les totaux du devis sont :
+      | total HT | total TVA | total TTC |
+      | 2100,00  | 370,00    | 2470,00   |
+    Et la TVA du devis est ventilée ainsi :
+      | taux | base HT | TVA    |
+      | 10   | 500,00  | 50,00  |
+      | 20   | 1600,00 | 320,00 |
+
+  Scénario: Une remise s'applique au prix unitaire sans l'arrondir
+    Étant donné un devis brouillon de "Batifolio" pour "Les Toits Rouges SARL"
+    Quand j'ajoute au devis la ligne suivante :
+      | désignation | quantité | unité | prix unitaire HT | remise | taux de TVA |
+      | Faïence     | 18,72    | u     | 33,33            | 10     | 10          |
+    Alors les totaux du devis sont :
+      | total HT | total TVA | total TTC |
+      | 561,54   | 56,15     | 617,69    |
