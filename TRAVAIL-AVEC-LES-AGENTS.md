@@ -61,6 +61,11 @@ chaque pull request.
   pensait que tout devait se faire au rendu. L'agent a montré, sources à l'appui, que les montants légaux
   doivent être arrondis au centime dans le domaine, sinon le PDF et le XML se contrediraient. Samir a
   demandé que cette règle soit écrite dans un ADR ([ADR-0008](docs/adr/ADR-0008-arrondis.md)).
+  Samir a ensuite introduit un second type de document, le **Code Design Report (CDR)**, pour les
+  décisions de conception du code (motifs, modélisation). Samir avait relevé que le modèle de mention
+  proposé par l'agent imposait de modifier une structure commune à chaque nouvelle mention, et il
+  demandait si un builder aiderait. L'agent a écarté le builder, qui règle la construction et non
+  l'extension, au profit du Template Method : une mention, une classe ([docs/cdr](docs/cdr/README.md)).
 - **La roadmap.** L'agent a proposé un découpage en lots, et Samir l'a validé. Samir a ensuite validé la
   structure de la solution (projets et sens des dépendances), et l'agent a rédigé le détail PR par PR
   dans [docs/ROADMAP.md](docs/ROADMAP.md), avec les questions à trancher en chemin. L'agent a signalé un

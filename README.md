@@ -52,6 +52,10 @@ l'émetteur et du client, et tout contexte non pris en charge est refusé
 
 ## Décisions
 
+Les décisions d'**architecture** sont des ADR, ci-dessous. Les décisions de **conception du code**
+(motifs, modélisation, conventions) sont des CDR, avec la carte des motifs en usage :
+[docs/cdr/README.md](docs/cdr/README.md).
+
 | ADR | Décision |
 |---|---|
 | [0001](docs/adr/ADR-0001-spike-jetable-puis-lots-livrables.md) | Un spike de rendu jetable, puis des lots livrables |
