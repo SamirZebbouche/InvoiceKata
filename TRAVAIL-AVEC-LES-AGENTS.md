@@ -5,7 +5,9 @@ chaque pull request.
 
 ## Ce qui est délégué
 
-- La documentation : le [README](README.md) et cette page.
+- La documentation : le [README](README.md), cette page, et la rédaction des ADR, que Samir ratifie.
+- La recherche légale (mentions obligatoires des devis et des factures, facturation électronique), puis
+  sa confrontation avec le scénario de Samir.
 - Les gestes git : commits, push de branche et ouverture des pull requests (niveau `autonomous-pr`). Le
   merge reste à Samir.
 
@@ -20,7 +22,24 @@ chaque pull request.
   ensuite une roadmap découpée en lots, avec un POC d'abord, puis un MVP enrichi petit à petit. La
   contrainte est que chaque PR laisse un système fonctionnel : où que le travail s'arrête, la solution
   est opérationnelle.
-- **Le périmètre**, qui découlera du cadre et de la roadmap.
+- **Le périmètre et l'architecture.** Le périmètre est le back d'un logiciel de devis et de factures. Le
+  produit est modulaire : chaque cas pris en charge dépend de l'émetteur et du client. Ce qui n'est pas
+  pris en charge est refusé, parce que « le pire serait de fournir une facture fausse »
+  ([ADR-0002](docs/adr/ADR-0002-variations-selon-emetteur-et-client.md)). Le POC est un spike jetable
+  qui ne teste que le moteur de rendu ([ADR-0001](docs/adr/ADR-0001-spike-jetable-puis-lots-livrables.md)).
+  Samir a proposé le motif Strategy ; l'agent l'a affiné en réservant la Strategy au régime de TVA, qui
+  est exclusif, et en traitant les mentions légales, qui s'additionnent, comme une liste de règles. Samir
+  a écarté la recommandation de l'agent, qui voulait merger le POC. Samir a aussi demandé une chorégraphie
+  par événements pour certaines parties, chaque événement étant traité de façon idempotente. L'agent a
+  délimité ces parties : le noyau légal reste synchrone, et seules les réactions à un fait acquis sont
+  chorégraphiées ([ADR-0003](docs/adr/ADR-0003-reactions-par-evenements-idempotentes.md)). Chaque
+  cas d'usage est livré en ATDD couplé au BDD, choix de Samir, avec des scénarios en français
+  ([ADR-0004](docs/adr/ADR-0004-atdd-et-bdd-par-cas-d-usage.md)).
+- **La roadmap.** L'agent a proposé un découpage en lots, et Samir l'a validé. L'agent a signalé un
+  risque : à J-2, toujours aucune ligne de code, alors que l'énoncé demande « quelques heures ». La suite
+  doit donc surtout être de l'exécution.
+- **Le rôle de PO.** Dans la réalité, les règles légales viendraient d'un PO ou d'un juriste. Ici, Samir
+  tient ce rôle : l'agent fournit une recherche sourcée sur les sites officiels, Samir décide.
 
 ## Comment c'est vérifié
 

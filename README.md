@@ -40,4 +40,30 @@ Stack : C# / .NET, avec `dotnet test` et `dotnet format --verify-no-changes` com
 
 ## Périmètre retenu
 
-_À définir._
+La partie back d'un logiciel de devis et de factures. On enregistre un client, on crée un devis, on y
+ajoute ou on en retire des lignes, et la TVA est recalculée à chaque fois. On finalise ensuite le devis
+pour en rendre le PDF, puis on génère la facture à partir du devis. Les mentions légales dépendent de
+l'émetteur et du client, et tout contexte non pris en charge est refusé
+([ADR-0002](docs/adr/ADR-0002-variations-selon-emetteur-et-client.md)).
+
+## Décisions
+
+| ADR | Décision |
+|---|---|
+| [0001](docs/adr/ADR-0001-spike-jetable-puis-lots-livrables.md) | Un spike de rendu jetable, puis des lots livrables |
+| [0002](docs/adr/ADR-0002-variations-selon-emetteur-et-client.md) | Les variations selon l'émetteur et le client, dans un monde fermé |
+| [0003](docs/adr/ADR-0003-reactions-par-evenements-idempotentes.md) | Les réactions par événements de domaine, idempotentes |
+| [0004](docs/adr/ADR-0004-atdd-et-bdd-par-cas-d-usage.md) | ATDD et BDD pour chaque cas d'usage |
+
+## Roadmap
+
+Chaque lot laisse un système fonctionnel : la fin de chaque lot est un point d'arrêt possible.
+
+| Lot | Contenu | Ce qui apparaît |
+|---|---|---|
+| Spike | YAML + template → PDF, jamais mergé | Un ADR sur le rendu |
+| 1 | Client, devis brouillon, ajout et retrait de lignes, TVA. Un seul contexte : une société au régime normal qui facture un professionnel. | Le premier scénario ATDD et le refus des contextes non pris en charge |
+| 2 | Finalisation du devis, qui est alors figé, et rendu de son PDF | `QuoteFinalized`, le premier gestionnaire idempotent |
+| 3 | Facture créée à partir du devis : numérotation continue, immuabilité, mentions de paiement | `InvoiceIssued` |
+| 4 | Un second contexte : un EI en franchise de TVA | La Strategy de TVA |
+| 5 | Un client particulier | De nouvelles règles de mentions |
