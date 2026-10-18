@@ -8,6 +8,12 @@ chaque pull request.
 - La documentation : le [README](README.md), cette page, et la rédaction des ADR, que Samir ratifie.
 - La recherche légale (mentions obligatoires des devis et des factures, facturation électronique), puis
   sa confrontation avec le scénario de Samir.
+- L'analyse de modèles réels de factures et d'un devis fournis par Samir. Elle a relevé des erreurs dans
+  ces modèles : une TVA totale à 0 €, l'indemnité de 40 € réclamée à un particulier, une échéance
+  antérieure à la date de la facture.
+- Le spike de rendu, de bout en bout : les données, le template Typst, la console .NET et les constats.
+  Samir avait fixé le cadre : Typst, un YAML résolu en entrée, un PDF en sortie, un template par type
+  d'entreprise.
 - Les gestes git : commits, push de branche et ouverture des pull requests (niveau `autonomous-pr`). Le
   merge reste à Samir.
 
@@ -47,6 +53,8 @@ chaque pull request.
   `dotnet format --verify-no-changes` sont relancés après la dernière modification. Il n'y a pas encore
   de code.
 - **La documentation et les décisions** : Samir les relit, pull request par pull request.
+- **Le spike de rendu** : l'agent lit chaque PDF produit et en recalcule les totaux, plutôt que de se
+  fier au code de retour.
 
 ## Ce qui n'a pas marché du premier coup
 
@@ -60,3 +68,8 @@ chaque pull request.
   existait. L'agent n'a rien poussé et a posé la question ; la règle a été corrigée.
 - **Une première version trop détaillée de cette page.** Samir recadre : la page sert à l'évaluer, elle
   doit être synthétique.
+- **Une réponse présentée comme un choix par défaut.** « Un YAML en entrée, un PDF en sortie » répondait
+  déjà à la question de Factur-X. L'agent a pourtant présenté ce point comme un défaut qu'il retenait, et
+  Samir l'a relevé.
+- **Un chemin déformé dans le spike.** Git Bash a converti le chemin passé à Typst en chemin Windows, et
+  la première compilation a échoué. L'agent a diagnostiqué la cause, puis l'a contournée.
