@@ -2,7 +2,7 @@ using InvoiceKata.Domain;
 
 namespace InvoiceKata.Application.Issuers;
 
-public sealed record ConfigureIssuerCommand(string Name, string LegalForm, decimal ShareCapital, Siren Siren, VatNumber VatNumber, Address Address);
+public sealed record ConfigureIssuerCommand(string Name, LegalForm LegalForm, decimal ShareCapital, Siren Siren, VatNumber VatNumber, Address Address);
 
 public sealed class ConfigureIssuer(IIssuerRepository issuers)
 {

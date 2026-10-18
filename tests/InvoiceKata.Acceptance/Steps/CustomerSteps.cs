@@ -17,7 +17,7 @@ public sealed class CustomerSteps(AcceptanceContext context)
     public async Task GivenACompanyIssuer(string name)
     {
         var command = new ConfigureIssuerCommand(
-            name, "SAS", 20000m, new Siren("912345678"), new VatNumber("FR12912345678"),
+            name, LegalForm.Sas, 20000m, new Siren("912345678"), new VatNumber("FR12912345678"),
             new Address { Street = "12 rue des Artisans", PostalCode = "47000", City = "Agen" });
         context.IssuersByName[name] = await context.ConfigureIssuer.HandleAsync(command, CancellationToken.None);
     }

@@ -3,7 +3,7 @@ namespace InvoiceKata.Domain;
 // A company that issues quotes and invoices; one SaaS instance serves many of them (ADR-0007).
 public sealed class Issuer
 {
-    private Issuer(IssuerId id, string name, string legalForm, decimal shareCapital, Siren siren, VatNumber vatNumber, Address address)
+    private Issuer(IssuerId id, string name, LegalForm legalForm, decimal shareCapital, Siren siren, VatNumber vatNumber, Address address)
     {
         Id = id;
         Name = name;
@@ -18,7 +18,7 @@ public sealed class Issuer
 
     public string Name { get; }
 
-    public string LegalForm { get; }
+    public LegalForm LegalForm { get; }
 
     public decimal ShareCapital { get; }
 
@@ -28,6 +28,6 @@ public sealed class Issuer
 
     public Address Address { get; }
 
-    public static Issuer ConfigureCompany(string name, string legalForm, decimal shareCapital, Siren siren, VatNumber vatNumber, Address address) =>
+    public static Issuer ConfigureCompany(string name, LegalForm legalForm, decimal shareCapital, Siren siren, VatNumber vatNumber, Address address) =>
         new(IssuerId.New(), name, legalForm, shareCapital, siren, vatNumber, address);
 }

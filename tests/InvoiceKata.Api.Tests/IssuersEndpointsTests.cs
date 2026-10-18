@@ -44,5 +44,35 @@ public sealed class IssuersEndpointsTests(WebApplicationFactory<Program> factory
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
     }
 
-    private sealed record IssuerBody(Guid Id, string Name, string Siren);
+    [Fact]
+    public async Task Should_ReturnBadRequestAsProblemDetails_When_LegalFormIsUnknown()
+    {
+        var client = factory.CreateClient();
+
+        var response = await client.PostAsJsonAsync("/issuers", new
+        {
+            name = "Batifolio",
+            legalForm = "XYZ",
+            shareCapital = 20000m,
+            siren = "912345678",
+            vatNumber = "FR12912345678",
+            address = new { street = "12 rue des Artisans", postalCode = "47000", city = "Agen" },
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+    }
+
+    [Fact]
+    public async Task Should_ReturnTheLegalFormAsSent_When_ReadingTheIssuer()
+    {
+        var client = factory.CreateClient();
+
+        var created = await client.PostAsJsonAsync("/issuers", Batifolio);
+        var issuer = await client.GetFromJsonAsync<IssuerBody>(created.Headers.Location);
+
+        Assert.Equal("SAS", issuer!.LegalForm);
+    }
+
+    private sealed record IssuerBody(Guid Id, string Name, string LegalForm, string Siren);
 }

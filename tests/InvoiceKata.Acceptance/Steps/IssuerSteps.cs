@@ -17,7 +17,7 @@ public sealed class IssuerSteps(AcceptanceContext context)
         var fields = table.Rows.ToDictionary(row => row["champ"], row => row["valeur"]);
         _command = new ConfigureIssuerCommand(
             Name: fields["dénomination"],
-            LegalForm: fields["forme juridique"],
+            LegalForm: Enum.Parse<LegalForm>(fields["forme juridique"], ignoreCase: true),
             ShareCapital: decimal.Parse(fields["capital"], System.Globalization.CultureInfo.InvariantCulture),
             Siren: new Siren(fields["SIREN"]),
             VatNumber: new VatNumber(fields["numéro de TVA"]),

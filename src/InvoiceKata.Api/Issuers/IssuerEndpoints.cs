@@ -9,7 +9,15 @@ public static class IssuerEndpoints
     {
         routes.MapPost("/issuers", async (ConfigureIssuerRequest request, ConfigureIssuer configureIssuer, CancellationToken cancellationToken) =>
         {
-            var id = await configureIssuer.HandleAsync(request.ToCommand(), cancellationToken);
+            if (!LegalFormLabels.TryParse(request.LegalForm, out var legalForm))
+            {
+                return Results.Problem(
+                    statusCode: StatusCodes.Status400BadRequest,
+                    title: "Unknown legal form",
+                    detail: $"'{request.LegalForm}' is not a supported legal form.");
+            }
+
+            var id = await configureIssuer.HandleAsync(request.ToCommand(legalForm), cancellationToken);
             return Results.Created($"/issuers/{id.Value}", new { id = id.Value });
         });
 
@@ -32,11 +40,11 @@ public sealed record AddressBody(string Street, string PostalCode, string City)
 
 public sealed record ConfigureIssuerRequest(string Name, string LegalForm, decimal ShareCapital, string Siren, string VatNumber, AddressBody Address)
 {
-    public ConfigureIssuerCommand ToCommand() => new(Name, LegalForm, ShareCapital, new Siren(Siren), new VatNumber(VatNumber), Address.ToAddress());
+    public ConfigureIssuerCommand ToCommand(LegalForm legalForm) => new(Name, legalForm, ShareCapital, new Siren(Siren), new VatNumber(VatNumber), Address.ToAddress());
 }
 
 public sealed record IssuerResponse(Guid Id, string Name, string LegalForm, decimal ShareCapital, string Siren, string VatNumber, AddressBody Address)
 {
     public static IssuerResponse From(Issuer issuer) =>
-        new(issuer.Id.Value, issuer.Name, issuer.LegalForm, issuer.ShareCapital, issuer.Siren.Value, issuer.VatNumber.Value, AddressBody.From(issuer.Address));
+        new(issuer.Id.Value, issuer.Name, LegalFormLabels.Of(issuer.LegalForm), issuer.ShareCapital, issuer.Siren.Value, issuer.VatNumber.Value, AddressBody.From(issuer.Address));
 }

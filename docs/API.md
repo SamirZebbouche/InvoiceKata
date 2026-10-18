@@ -28,7 +28,7 @@ Cette documentation vit avec le code : chaque nouvelle route y entre avec son di
 
 | Méthode et route | Rôle | Réponse |
 |---|---|---|
-| `POST /issuers` | Configurer un émetteur de type société : dénomination, forme juridique, capital, SIREN, n° de TVA, adresse | `201`, avec `Location: /issuers/{issuerId}` |
+| `POST /issuers` | Configurer un émetteur de type société : dénomination, forme juridique (`SA`, `SAS`, `SASU`, `SARL`, `EURL`, `SNC`), capital, SIREN, n° de TVA, adresse | `201`, avec `Location: /issuers/{issuerId}` ; `400` si la forme juridique est inconnue |
 | `GET /issuers/{issuerId}` | Lire un émetteur | `200` |
 | `POST /issuers/{issuerId}/customers` | Enregistrer un client professionnel : nom, SIREN, n° de TVA, adresse | `201`, avec `Location: /issuers/{issuerId}/customers/{id}` |
 | `GET /issuers/{issuerId}/customers/{id}` | Lire un client | `200` |
