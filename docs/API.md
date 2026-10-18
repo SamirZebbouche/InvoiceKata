@@ -30,9 +30,9 @@ Cette documentation vit avec le code : chaque nouvelle route y entre avec son di
 |---|---|---|
 | `POST /issuers` | Configurer un émetteur de type société : dénomination, forme juridique (`SA`, `SAS`, `SASU`, `SARL`, `EURL`, `SNC`), capital, SIREN, n° de TVA, adresse | `201`, avec `Location: /issuers/{issuerId}` ; `400` si la forme juridique est inconnue |
 | `GET /issuers/{issuerId}` | Lire un émetteur | `200` |
-| `POST /issuers/{issuerId}/customers` | Enregistrer un client professionnel : nom, SIREN, n° de TVA, adresse | `201`, avec `Location: /issuers/{issuerId}/customers/{id}` |
+| `POST /issuers/{issuerId}/customers` | Enregistrer un client : `kind` (`Professional` par défaut, ou `Individual`), nom, adresse, et pour un professionnel le SIREN et le n° de TVA | `201`, avec `Location: /issuers/{issuerId}/customers/{id}` ; `400` si le type est inconnu, ou si un professionnel n'a pas de SIREN ou de n° de TVA |
 | `GET /issuers/{issuerId}/customers/{id}` | Lire un client | `200` |
-| `POST /issuers/{issuerId}/quotes` `{ customerId }` | Créer un devis brouillon pour ce client | `201`, avec `Location: /issuers/{issuerId}/quotes/{id}` |
+| `POST /issuers/{issuerId}/quotes` `{ customerId }` | Créer un devis brouillon pour ce client | `201`, avec `Location: /issuers/{issuerId}/quotes/{id}` ; `422` si le contexte de facturation n'est pas pris en charge (seul le contexte société × professionnel l'est) |
 | `POST /issuers/{issuerId}/quotes/{id}/lines` | Ajouter une ligne : désignation, quantité, unité, prix unitaire HT, taux de TVA, et une remise en % facultative | `201`, avec `Location: …/lines/{lineId}` et le devis recalculé dans le corps |
 | `DELETE /issuers/{issuerId}/quotes/{id}/lines/{lineId}` | Retirer une ligne | `200`, avec le devis recalculé ; `404` si la ligne n'est pas sur le devis |
 | `GET /issuers/{issuerId}/quotes/{id}` | Lire le devis : lignes, totaux (HT, TVA, TTC), ventilation de la TVA par taux | `200` |

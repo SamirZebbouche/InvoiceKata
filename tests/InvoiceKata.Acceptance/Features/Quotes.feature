@@ -62,3 +62,8 @@ Fonctionnalité: Créer un devis
     Alors les totaux du devis sont :
       | total HT | total TVA | total TTC |
       | 561,54   | 56,15     | 617,69    |
+
+  Scénario: Un contexte de facturation non pris en charge est refusé dès la création du devis
+    Étant donné "Batifolio" a enregistré le client particulier "Jeanne Martin"
+    Quand "Batifolio" crée un devis pour "Jeanne Martin"
+    Alors le contexte de facturation n'est pas pris en charge

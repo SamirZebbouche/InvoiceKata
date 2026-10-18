@@ -91,6 +91,9 @@ chaque pull request.
   - une casse doit être ciblée : retirer `[ApiController]` faisait échouer une dizaine de tests à la
     fois, ce qui ne prouvait rien du test visé. L'agent a recommencé avec une casse précise (un seul champ
     rendu facultatif), qui ne fait échouer que ce test.
+  - une casse doit aussi compiler : deux casses rendaient du code inaccessible, ce que
+    `TreatWarningsAsErrors` refuse. Aucun test n'a tourné, et l'absence de sortie n'était pas une preuve.
+    L'agent les a refaites, en vérifiant le build avant de lire les tests.
 - **La documentation et les décisions** : Samir les relit, pull request par pull request.
 - **Les rapports publics** : à chaque passage sur `main`, la CI publie sur GitHub Pages le rapport des
   scénarios Gherkin et la couverture. Dans chaque PR, le résumé du job donne la synthèse des tests et de la
@@ -140,6 +143,8 @@ chaque pull request.
 - **Un fichier généré commité.** Le code produit par Reqnroll (`*.feature.cs`) est entré dans un commit.
   L'agent l'a vu en relisant le commit, l'a ajouté au `.gitignore` et a corrigé le commit, qui n'était
   pas encore poussé.
+- **Un écart à la règle TDD.** Pour le client particulier, l'agent a écrit le contrôleur avant ses tests
+  d'API. Il l'a signalé, puis a rattrapé l'écart en faisant échouer chaque test par une casse ciblée.
 - **Une DLL périmée.** Après avoir restauré l'adaptateur qu'il avait cassé exprès, l'agent a vu le test
   rester rouge. La copie de sauvegarde avait gardé une date antérieure à la dernière compilation, si bien
   que la compilation incrémentale n'avait pas repris le fichier. Une reconstruction complète a corrigé

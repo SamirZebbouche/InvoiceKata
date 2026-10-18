@@ -1,6 +1,6 @@
 # CDR-0004 : Les erreurs du domaine traduites en codes HTTP
 
-- **Statut** : accepté le 2026-10-18 · en place pour `400` et `404`
+- **Statut** : accepté le 2026-10-18 · en place pour `400`, `404` et `422`
 - **Décideur** : Samir
 
 ## Problème
@@ -20,7 +20,7 @@ result pattern (ADR-0002).
    comme pour toute ressource introuvable. Le domaine ne voit pas l'application, et une exception du
    domaine ne pourrait pas dériver d'une exception de base définie dans l'application.
 2. **La traduction se fait à un seul endroit, au plus haut niveau** : un gestionnaire d'exceptions de
-   l'API (`IExceptionHandler`) traduit chaque classe en code HTTP, au format Problem Details. Aucune
+   l'API (`DomainExceptionHandler`, un `IExceptionHandler`) traduit chaque classe en code HTTP, au format Problem Details. Aucune
    exception générique n'est attrapée ailleurs (règle `dotnet-error-handling`).
 3. **La correspondance :**
 
@@ -29,7 +29,7 @@ result pattern (ADR-0002).
    | Ressource inconnue, ou appartenant à un autre émetteur | `404` | `ResourceNotFoundException` |
    | Donnée invalide à la frontière (forme juridique inconnue…) | `400` | La validation de l'endpoint |
    | Action interdite par l'état du document | `409` | À venir |
-   | Contexte de facturation non pris en charge | `422` | À venir (`UnsupportedBillingContextException`) |
+   | Contexte de facturation non pris en charge | `422` | `UnsupportedBillingContextException`, levée par le devis à sa création |
 
 4. **Une ressource d'un autre émetteur répond `404`, jamais `403`** ([ADR-0007](../adr/ADR-0007-saas-multi-emetteur.md)).
 

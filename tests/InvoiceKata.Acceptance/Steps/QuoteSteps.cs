@@ -32,6 +32,9 @@ public sealed class QuoteSteps(AcceptanceContext context)
         Assert.Equal(context.CustomersByName[customer], quote.CustomerId);
     }
 
+    [Then("le contexte de facturation n'est pas pris en charge")]
+    public void ThenTheBillingContextIsNotSupported() => Assert.IsType<UnsupportedBillingContextException>(context.LastFailure);
+
     [Given("un devis brouillon de {string} pour {string}")]
     public Task GivenADraftQuote(string issuer, string customer) => WhenTheIssuerCreatesAQuoteFor(issuer, customer);
 

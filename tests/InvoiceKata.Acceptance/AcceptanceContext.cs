@@ -19,9 +19,11 @@ public sealed class AcceptanceContext
 
     public RegisterCustomer RegisterCustomer => new(_issuers, _customers);
 
+    public RegisterIndividualCustomer RegisterIndividualCustomer => new(_issuers, _customers);
+
     public GetCustomer GetCustomer => new(_customers);
 
-    public CreateQuote CreateQuote => new(_customers, _quotes);
+    public CreateQuote CreateQuote => new(_issuers, _customers, _quotes);
 
     public GetQuote GetQuote => new(_quotes);
 

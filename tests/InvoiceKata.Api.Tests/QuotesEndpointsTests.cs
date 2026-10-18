@@ -116,6 +116,24 @@ public sealed class QuotesEndpointsTests(WebApplicationFactory<Program> factory)
         Assert.Equal(561.54m, line.TotalExcludingVat);
     }
 
+    [Fact]
+    public async Task Should_ReturnUnprocessableEntityAsProblemDetails_When_QuotingAnIndividualCustomer()
+    {
+        var client = factory.CreateClient();
+        var issuerId = await ConfigureIssuerAsync(client);
+        var customerId = IdFrom(await client.PostAsJsonAsync($"/issuers/{issuerId}/customers", new
+        {
+            kind = "Individual",
+            name = "Jeanne Martin",
+            address = new { street = "3 rue des Lilas", postalCode = "33000", city = "Bordeaux" },
+        }));
+
+        var response = await client.PostAsJsonAsync($"/issuers/{issuerId}/quotes", new { customerId });
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+    }
+
     private static async Task<(Guid IssuerId, Guid QuoteId)> DraftQuoteAsync(HttpClient client)
     {
         var issuerId = await ConfigureIssuerAsync(client);

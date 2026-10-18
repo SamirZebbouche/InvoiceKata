@@ -44,7 +44,22 @@ public sealed class Quote
 
     public Money TotalIncludingVat => TotalExcludingVat + TotalVat;
 
-    public static Quote DraftFor(Customer customer) => new(QuoteId.New(), customer.IssuerId, customer.Id);
+    /// <exception cref="UnsupportedBillingContextException">The product does not handle this issuer and customer pair.</exception>
+    public static Quote DraftFor(Issuer issuer, Customer customer)
+    {
+        if (customer.IssuerId != issuer.Id)
+        {
+            throw new ArgumentException("The customer belongs to another issuer.", nameof(customer));
+        }
+
+        var context = new BillingContext(issuer.Kind, customer.Kind);
+        if (!context.IsSupported)
+        {
+            throw new UnsupportedBillingContextException(context);
+        }
+
+        return new Quote(QuoteId.New(), issuer.Id, customer.Id);
+    }
 
     public QuoteLineId AddLine(NewQuoteLine line)
     {

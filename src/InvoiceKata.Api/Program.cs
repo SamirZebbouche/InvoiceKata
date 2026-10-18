@@ -8,13 +8,14 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddProblemDetails();
-builder.Services.AddExceptionHandler<NotFoundExceptionHandler>();
+builder.Services.AddExceptionHandler<DomainExceptionHandler>();
 
 builder.Services.AddSingleton<IIssuerRepository, InMemoryIssuerRepository>();
 builder.Services.AddTransient<ConfigureIssuer>();
 builder.Services.AddTransient<GetIssuer>();
 builder.Services.AddSingleton<ICustomerRepository, InMemoryCustomerRepository>();
 builder.Services.AddTransient<RegisterCustomer>();
+builder.Services.AddTransient<RegisterIndividualCustomer>();
 builder.Services.AddTransient<GetCustomer>();
 builder.Services.AddSingleton<IQuoteRepository, InMemoryQuoteRepository>();
 builder.Services.AddTransient<CreateQuote>();
