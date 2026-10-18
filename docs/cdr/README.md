@@ -16,6 +16,7 @@ Chaque CDR suit la même trame : le problème, le motif retenu, où il s'appliqu
 | [0003](CDR-0003-objets-valeur-et-proprietes-requises.md) | Objets valeur contre l'inversion, propriétés `required` pour les enregistrements | En place |
 | [0004](CDR-0004-erreurs-et-codes-http.md) | Les erreurs du domaine traduites en codes HTTP | En place |
 | [0005](CDR-0005-controleurs-plutot-que-minimal-apis.md) | Des contrôleurs plutôt que des minimal APIs | En place |
+| [0006](CDR-0006-etat-persistant-des-agregats.md) | L'état persistant des agrégats, garanti par une interface | En place |
 
 ## Carte des motifs en usage
 

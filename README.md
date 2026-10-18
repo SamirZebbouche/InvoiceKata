@@ -67,6 +67,7 @@ Les décisions d'**architecture** sont des ADR, ci-dessous. Les décisions de **
 | [0006](docs/adr/ADR-0006-persistance-par-port-secondaire.md) | La persistance derrière un port secondaire, des fichiers pour le kata |
 | [0007](docs/adr/ADR-0007-saas-multi-emetteur.md) | Un SaaS multi-émetteur, l'émetteur dans la route |
 | [0008](docs/adr/ADR-0008-arrondis.md) | Les arrondis : précision dans le domaine, centimes pour les montants légaux |
+| [0009](docs/adr/ADR-0009-documents-legaux-jamais-reecrits.md) | Les documents légaux ne sont jamais réécrits, les migrations se font à la lecture |
 
 ## Roadmap
 
