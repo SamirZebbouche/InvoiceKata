@@ -129,7 +129,7 @@ invariants hold at every level.
 <!-- /ai-core:git-action-gate -->
 
 ### In this project
-Level: `autonomous-pr`. No remote or forge yet: until one exists, commits stay local.
+Level: `autonomous-pr`. Forge: GitHub (`origin` = `SamirZebbouche/InvoiceKata`).
 
 <!-- ai-core:test-tdd-cycle@v3 -->
 ## Test-driven development cycle
