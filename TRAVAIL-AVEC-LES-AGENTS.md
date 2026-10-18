@@ -116,7 +116,13 @@ chaque pull request.
   - les tests par mutation automatisent ces casses : Samir a proposé Stryker.NET. Le premier passage a
     trouvé trois vrais trous (des libellés de forme juridique non figés, un cas d'échec non couvert, un
     constructeur de devis vidable sans qu'aucun test du domaine ne le voie). Stryker fait désormais partie
-    des preuves, au même titre que `dotnet format`, avec un seuil bloquant de 70 % ; le score est de 80 %.
+    des preuves, au même titre que `dotnet format`, avec un seuil bloquant de 70 %.
+  - la règle du scout, demandée par Samir : les mutants survivants des fichiers touchés sont traités au
+    passage. Deux vrais trous sont apparus : l'enregistrement de la mention de taux réduit, et le
+    répertoire de données, qu'on pouvait ignorer en silence. Les survivants du démarrage de l'API sont de
+    faux positifs, car un hôte de test partagé ne rejoue pas le démarrage sous un mutant : l'agent les a
+    tués à la main, puis les a marqués avec leur justification. Une assertion ajoutée sur un message
+    d'erreur a aussi révélé une faute (« a Individual »). Le score est passé de 82,6 % à 92 %.
   - l'argument d'un CDR se démontre : avant d'écrire la règle du taux réduit, l'agent a écrit la version
     fondée sur le delta que le CDR-0001 écarte, et le scénario l'a fait échouer au retrait de la première
     ligne à 10 %.

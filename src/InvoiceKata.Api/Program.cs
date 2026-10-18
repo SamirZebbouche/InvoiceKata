@@ -9,6 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddProblemDetails();
+// Stryker disable once Statement : killed by the API tests when applied by hand; a shared test host never re-runs startup under a mutant
 builder.Services.AddExceptionHandler<DomainExceptionHandler>();
 
 // Data survive a restart: JSON files under a configurable directory (ADR-0006).
@@ -32,11 +33,14 @@ builder.Services.AddTransient<QuoteEventDispatcher>();
 builder.Services.AddSingleton<IMentionTexts, FrenchMentionTexts>();
 
 // Each legal mention is a handler of its own: adding a mention is adding a line here (CDR-0001).
+// Stryker disable once Statement : killed by the API tests when applied by hand; a shared test host never re-runs startup under a mutant
 builder.Services.AddTransient<IQuoteEventHandler, IssuerLegalIdentityMention>();
+// Stryker disable once Statement : killed by the API tests when applied by hand; a shared test host never re-runs startup under a mutant
 builder.Services.AddTransient<IQuoteEventHandler, ReducedVatRateMention>();
 
 var app = builder.Build();
 
+// Stryker disable once Statement : killed by the API tests when applied by hand; a shared test host never re-runs startup under a mutant
 app.UseExceptionHandler();
 app.MapControllers();
 

@@ -49,7 +49,8 @@ public sealed class PersistentStateTests
     {
         var state = Quotes.ProfessionalCustomerOf(Quotes.Issuer()).ToState() with { Siren = null };
 
-        Assert.Throws<ArgumentException>(() => Customer.FromState(state));
+        var refusal = Assert.Throws<ArgumentException>(() => Customer.FromState(state));
+        Assert.Contains("the SIREN and VAT number do not fit the customer kind Professional", refusal.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -60,7 +61,8 @@ public sealed class PersistentStateTests
             issuer.Id, "Jeanne Martin", new Address { Street = "3 rue des Lilas", PostalCode = "33000", City = "Bordeaux" });
         var state = individual.ToState() with { Siren = "834567890" };
 
-        Assert.Throws<ArgumentException>(() => Customer.FromState(state));
+        var refusal = Assert.Throws<ArgumentException>(() => Customer.FromState(state));
+        Assert.Contains("the SIREN and VAT number do not fit the customer kind Individual", refusal.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -71,7 +73,8 @@ public sealed class PersistentStateTests
         var state = quote.ToState();
         var duplicated = state with { Lines = [state.Lines[0], state.Lines[0]] };
 
-        Assert.Throws<ArgumentException>(() => Quote.FromState(duplicated));
+        var refusal = Assert.Throws<ArgumentException>(() => Quote.FromState(duplicated));
+        Assert.Contains("two lines share an identifier", refusal.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -83,22 +86,22 @@ public sealed class PersistentStateTests
     }
 
     // Every structural invariant re-checked on restore has its own case: a guarantee nobody tests guarantees nothing.
-    public static TheoryData<string, Func<object>> CorruptStates => new()
+    public static TheoryData<string, string, Func<object>> CorruptStates => new()
     {
-        { "issuer of an unknown version", () => Issuer.FromState(Quotes.Issuer().ToState() with { Version = 2 }) },
-        { "issuer without identifier", () => Issuer.FromState(Quotes.Issuer().ToState() with { Id = Guid.Empty }) },
-        { "issuer of an unknown legal form", () => Issuer.FromState(Quotes.Issuer().ToState() with { LegalForm = (LegalForm)99 }) },
-        { "customer of an unknown version", () => Customer.FromState(CustomerState() with { Version = 2 }) },
-        { "customer without identifier", () => Customer.FromState(CustomerState() with { Id = Guid.Empty }) },
-        { "customer without issuer", () => Customer.FromState(CustomerState() with { IssuerId = Guid.Empty }) },
-        { "customer of an unknown kind", () => Customer.FromState(CustomerState() with { Kind = (CustomerKind)99 }) },
-        { "quote of an unknown version", () => Quote.FromState(Quotes.Draft().ToState() with { Version = 2 }) },
-        { "quote without issuer", () => Quote.FromState(Quotes.Draft().ToState() with { IssuerId = Guid.Empty }) },
-        { "quote without customer", () => Quote.FromState(Quotes.Draft().ToState() with { CustomerId = Guid.Empty }) },
-        { "quote of an unknown status", () => Quote.FromState(Quotes.Draft().ToState() with { Status = (QuoteStatus)99 }) },
-        { "quote with an unknown mention code", () => Quote.FromState(Quotes.Draft().ToState() with { Mentions = [new LegalMention((MentionCode)99, "?")] }) },
+        { "issuer of an unknown version", "version 2 is not supported", () => Issuer.FromState(Quotes.Issuer().ToState() with { Version = 2 }) },
+        { "issuer without identifier", "the issuer has no identifier", () => Issuer.FromState(Quotes.Issuer().ToState() with { Id = Guid.Empty }) },
+        { "issuer of an unknown legal form", "legal form 99 is unknown", () => Issuer.FromState(Quotes.Issuer().ToState() with { LegalForm = (LegalForm)99 }) },
+        { "customer of an unknown version", "version 2 is not supported", () => Customer.FromState(CustomerState() with { Version = 2 }) },
+        { "customer without identifier", "the customer or its issuer has no identifier", () => Customer.FromState(CustomerState() with { Id = Guid.Empty }) },
+        { "customer without issuer", "the customer or its issuer has no identifier", () => Customer.FromState(CustomerState() with { IssuerId = Guid.Empty }) },
+        { "customer of an unknown kind", "customer kind 99 is unknown", () => Customer.FromState(CustomerState() with { Kind = (CustomerKind)99 }) },
+        { "quote of an unknown version", "version 2 is not supported", () => Quote.FromState(Quotes.Draft().ToState() with { Version = 2 }) },
+        { "quote without issuer", "the quote, its issuer or its customer has no identifier", () => Quote.FromState(Quotes.Draft().ToState() with { IssuerId = Guid.Empty }) },
+        { "quote without customer", "the quote, its issuer or its customer has no identifier", () => Quote.FromState(Quotes.Draft().ToState() with { CustomerId = Guid.Empty }) },
+        { "quote of an unknown status", "status 99 is unknown", () => Quote.FromState(Quotes.Draft().ToState() with { Status = (QuoteStatus)99 }) },
+        { "quote with an unknown mention code", "a mention code is unknown", () => Quote.FromState(Quotes.Draft().ToState() with { Mentions = [new LegalMention((MentionCode)99, "?")] }) },
         {
-            "quote with two mentions of the same code",
+            "quote with two mentions of the same code", "two mentions share a code",
             () => Quote.FromState(Quotes.Draft().ToState() with
             {
                 Mentions = [new LegalMention(MentionCode.ReducedVatRate, "a"), new LegalMention(MentionCode.ReducedVatRate, "b")],
@@ -108,11 +111,12 @@ public sealed class PersistentStateTests
 
     [Theory]
     [MemberData(nameof(CorruptStates))]
-    public void Should_RefuseToRestore_When_TheStateIsCorrupt(string corruption, Func<object> restore)
+    public void Should_RefuseToRestoreAndSayWhy_When_TheStateIsCorrupt(string corruption, string reason, Func<object> restore)
     {
         var refusal = Record.Exception(restore);
 
         Assert.True(refusal is ArgumentException, $"A {corruption} was restored instead of being refused.");
+        Assert.Contains(reason, refusal.Message, StringComparison.Ordinal);
     }
 
     private static CustomerState CustomerState() => Quotes.ProfessionalCustomerOf(Quotes.Issuer()).ToState();

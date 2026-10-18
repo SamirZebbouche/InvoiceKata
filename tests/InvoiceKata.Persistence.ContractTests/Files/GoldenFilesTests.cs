@@ -49,7 +49,25 @@ public sealed class GoldenFilesTests : IDisposable
         Assert.Equal([new LegalMention(MentionCode.ReducedVatRate, "Taux de TVA réduit de 10 %.")], quote.Mentions);
     }
 
+    // Writing must produce the version 1 format too, byte for byte apart from line endings: readable, indented JSON.
+    [Fact]
+    public async Task Should_WriteAnIssuerInTheVersion1Format()
+    {
+        var store = new JsonFileStore(_directory.Path);
+        var issuer = Issuer.FromState(new IssuerState(
+            1, IssuerId, "Batifolio", LegalForm.Sas, 20000m, "912345678", "FR12912345678",
+            new Address { Street = "12 rue des Artisans", PostalCode = "47000", City = "Agen" }));
+
+        await new FileIssuerRepository(store).AddAsync(issuer, CancellationToken.None);
+
+        var written = await File.ReadAllTextAsync(Path.Combine(_directory.Path, "issuers", IssuerId.ToString(), "issuer.json"));
+        var golden = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "Files", "Golden", "issuer.v1.json"));
+        Assert.Equal(Normalized(golden), Normalized(written));
+    }
+
     public void Dispose() => _directory.Dispose();
+
+    private static string Normalized(string json) => json.ReplaceLineEndings("\n").Trim();
 
     private void Install(string golden, string relativePath)
     {
