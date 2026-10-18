@@ -45,6 +45,13 @@ document en XML CII. Le juge était un validateur indépendant, Mustang 2.26.0. 
 
    Mustang, une CLI Java sous licence Apache-2.0, est la solution de repli. Un équivalent .NET sera
    cherché en temps voulu, ou pas : Factur-X n'est pas dans la roadmap du kata.
+9. **Un validateur final garde le contrat entre le domaine et le rendu.** Avant tout rendu, le document
+   résolu passe par un validateur **composé des validateurs de chaque partie** (émetteur, client, lignes,
+   totaux, mentions…). Un document invalide est refusé par une exception de domaine, et aucun PDF n'est
+   produit. Ce validateur est la forme exécutable du contrat : il prolonge le monde fermé de
+   l'[ADR-0002](ADR-0002-variations-selon-emetteur-et-client.md) jusqu'à la frontière du rendu.
+10. **Les sections sont facultatives.** Le template suit la structure du YAML : des lignes regroupées en
+    sections si le document en a, une liste à plat sinon.
 
 ## Options écartées
 
@@ -56,23 +63,18 @@ document en XML CII. Le juge était un validateur indépendant, Mustang 2.26.0. 
 | Un template par combinaison émetteur × client | La variation selon le client passe par les mentions, qui sont déjà résolues : le template n'a pas à la connaître. |
 | Laisser les totaux, les mentions et la signature se répartir sur plusieurs pages | Une signature isolée du prix qu'elle accepte affaiblit la preuve de l'accord. |
 
+## Acceptés pour le kata
+
+- **Les totaux seuls en haut d'une page**, quand le bloc de la décision 6 ne tient pas sous les lignes.
+- **Des quantités affichées à trois décimales** (« 1,000 u »).
+
 ## Questions ouvertes
 
-Ce qui suit a été tranché dans le spike par l'agent seul, et reste à décider par Samir :
-
-- **Le contrat YAML entre le domaine et le rendu** : sa structure et ses noms de champs ; des mentions en
-  liste de phrases ou en champs structurés ; une identité légale composée par le template (« SAS au
-  capital de… ») ou fournie déjà résolue. Il est à fixer avant le lot 2, quand le domaine produira ce
-  document. Factur-X apporte un élément de réponse : des phrases à plat ne suffisent pas. Les règles
-  françaises 2026 exigent des données structurées (échéance, date de livraison, IBAN, adresses
+- **Le détail du contrat**, à fixer avant le lot 2, quand le domaine produira le document : les noms de
+  champs, les mentions en phrases ou en champs structurés, l'identité légale composée par le template ou
+  fournie déjà résolue. Factur-X apporte un élément de réponse : des phrases à plat ne suffisent pas. Les
+  règles françaises 2026 exigent des données structurées (échéance, date de livraison, IBAN, adresses
   électroniques des parties, mentions codées PMT, PMD et AAB).
-- **Les totaux seuls en haut d'une page** : c'est le revers de la décision 6. Faut-il le laisser ainsi,
-  faire suivre les dernières lignes du tableau avec le bloc, ou ajouter des reports (« Total à reporter »
-  en bas de page, « Report » en haut de la suivante) ?
-- **Les sections** : obligatoires ou facultatives ? Sur un devis de trois lignes, un titre de section
-  alourdit la page.
-- **Les quantités** : elles s'affichent à trois décimales (« 1,000 u »). Faut-il retirer les zéros
-  inutiles, ou laisser chaque ligne déclarer sa précision ?
 
 ## Conséquences
 

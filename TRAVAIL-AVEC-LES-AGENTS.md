@@ -40,7 +40,9 @@ chaque pull request.
   délimité ces parties : le noyau légal reste synchrone, et seules les réactions à un fait acquis sont
   chorégraphiées ([ADR-0003](docs/adr/ADR-0003-reactions-par-evenements-idempotentes.md)). Chaque
   cas d'usage est livré en ATDD couplé au BDD, choix de Samir, avec des scénarios en français
-  ([ADR-0004](docs/adr/ADR-0004-atdd-et-bdd-par-cas-d-usage.md)).
+  ([ADR-0004](docs/adr/ADR-0004-atdd-et-bdd-par-cas-d-usage.md)). Pour le contrat entre le domaine et
+  le rendu, Samir choisit un validateur final, composé des validateurs de chaque partie, qui refuse tout
+  document invalide avant le rendu ([ADR-0005](docs/adr/ADR-0005-rendu-pdf-par-typst.md)).
 - **La roadmap.** L'agent a proposé un découpage en lots, et Samir l'a validé. L'agent a signalé un
   risque : à J-2, toujours aucune ligne de code, alors que l'énoncé demande « quelques heures ». La suite
   doit donc surtout être de l'exécution.
