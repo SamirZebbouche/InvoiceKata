@@ -1,6 +1,7 @@
 # CDR-0001 : Une mention légale = une règle en Template Method
 
-- **Statut** : accepté le 2026-10-18 · en place (`LegalMentionRule`, première règle : `IssuerLegalIdentityMention`)
+- **Statut** : accepté le 2026-10-18 · en place (`LegalMentionRule` ; règles : `IssuerLegalIdentityMention`,
+  `ReducedVatRateMention`)
 - **Décideur** : Samir
 
 ## Problème
@@ -50,6 +51,10 @@ gestionnaire qui ne serait pas fondé sur l'état.
 ## Conséquences
 
 - La classe de base `LegalMentionRule` est le seul endroit où vivent l'approche fondée sur l'état et
-  l'idempotence. Un test de rejeu sur cette classe de base les couvre pour toutes les mentions.
+  l'idempotence. Un scénario de rejeu les couvre pour toutes les mentions : rejouer deux fois toute
+  l'histoire d'un devis ne change pas ses mentions. Il attrape une règle qui garderait un état d'un
+  événement à l'autre, par exemple un compteur.
+- La version fondée sur le delta a été écrite, puis vue en échec, avant la vraie règle du taux réduit :
+  elle retirait la mention au retrait de la première ligne à 10 %, alors qu'une autre restait.
 - Le catalogue des textes grandit avec chaque mention : c'est voulu, puisqu'il est la future table de
   traduction.

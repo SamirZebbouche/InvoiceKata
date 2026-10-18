@@ -30,7 +30,7 @@ chaque pull request.
     dans sa base mais pas dans le projet ;
   - **du projet vers `ai-core`**, quand le projet invente une pratique qui vaut ailleurs. Les tests par
     mutation, nés ici des casses ciblées de l'agent puis outillés avec Stryker.NET, ont été récoltés par
-    Samir dans sa base, pour servir à ses autres projets.
+    Samir dans sa base, sous l'identifiant `test-mutation-testing`, pour servir à ses autres projets.
 
   Le projet complète aussi ses propres notes : le ruleset de `main`, l'exception de langue des
   scénarios Gherkin, la zone des spikes, et maintenant Stryker parmi les preuves.
@@ -110,6 +110,9 @@ chaque pull request.
     trouvé trois vrais trous (des libellés de forme juridique non figés, un cas d'échec non couvert, un
     constructeur de devis vidable sans qu'aucun test du domaine ne le voie). Stryker fait désormais partie
     des preuves, au même titre que `dotnet format`, avec un seuil bloquant de 70 % ; le score est de 80 %.
+  - l'argument d'un CDR se démontre : avant d'écrire la règle du taux réduit, l'agent a écrit la version
+    fondée sur le delta que le CDR-0001 écarte, et le scénario l'a fait échouer au retrait de la première
+    ligne à 10 %.
   - une casse doit aussi compiler : deux casses rendaient du code inaccessible, ce que
     `TreatWarningsAsErrors` refuse. Aucun test n'a tourné, et l'absence de sortie n'était pas une preuve.
     L'agent les a refaites, en vérifiant le build avant de lire les tests.

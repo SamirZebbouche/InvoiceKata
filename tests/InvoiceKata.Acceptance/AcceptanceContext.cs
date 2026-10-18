@@ -19,7 +19,8 @@ public sealed class AcceptanceContext
     public AcceptanceContext()
     {
         var texts = new FrenchMentionTexts();
-        _events = new QuoteEventDispatcher([new IssuerLegalIdentityMention(texts)]);
+        QuoteEventHandlers = [new IssuerLegalIdentityMention(texts), new ReducedVatRateMention(texts)];
+        _events = new QuoteEventDispatcher(QuoteEventHandlers);
         _scopes = new QuoteScopes(_issuers, _customers);
     }
 
@@ -36,6 +37,10 @@ public sealed class AcceptanceContext
     public CreateQuote CreateQuote => new(_issuers, _customers, _quotes, _events);
 
     public GetQuote GetQuote => new(_quotes);
+
+    public QuoteScopes QuoteScopes => _scopes;
+
+    public IReadOnlyList<IQuoteEventHandler> QuoteEventHandlers { get; }
 
     public AddQuoteLine AddQuoteLine => new(_quotes, _scopes, _events);
 

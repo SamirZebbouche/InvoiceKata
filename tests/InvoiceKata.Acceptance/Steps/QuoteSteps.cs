@@ -1,5 +1,6 @@
 using System.Globalization;
 
+using InvoiceKata.Application.Quotes;
 using InvoiceKata.Domain;
 
 using Reqnroll;
@@ -12,6 +13,7 @@ public sealed class QuoteSteps(AcceptanceContext context)
     private IssuerId _issuerId;
     private QuoteId _quoteId;
     private readonly Dictionary<string, QuoteLineId> _lineIds = [];
+    private IReadOnlyList<LegalMention> _mentionsBeforeReplay = [];
 
     [When("{string} crée un devis pour {string}")]
     public async Task WhenTheIssuerCreatesAQuoteFor(string issuer, string customer)
@@ -47,6 +49,27 @@ public sealed class QuoteSteps(AcceptanceContext context)
 
         Assert.DoesNotContain(quote.Mentions, mention => WithPlainSpaces(mention.Text).Contains(fragment, StringComparison.Ordinal));
     }
+
+    [When("tous les événements du devis sont rejoués")]
+    public async Task WhenAllTheQuoteEventsAreReplayed()
+    {
+        var quote = await QuoteAsync();
+        _mentionsBeforeReplay = quote.Mentions;
+        var scope = await context.QuoteScopes.ForAsync(quote, CancellationToken.None);
+        IQuoteEvent[] history = [new QuoteDrafted(quote.Id), .. quote.Lines.Select(line => new QuoteLineAdded(quote.Id, line.Id))];
+
+        // Each event twice, in order: a state-based handler ends up in the same state.
+        foreach (var quoteEvent in history.Concat(history))
+        {
+            foreach (var handler in context.QuoteEventHandlers)
+            {
+                handler.Handle(quoteEvent, scope);
+            }
+        }
+    }
+
+    [Then("le devis porte exactement les mêmes mentions qu'avant")]
+    public async Task ThenTheQuoteCarriesTheSameMentions() => Assert.Equal(_mentionsBeforeReplay, (await QuoteAsync()).Mentions);
 
     [Then("le contexte de facturation n'est pas pris en charge")]
     public void ThenTheBillingContextIsNotSupported() => Assert.IsType<UnsupportedBillingContextException>(context.LastFailure);

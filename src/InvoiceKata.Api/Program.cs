@@ -29,6 +29,7 @@ builder.Services.AddSingleton<IMentionTexts, FrenchMentionTexts>();
 
 // Each legal mention is a handler of its own: adding a mention is adding a line here (CDR-0001).
 builder.Services.AddTransient<IQuoteEventHandler, IssuerLegalIdentityMention>();
+builder.Services.AddTransient<IQuoteEventHandler, ReducedVatRateMention>();
 
 var app = builder.Build();
 

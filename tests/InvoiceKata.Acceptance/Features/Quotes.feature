@@ -71,3 +71,24 @@ Fonctionnalité: Créer un devis
   Scénario: L'identité légale de l'émetteur figure sur le devis dès sa création
     Quand "Batifolio" crée un devis pour "Les Toits Rouges SARL"
     Alors le devis porte la mention "Batifolio, SAS au capital de 20 000 €, SIREN 912 345 678"
+
+  Scénario: La mention du taux réduit suit les lignes à 10 %
+    Étant donné un devis brouillon de "Batifolio" pour "Les Toits Rouges SARL"
+    Et le devis contient les lignes suivantes :
+      | désignation     | quantité | unité   | prix unitaire HT | taux de TVA |
+      | Pose de faïence | 1        | forfait | 500,00           | 10          |
+      | Carrelage       | 1        | forfait | 300,00           | 10          |
+      | Audit           | 1        | jour    | 800,00           | 20          |
+    Alors le devis porte la mention "Taux de TVA réduit de 10 % appliqué aux travaux d'amélioration d'un logement achevé depuis plus de deux ans (art. 279-0 bis du CGI)."
+    Quand je retire la ligne "Pose de faïence" du devis
+    Alors le devis porte la mention "Taux de TVA réduit de 10 % appliqué aux travaux d'amélioration d'un logement achevé depuis plus de deux ans (art. 279-0 bis du CGI)."
+    Quand je retire la ligne "Carrelage" du devis
+    Alors le devis ne porte pas de mention contenant "Taux de TVA réduit"
+
+  Scénario: Rejouer les événements d'un devis ne change pas ses mentions
+    Étant donné un devis brouillon de "Batifolio" pour "Les Toits Rouges SARL"
+    Et le devis contient les lignes suivantes :
+      | désignation     | quantité | unité   | prix unitaire HT | taux de TVA |
+      | Pose de faïence | 1        | forfait | 500,00           | 10          |
+    Quand tous les événements du devis sont rejoués
+    Alors le devis porte exactement les mêmes mentions qu'avant

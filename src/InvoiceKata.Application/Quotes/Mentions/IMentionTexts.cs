@@ -6,4 +6,6 @@ namespace InvoiceKata.Application.Quotes.Mentions;
 public interface IMentionTexts
 {
     string IssuerLegalIdentity(Issuer issuer);
+
+    string ReducedVatRate();
 }
