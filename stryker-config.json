@@ -3,7 +3,7 @@
     "solution": "InvoiceKata.slnx",
     "reporters": [ "html", "json", "markdown", "progress" ],
     "ignore-methods": [ "*Exception.ctor" ],
-    "since": { "ignore-changes-in": [ "**/*.feature", "**/Golden/*.json" ] },
+    "since": { "enabled": false, "target": "origin/main", "ignore-changes-in": [ "**/*.feature", "**/Golden/*.json" ] },
     "thresholds": { "high": 80, "low": 70, "break": 70 }
   }
 }
