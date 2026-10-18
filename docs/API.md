@@ -36,6 +36,7 @@ Cette documentation vit avec le code : chaque nouvelle route y entre avec son di
 | `POST /issuers/{issuerId}/quotes/{id}/lines` | Ajouter une ligne : désignation, quantité, unité, prix unitaire HT, taux de TVA, et une remise en % facultative | `201`, avec `Location: …/lines/{lineId}` et le devis recalculé dans le corps |
 | `DELETE /issuers/{issuerId}/quotes/{id}/lines/{lineId}` | Retirer une ligne | `200`, avec le devis recalculé ; `404` si la ligne n'est pas sur le devis |
 | `GET /issuers/{issuerId}/quotes/{id}` | Lire le devis : statut, numéro et dates (vides pour un brouillon), lignes, totaux (HT, TVA, TTC), ventilation de la TVA par taux, mentions légales (`code` et `text`) | `200` |
+| `GET /issuers/{issuerId}/quotes/{id}/pdf` | Télécharger le PDF du devis finalisé, nommé d'après son numéro (`D-2026-0001.pdf`) | `200` `application/pdf` ; `409` si le devis est encore un brouillon |
 | `POST /issuers/{issuerId}/quotes/{id}/finalization` `{ validityDays }` | Finaliser le devis : il reçoit son numéro (`D-2026-0001`, une séquence par émetteur et par année), sa date (le jour de la finalisation, à l'heure de Paris), sa date de validité et la mention de validité, puis il est figé. `validityDays` est facultatif : 30 jours par défaut, de 1 à 365 | `200`, avec le devis finalisé ; `400` si la validité sort de 1 à 365 jours ; `409` si le devis est déjà finalisé, s'il n'a aucune ligne, ou si une finalisation simultanée a pris le même numéro (on relance alors la finalisation) |
 
 Un devis finalisé refuse toute modification : ajouter ou retirer une ligne répond `409`. Ses montants sont
@@ -104,7 +105,9 @@ Le validateur final ne s'exécute qu'une fois terminées toutes les réactions d
 La finalisation d'un devis. Le domaine calcule le numéro à partir de ceux que l'émetteur a déjà pris, et
 le port refuse un doublon sous son verrou ([CDR-0007](cdr/CDR-0007-numerotation-des-devis.md)). L'événement
 `QuoteFinalized` n'est publié **qu'après l'enregistrement** du devis figé, pour qu'aucune réaction ne parte
-d'un fait qui n'a pas été enregistré. Sa première réaction, le rendu du PDF, est à venir :
+d'un fait qui n'a pas été enregistré. Sa réaction, le rendu du PDF, s'exécute dans la même requête : si elle
+échoue, le devis reste finalisé, l'échec est journalisé, et la lecture du PDF relance le rendu
+([ADR-0005](adr/ADR-0005-rendu-pdf-par-typst.md), amendement) :
 
 ```mermaid
 sequenceDiagram
@@ -126,16 +129,15 @@ sequenceDiagram
     Note over D: le devis pose la mention de validité,<br/>est figé et lève QuoteFinalized
     UC->>R: Save(quote)
     Note over R: sous le verrou : refuse un numéro déjà pris<br/>et n'écrase jamais un devis finalisé
-    UC->>E: Publish(QuoteFinalized) (à venir)
-    API-->>U: 200 devis finalisé
-
-    E-)H: QuoteFinalized
-    Note over H: idempotent : le PDF est identifié<br/>par le devis et sa version
+    UC->>E: Publish(QuoteFinalized)
+    E->>H: QuoteFinalized
+    Note over H: idempotent : un PDF déjà stocké<br/>n'est jamais rendu à nouveau
     H->>D: document résolu
     H->>H: validateur final
-    H->>T: YAML résolu
+    H->>T: JSON résolu
     T-->>H: PDF
-    H->>R: Store(pdf)
+    H->>R: SaveIfAbsent(pdf)
+    API-->>U: 200 devis finalisé
 
     U->>API: GET /issuers/{issuerId}/quotes/{id}/pdf
     API-->>U: 200 application/pdf
@@ -147,7 +149,6 @@ Toutes sous `/issuers/{issuerId}` :
 
 | Fonctionnalité | Routes |
 |---|---|
-| PDF du devis | `GET /quotes/{id}/pdf` |
 | Facture | `POST /invoices` `{ quoteId }`, `GET /invoices/{id}`, `GET /invoices/{id}/pdf` |
 
 ## Options écartées

@@ -13,6 +13,11 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
+      - name: Install Typst, at the pinned version (ADR-0005)
+        run: |
+          curl -sSL https://github.com/typst/typst/releases/download/v0.15.1/typst-x86_64-unknown-linux-musl.tar.xz | tar -xJ
+          sudo mv typst-x86_64-unknown-linux-musl/typst /usr/local/bin/typst
+          typst --version
       - run: dotnet restore
       - run: dotnet tool restore
       - run: dotnet build --no-restore
@@ -33,7 +38,7 @@ jobs:
             -reports:"TestResults/**/coverage.cobertura.xml" \
             -targetdir:site/coverage \
             -reporttypes:"Html;MarkdownSummaryGithub" \
-            -assemblyfilters:"+InvoiceKata.Domain;+InvoiceKata.Application;+InvoiceKata.Adapters.Persistence;+InvoiceKata.Api"
+            -assemblyfilters:"+InvoiceKata.Domain;+InvoiceKata.Application;+InvoiceKata.Adapters.Persistence;+InvoiceKata.Adapters.Rendering;+InvoiceKata.Api"
           cat site/coverage/SummaryGithub.md >> "$GITHUB_STEP_SUMMARY"
           if [ -f StrykerOutput/reports/mutation-report.html ]; then
             mkdir -p site/mutation
@@ -41,12 +46,20 @@ jobs:
             cat StrykerOutput/reports/mutation-report.md >> "$GITHUB_STEP_SUMMARY"
           fi
           cp tests/InvoiceKata.Acceptance/bin/Debug/net10.0/reports/scenarios.html site/scenarios.html
+          mkdir -p site/pdf
+          cp tests/InvoiceKata.Rendering.Tests/bin/Debug/net10.0/rendered/*.pdf site/pdf/ || true
           sed "s/__COMMIT__/${GITHUB_SHA::7}/" .github/pages/index.html > site/index.html
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: test-reports
           path: site
+      - name: Publish the PDFs the tests rendered, to download and look at
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pdf
+          path: tests/InvoiceKata.Rendering.Tests/bin/Debug/net10.0/rendered/*.pdf
       - uses: actions/upload-pages-artifact@v3
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         with:

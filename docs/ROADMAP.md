@@ -87,14 +87,20 @@ Ajoutée en chemin : un scénario d'acceptation ne dispense pas d'un test unitai
 
 ### PR 2.2 — Le rendu du PDF
 
+- **Scénarios** :
+  - le PDF d'un devis finalisé porte son numéro, ses lignes, ses totaux et ses mentions ;
+  - rejouer la finalisation ne refait pas le PDF ;
+  - un devis brouillon n'a pas de PDF.
 - **Ce qui apparaît** :
-  - le contrat du document résolu, fixé noir sur blanc ;
-  - le validateur final, composé des validateurs de chaque partie ([ADR-0005](adr/ADR-0005-rendu-pdf-par-typst.md)) ;
-  - l'adaptateur Typst, avec le template « société » repris du spike ;
-  - le gestionnaire de `QuoteFinalized`, idempotent et couvert par un test de rejeu ;
+  - le contrat du document résolu, en JSON (amendement de l'[ADR-0005](adr/ADR-0005-rendu-pdf-par-typst.md)) ;
+  - le validateur final, composé des validateurs de chaque partie ;
+  - l'adaptateur Typst, dans son propre projet, avec le template « société » repris du spike ;
+  - la publication après l'enregistrement, et la réaction qui rend le PDF, idempotente et couverte par un
+    test de rejeu ;
+  - le stockage des PDF, qui n'écrase jamais un PDF ;
   - l'endpoint de téléchargement du PDF ;
   - Typst installé dans la CI ;
-  - les PDF produits par les tests, publiés en artefacts de la CI pour qu'on puisse les télécharger.
+  - les PDF produits par les tests, publiés en artefacts de la CI et dans les rapports.
 
 ## Lot 3 — La facture
 

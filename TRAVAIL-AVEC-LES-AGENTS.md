@@ -133,6 +133,11 @@ chaque pull request.
     ligne à 10 %.
   - un fichier de référence prouve sa valeur : en renommant un champ de l'état d'une ligne, tous les
     tests d'aller-retour passaient encore, et seul le fichier de référence v1 a échoué.
+  - un test peut passer pour une mauvaise raison : le test du bloc insécable (totaux, mentions et « Bon pour
+    accord » sur une même page) passait avec un bloc sécable, parce qu'avec 60 lignes le bloc tenait de toute
+    façon sur la dernière page. Il parcourt désormais plusieurs longueurs de devis, et deux d'entre elles
+    cassent le bloc dès qu'il devient sécable. Les PDF des tests sont relus par PdfPig, et l'agent les a aussi
+    regardés lui-même.
   - une casse doit aussi compiler : deux casses rendaient du code inaccessible, ce que
     `TreatWarningsAsErrors` refuse. Aucun test n'a tourné, et l'absence de sortie n'était pas une preuve.
     L'agent les a refaites, en vérifiant le build avant de lire les tests.
@@ -198,6 +203,10 @@ chaque pull request.
   comparer des états dans les tests, et des invariants de reconstruction non testés un par un. L'égalité
   a été supprimée, et chaque invariant a maintenant son cas : le score de mutation est remonté de 76,5 %
   à 82,6 %.
+- **Un écart à l'ATDD.** Pour le PDF du devis, l'agent a écrit la réaction et ses tests unitaires avant les
+  scénarios Gherkin, qui sont donc passés dès leur premier lancement. Il a rattrapé l'écart en faisant
+  échouer chaque scénario par une casse ciblée : le cadre « Bon pour accord » retiré, un brouillon rendu,
+  un PDF rendu à nouveau à chaque lecture.
 - **Un écart à la règle TDD.** Pour le client particulier, l'agent a écrit le contrôleur avant ses tests
   d'API. Il l'a signalé, puis a rattrapé l'écart en faisant échouer chaque test par une casse ciblée.
 - **Une DLL périmée.** Après avoir restauré l'adaptateur qu'il avait cassé exprès, l'agent a vu le test
