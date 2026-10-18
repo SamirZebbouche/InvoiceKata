@@ -12,8 +12,14 @@ builder.Services.AddProblemDetails();
 // Stryker disable once Statement : killed by the API tests when applied by hand; a shared test host never re-runs startup under a mutant
 builder.Services.AddExceptionHandler<DomainExceptionHandler>();
 
-// Data survive a restart: JSON files under a configurable directory (ADR-0006).
-var dataDirectory = Path.Combine(builder.Environment.ContentRootPath, builder.Configuration["Persistence:Directory"] ?? "data");
+// Data survive a restart: JSON files under a configurable directory (ADR-0006), whose default lives in appsettings.json.
+var configuredDirectory = builder.Configuration["Persistence:Directory"];
+if (string.IsNullOrWhiteSpace(configuredDirectory))
+{
+    throw new InvalidOperationException("Persistence:Directory is not configured: set it to the directory that holds the data.");
+}
+
+var dataDirectory = Path.Combine(builder.Environment.ContentRootPath, configuredDirectory);
 builder.Services.AddSingleton(new JsonFileStore(dataDirectory));
 
 builder.Services.AddSingleton<IIssuerRepository, FileIssuerRepository>();
