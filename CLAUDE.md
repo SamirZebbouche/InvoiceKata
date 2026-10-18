@@ -130,6 +130,8 @@ invariants hold at every level.
 
 ### In this project
 Level: `autonomous-pr`. Forge: GitHub (`origin` = `SamirZebbouche/InvoiceKata`).
+`main` is protected by the ruleset « main : PR seulement »: no deletion, no force-push, a pull request
+required (0 approval: the owner cannot approve their own PR), `build-and-test` required, no bypass.
 
 <!-- ai-core:test-tdd-cycle@v3 -->
 ## Test-driven development cycle
