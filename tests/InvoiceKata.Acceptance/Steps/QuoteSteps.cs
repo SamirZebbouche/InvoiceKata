@@ -11,6 +11,7 @@ public sealed class QuoteSteps(AcceptanceContext context)
 {
     private IssuerId _issuerId;
     private QuoteId _quoteId;
+    private readonly Dictionary<string, QuoteLineId> _lineIds = [];
 
     [When("{string} crée un devis pour {string}")]
     public async Task WhenTheIssuerCreatesAQuoteFor(string issuer, string customer)
@@ -35,19 +36,26 @@ public sealed class QuoteSteps(AcceptanceContext context)
     public Task GivenADraftQuote(string issuer, string customer) => WhenTheIssuerCreatesAQuoteFor(issuer, customer);
 
     [When("j'ajoute au devis la ligne suivante :")]
-    public async Task WhenIAddTheFollowingLine(DataTable table)
+    [Given("le devis contient les lignes suivantes :")]
+    public async Task WhenIAddTheFollowingLines(DataTable table)
     {
-        var row = table.Rows.Single();
-        var line = new NewQuoteLine
+        foreach (var row in table.Rows)
         {
-            Designation = row["désignation"],
-            Quantity = new Quantity(Amount(row["quantité"])),
-            Unit = row["unité"],
-            UnitPriceExcludingVat = new Money(Amount(row["prix unitaire HT"])),
-            VatRate = new VatRate(Amount(row["taux de TVA"])),
-        };
-        await context.AddQuoteLine.HandleAsync(_issuerId, _quoteId, line, CancellationToken.None);
+            var line = new NewQuoteLine
+            {
+                Designation = row["désignation"],
+                Quantity = new Quantity(Amount(row["quantité"])),
+                Unit = row["unité"],
+                UnitPriceExcludingVat = new Money(Amount(row["prix unitaire HT"])),
+                VatRate = new VatRate(Amount(row["taux de TVA"])),
+            };
+            _lineIds[line.Designation] = await context.AddQuoteLine.HandleAsync(_issuerId, _quoteId, line, CancellationToken.None);
+        }
     }
+
+    [When("je retire la ligne {string} du devis")]
+    public Task WhenIRemoveTheLine(string designation) =>
+        context.RemoveQuoteLine.HandleAsync(_issuerId, _quoteId, _lineIds[designation], CancellationToken.None);
 
     [Then("le devis contient {int} ligne(s)")]
     public async Task ThenTheQuoteHasLines(int count) => Assert.Equal(count, (await QuoteAsync()).Lines.Count);

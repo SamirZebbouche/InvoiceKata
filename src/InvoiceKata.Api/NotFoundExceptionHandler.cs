@@ -1,4 +1,4 @@
-using InvoiceKata.Application;
+using InvoiceKata.Domain;
 
 using Microsoft.AspNetCore.Diagnostics;
 

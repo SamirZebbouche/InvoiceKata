@@ -28,6 +28,13 @@ public static class QuoteEndpoints
             return Results.Created($"/issuers/{issuerId}/quotes/{quoteId}/lines/{lineId.Value}", QuoteResponse.From(quote));
         });
 
+        quotes.MapDelete("/{quoteId:guid}/lines/{lineId:guid}", async (Guid issuerId, Guid quoteId, Guid lineId, RemoveQuoteLine removeQuoteLine, GetQuote getQuote, CancellationToken cancellationToken) =>
+        {
+            await removeQuoteLine.HandleAsync(new IssuerId(issuerId), new QuoteId(quoteId), new QuoteLineId(lineId), cancellationToken);
+            var quote = await getQuote.HandleAsync(new IssuerId(issuerId), new QuoteId(quoteId), cancellationToken);
+            return Results.Ok(QuoteResponse.From(quote));
+        });
+
         return routes;
     }
 }

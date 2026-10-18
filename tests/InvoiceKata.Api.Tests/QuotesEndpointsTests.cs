@@ -66,6 +66,55 @@ public sealed class QuotesEndpointsTests(WebApplicationFactory<Program> factory)
         Assert.Equal([new VatBreakdownBody(20m, 1600m, 320m)], quote.VatBreakdown);
     }
 
+    [Fact]
+    public async Task Should_ReturnTheRecalculatedQuote_When_RemovingALine()
+    {
+        var client = factory.CreateClient();
+        var (issuerId, quoteId) = await DraftQuoteAsync(client);
+        await AddLineAsync(client, issuerId, quoteId, "Audit", 800m);
+        var formation = await AddLineAsync(client, issuerId, quoteId, "Formation", 500m);
+
+        var removed = await client.DeleteAsync($"/issuers/{issuerId}/quotes/{quoteId}/lines/{formation}");
+
+        Assert.Equal(HttpStatusCode.OK, removed.StatusCode);
+        var quote = await removed.Content.ReadFromJsonAsync<QuoteWithTotalsBody>();
+        Assert.Single(quote!.Lines);
+        Assert.Equal(new TotalsBody(800m, 160m, 960m), quote.Totals);
+    }
+
+    [Fact]
+    public async Task Should_ReturnNotFoundAsProblemDetails_When_RemovingAnUnknownLine()
+    {
+        var client = factory.CreateClient();
+        var (issuerId, quoteId) = await DraftQuoteAsync(client);
+
+        var response = await client.DeleteAsync($"/issuers/{issuerId}/quotes/{quoteId}/lines/{Guid.NewGuid()}");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+    }
+
+    private static async Task<(Guid IssuerId, Guid QuoteId)> DraftQuoteAsync(HttpClient client)
+    {
+        var issuerId = await ConfigureIssuerAsync(client);
+        var customerId = await RegisterCustomerAsync(client, issuerId);
+        var quoteId = IdFrom(await client.PostAsJsonAsync($"/issuers/{issuerId}/quotes", new { customerId }));
+        return (issuerId, quoteId);
+    }
+
+    private static async Task<Guid> AddLineAsync(HttpClient client, Guid issuerId, Guid quoteId, string designation, decimal unitPrice)
+    {
+        var response = await client.PostAsJsonAsync($"/issuers/{issuerId}/quotes/{quoteId}/lines", new
+        {
+            designation,
+            quantity = 1m,
+            unit = "forfait",
+            unitPriceExcludingVat = unitPrice,
+            vatRate = 20m,
+        });
+        return IdFrom(response);
+    }
+
     private static async Task<Guid> ConfigureIssuerAsync(HttpClient client)
     {
         var response = await client.PostAsJsonAsync("/issuers", new

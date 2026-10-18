@@ -52,4 +52,13 @@ public sealed class Quote
         _lines.Add(added);
         return added.Id;
     }
+
+    /// <exception cref="QuoteLineNotFoundException">The line is not on this quote.</exception>
+    public void RemoveLine(QuoteLineId lineId)
+    {
+        if (_lines.RemoveAll(line => line.Id == lineId) == 0)
+        {
+            throw new QuoteLineNotFoundException(Id, lineId);
+        }
+    }
 }

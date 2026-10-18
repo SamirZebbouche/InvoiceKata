@@ -22,6 +22,7 @@ builder.Services.AddSingleton<IQuoteRepository, InMemoryQuoteRepository>();
 builder.Services.AddTransient<CreateQuote>();
 builder.Services.AddTransient<GetQuote>();
 builder.Services.AddTransient<AddQuoteLine>();
+builder.Services.AddTransient<RemoveQuoteLine>();
 
 var app = builder.Build();
 
