@@ -5,15 +5,6 @@ public sealed record QuoteState(
     int Version, Guid Id, Guid IssuerId, Guid CustomerId, QuoteStatus Status, IReadOnlyList<QuoteLineState> Lines, IReadOnlyList<LegalMention> Mentions)
 {
     public const int CurrentVersion = 1;
-
-    // Records compare lists by reference; a state compares its lines and mentions one by one.
-    public bool Equals(QuoteState? other) =>
-        other is not null
-        && (Version, Id, IssuerId, CustomerId, Status) == (other.Version, other.Id, other.IssuerId, other.CustomerId, other.Status)
-        && Lines.SequenceEqual(other.Lines)
-        && Mentions.SequenceEqual(other.Mentions);
-
-    public override int GetHashCode() => HashCode.Combine(Version, Id, IssuerId, CustomerId, Status, Lines.Count, Mentions.Count);
 }
 
 public sealed record QuoteLineState(

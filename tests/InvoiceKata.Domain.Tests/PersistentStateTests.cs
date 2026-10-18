@@ -11,7 +11,7 @@ public sealed class PersistentStateTests
 
         var restored = Quote.FromState(quote.ToState());
 
-        Assert.Equal(quote.ToState(), restored.ToState());
+        Assert.Equivalent(quote.ToState(), restored.ToState(), strict: true);
         Assert.Equal(quote.TotalIncludingVat, restored.TotalIncludingVat);
         Assert.Empty(restored.TakeEvents());
     }
@@ -81,4 +81,39 @@ public sealed class PersistentStateTests
 
         Assert.Throws<ArgumentException>(() => Quote.FromState(state));
     }
+
+    // Every structural invariant re-checked on restore has its own case: a guarantee nobody tests guarantees nothing.
+    public static TheoryData<string, Func<object>> CorruptStates => new()
+    {
+        { "issuer of an unknown version", () => Issuer.FromState(Quotes.Issuer().ToState() with { Version = 2 }) },
+        { "issuer without identifier", () => Issuer.FromState(Quotes.Issuer().ToState() with { Id = Guid.Empty }) },
+        { "issuer of an unknown legal form", () => Issuer.FromState(Quotes.Issuer().ToState() with { LegalForm = (LegalForm)99 }) },
+        { "customer of an unknown version", () => Customer.FromState(CustomerState() with { Version = 2 }) },
+        { "customer without identifier", () => Customer.FromState(CustomerState() with { Id = Guid.Empty }) },
+        { "customer without issuer", () => Customer.FromState(CustomerState() with { IssuerId = Guid.Empty }) },
+        { "customer of an unknown kind", () => Customer.FromState(CustomerState() with { Kind = (CustomerKind)99 }) },
+        { "quote of an unknown version", () => Quote.FromState(Quotes.Draft().ToState() with { Version = 2 }) },
+        { "quote without issuer", () => Quote.FromState(Quotes.Draft().ToState() with { IssuerId = Guid.Empty }) },
+        { "quote without customer", () => Quote.FromState(Quotes.Draft().ToState() with { CustomerId = Guid.Empty }) },
+        { "quote of an unknown status", () => Quote.FromState(Quotes.Draft().ToState() with { Status = (QuoteStatus)99 }) },
+        { "quote with an unknown mention code", () => Quote.FromState(Quotes.Draft().ToState() with { Mentions = [new LegalMention((MentionCode)99, "?")] }) },
+        {
+            "quote with two mentions of the same code",
+            () => Quote.FromState(Quotes.Draft().ToState() with
+            {
+                Mentions = [new LegalMention(MentionCode.ReducedVatRate, "a"), new LegalMention(MentionCode.ReducedVatRate, "b")],
+            })
+        },
+    };
+
+    [Theory]
+    [MemberData(nameof(CorruptStates))]
+    public void Should_RefuseToRestore_When_TheStateIsCorrupt(string corruption, Func<object> restore)
+    {
+        var refusal = Record.Exception(restore);
+
+        Assert.True(refusal is ArgumentException, $"A {corruption} was restored instead of being refused.");
+    }
+
+    private static CustomerState CustomerState() => Quotes.ProfessionalCustomerOf(Quotes.Issuer()).ToState();
 }
