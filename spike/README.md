@@ -12,7 +12,7 @@ template Typst sans logique légale ?
 | Chemin | Rôle |
 |---|---|
 | `data/generate.py` | Joue le rôle du domaine : calcule exactement les montants et écrit les YAML résolus |
-| `data/*.yaml` | Un devis, une facture issue du devis, et un devis long qui teste la pagination |
+| `data/*.yaml` | Un devis, une facture issue de ce devis, un devis long qui teste la pagination, et un devis court qui tient sur une page |
 | `templates/societe.typ` | Le template d'un émetteur de type société, commun au devis et à la facture |
 | `render/` | Une console .NET qui lance `typst compile` et mesure le temps de rendu |
 | `out/*.pdf` | Les PDF produits |
@@ -37,10 +37,15 @@ dotnet run --project spike/render -- templates/societe.typ data/devis.yaml out/d
 4. **Afficher le prix unitaire brut et la remise**, plutôt qu'un prix net arrondi, évite l'incohérence
    visible sur le devis réel étudié (18,720 × 30,00 affiché, mais 561,54 calculé). C'est un choix de
    présentation, propre à chaque template.
-5. **La pagination est gérée** : la ligne d'en-tête du tableau se répète sur chaque page, les totaux
-   restent groupés, et l'en-tête de page, l'identité légale en pied de page et « page x / y » apparaissent
-   partout.
-6. **Le template ne pose de conditions que sur la présence d'une donnée facultative** (référence, SIREN du
+5. **La pagination est gérée.** La ligne d'en-tête du tableau se répète sur chaque page. L'en-tête de
+   page, l'identité légale en pied de page et la mention « <numéro> — page n / N » apparaissent sur chaque
+   page. C'est une **obligation** pour la facture : le numéro sur toutes les pages et une pagination n/N
+   ([service-public, F23208](https://entreprendre.service-public.gouv.fr/vosdroits/F23208)).
+6. **Les totaux, les mentions et le cadre « Bon pour accord » forment un seul bloc insécable**, à la
+   demande de Samir : ils sont toujours sur la même page. Aucun texte ne l'impose, mais une signature placée
+   à côté du prix et des conditions prouve mieux l'accord du client. Revers de cette règle : si le bloc ne
+   tient pas sous les lignes, il part seul en haut de la page suivante.
+7. **Le template ne pose de conditions que sur la présence d'une donnée facultative** (référence, SIREN du
    client, cadre d'acceptation). Il ne contient aucune règle sur le profil légal.
 
 ## Pièges rencontrés
@@ -49,6 +54,18 @@ dotnet run --project spike/render -- templates/societe.typ data/devis.yaml out/d
   `MSYS_NO_PATHCONV=1` en ligne de commande. Le problème ne se pose pas depuis .NET avec `ArgumentList`.
 - **Typst n'autorise pas les fichiers hors de `--root`** : les données à rendre doivent se trouver sous la
   racine, ou dans un dossier temporaire qui sert de racine, comme dans cvGenerator.
+
+## Questions ouvertes
+
+- **Les totaux seuls en haut d'une page.** Faut-il les laisser ainsi, faire suivre les dernières lignes du
+  tableau avec eux, ou ajouter des reports (« Total à reporter » en bas de page, « Report » en haut de la
+  suivante) ?
+- **Les sections.** Sont-elles obligatoires ou facultatives ? Sur le devis court, un titre de section
+  pour trois lignes alourdit la page.
+- **Les quantités.** Elles s'affichent à trois décimales (« 1,000 u »). Faut-il retirer les zéros
+  inutiles, ou laisser chaque ligne déclarer sa précision ?
+- **Le contrat YAML entre le domaine et le rendu** : sa structure, les mentions en liste de phrases ou en
+  champs, l'identité légale composée par le template ou fournie déjà résolue.
 
 ## Hors du spike
 

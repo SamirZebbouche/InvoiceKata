@@ -133,7 +133,8 @@
   },
 )
 
-// Totals, with the VAT broken down by rate; kept together on one page.
+// Totals, legal mentions and acceptance box form one unbreakable block: they always share a page,
+// so the client's signature and the mentions sit next to the price they relate to.
 #block(breakable: false, width: 100%)[
   #v(0.6em)
   #align(right, table(
@@ -149,19 +150,19 @@
     table.hline(stroke: 0.6pt + accent),
     table.cell(fill: luma(235))[*Total TTC*], table.cell(fill: luma(235))[*#money(data.totals.incl_vat)*],
   ))
-]
 
-// Legal mentions, already resolved by the domain.
-#v(0.8em)
-#set text(size: 8.5pt)
-#for mention in data.mentions [
-  - #mention
-]
-
-#if doc.acceptance_box {
-  v(1em)
-  block(breakable: false, stroke: 0.5pt + luma(150), inset: 10pt, width: 55%)[
-    *Bon pour accord* — date et signature du client, précédées de la mention « Bon pour accord » :
-    #v(2.2cm)
+  // Legal mentions, already resolved by the domain.
+  #v(0.8em)
+  #set text(size: 8.5pt)
+  #for mention in data.mentions [
+    - #mention
   ]
-}
+
+  #if doc.acceptance_box {
+    v(1em)
+    block(stroke: 0.5pt + luma(150), inset: 10pt, width: 55%)[
+      *Bon pour accord* — date et signature du client, précédées de la mention « Bon pour accord » :
+      #v(2.2cm)
+    ]
+  }
+]
