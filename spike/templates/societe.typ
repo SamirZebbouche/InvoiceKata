@@ -47,6 +47,18 @@
 ).join(" · ")
 
 #set document(title: doc.title + " " + doc.number)
+
+// Factur-X: the caller may pass the structured XML of the same document; it is embedded as is.
+#if "attachment" in sys.inputs {
+  // Factur-X readers look the file up by this exact name, so it must not be the source path.
+  pdf.attach(
+    "factur-x.xml",
+    read(sys.inputs.attachment, encoding: none),
+    relationship: "alternative",
+    mime-type: "text/xml",
+    description: "Factur-X",
+  )
+}
 #set text(font: "Libertinus Serif", size: 9.5pt, lang: "fr")
 #set page(
   paper: "a4",

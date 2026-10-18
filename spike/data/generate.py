@@ -5,6 +5,7 @@ Run: python -I spike/data/generate.py
 """
 from decimal import Decimal, ROUND_HALF_UP
 from pathlib import Path
+from xml.sax.saxutils import escape
 
 CENT = Decimal("0.01")
 
@@ -92,7 +93,8 @@ def resolve_sections(source):
                 "quantity": qty,
                 "unit": unit,
                 "unit_price_excl_vat": price,
-                "net_unit_price_excl_vat": str(net.normalize()),
+                # "f" format: normalize() alone writes 50 as "5E+1", which XML decimals reject.
+                "net_unit_price_excl_vat": format(net.normalize(), "f"),
                 "total_excl_vat": money(total),
                 "vat_rate": rate,
             }
@@ -197,6 +199,140 @@ INVOICE = document(
     ],
 )
 
+# --- Factur-X: the same resolved invoice as structured CII XML (profile BASIC) -----------------------------
+# Facts the PDF only states in its mentions; the XML needs them as fields.
+INVOICE_FACTS = {
+    "delivered_on": "2026-11-27",
+    "due_on": "2026-12-30",
+    "payment_terms": "Virement à 30 jours",
+    "iban": "FR7630006000011234567890189",
+    # French CIUS (BR-FR-05): these mentions travel as coded notes, not free sentences.
+    "notes": [
+        ("PMT", "Indemnité forfaitaire pour frais de recouvrement en cas de retard de paiement : 40 €."),
+        ("PMD", "Pénalités de retard : trois fois le taux d'intérêt légal."),
+        ("AAB", "Escompte pour paiement anticipé : néant."),
+    ],
+}
+# UN/ECE Recommendation 20 unit codes.
+UNIT_CODES = {"m²": "MTK", "u": "C62", "h": "HUR", "ml": "MTR", "forfait": "LS"}
+FACTURX_BASIC = "urn:cen.eu:en16931:2017#compliant#urn:factur-x.eu:1p0:basic"
+
+
+def cii_date(iso: str) -> str:
+    return f'<udt:DateTimeString format="102">{iso.replace("-", "")}</udt:DateTimeString>'
+
+
+def party(tag: str, p: dict) -> str:
+    street, city_line = p["address"][0], p["address"][-1]
+    postcode, city = city_line.split(" ", 1)
+    return f"""      <ram:{tag}>
+        <ram:Name>{escape(p["name"])}</ram:Name>
+        <ram:SpecifiedLegalOrganization><ram:ID schemeID="0002">{p["siren"]}</ram:ID></ram:SpecifiedLegalOrganization>
+        <ram:PostalTradeAddress>
+          <ram:PostcodeCode>{postcode}</ram:PostcodeCode>
+          <ram:LineOne>{escape(street)}</ram:LineOne>
+          <ram:CityName>{escape(city)}</ram:CityName>
+          <ram:CountryID>FR</ram:CountryID>
+        </ram:PostalTradeAddress>
+        <ram:URIUniversalCommunication><ram:URIID schemeID="0225">{p["siren"]}</ram:URIID></ram:URIUniversalCommunication>
+        <ram:SpecifiedTaxRegistration><ram:ID schemeID="VA">{p["vat_number"]}</ram:ID></ram:SpecifiedTaxRegistration>
+      </ram:{tag}>"""
+
+
+def cii_line(number: int, l: dict) -> str:
+    gross, net = Decimal(l["unit_price_excl_vat"]), Decimal(l["net_unit_price_excl_vat"])
+    allowance = ""
+    if gross != net:
+        allowance = f"""
+          <ram:AppliedTradeAllowanceCharge>
+            <ram:ChargeIndicator><udt:Indicator>false</udt:Indicator></ram:ChargeIndicator>
+            <ram:ActualAmount>{gross - net}</ram:ActualAmount>
+          </ram:AppliedTradeAllowanceCharge>"""
+    return f"""    <ram:IncludedSupplyChainTradeLineItem>
+      <ram:AssociatedDocumentLineDocument><ram:LineID>{number}</ram:LineID></ram:AssociatedDocumentLineDocument>
+      <ram:SpecifiedTradeProduct><ram:Name>{escape(l["designation"])}</ram:Name></ram:SpecifiedTradeProduct>
+      <ram:SpecifiedLineTradeAgreement>
+        <ram:GrossPriceProductTradePrice>
+          <ram:ChargeAmount>{gross}</ram:ChargeAmount>{allowance}
+        </ram:GrossPriceProductTradePrice>
+        <ram:NetPriceProductTradePrice><ram:ChargeAmount>{net}</ram:ChargeAmount></ram:NetPriceProductTradePrice>
+      </ram:SpecifiedLineTradeAgreement>
+      <ram:SpecifiedLineTradeDelivery>
+        <ram:BilledQuantity unitCode="{UNIT_CODES[l["unit"]]}">{l["quantity"]}</ram:BilledQuantity>
+      </ram:SpecifiedLineTradeDelivery>
+      <ram:SpecifiedLineTradeSettlement>
+        <ram:ApplicableTradeTax>
+          <ram:TypeCode>VAT</ram:TypeCode>
+          <ram:CategoryCode>S</ram:CategoryCode>
+          <ram:RateApplicablePercent>{l["vat_rate"]}</ram:RateApplicablePercent>
+        </ram:ApplicableTradeTax>
+        <ram:SpecifiedTradeSettlementLineMonetarySummation>
+          <ram:LineTotalAmount>{l["total_excl_vat"]}</ram:LineTotalAmount>
+        </ram:SpecifiedTradeSettlementLineMonetarySummation>
+      </ram:SpecifiedLineTradeSettlement>
+    </ram:IncludedSupplyChainTradeLineItem>"""
+
+
+def cii_invoice(doc: dict, facts: dict) -> str:
+    lines = [l for s in doc["sections"] for l in s["lines"]]
+    taxes = "\n".join(f"""      <ram:ApplicableTradeTax>
+        <ram:CalculatedAmount>{b["vat"]}</ram:CalculatedAmount>
+        <ram:TypeCode>VAT</ram:TypeCode>
+        <ram:BasisAmount>{b["base_excl_vat"]}</ram:BasisAmount>
+        <ram:CategoryCode>S</ram:CategoryCode>
+        <ram:RateApplicablePercent>{b["rate"]}</ram:RateApplicablePercent>
+      </ram:ApplicableTradeTax>""" for b in doc["vat_breakdown"])
+    notes = "\n".join(
+        f"    <ram:IncludedNote><ram:Content>{escape(text)}</ram:Content><ram:SubjectCode>{code}</ram:SubjectCode></ram:IncludedNote>"
+        for code, text in facts["notes"])
+    t = doc["totals"]
+    return f"""<?xml version="1.0" encoding="UTF-8"?>
+<rsm:CrossIndustryInvoice xmlns:rsm="urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100"
+    xmlns:ram="urn:un:unece:uncefact:data:standard:ReusableAggregateBusinessInformationEntity:100"
+    xmlns:udt="urn:un:unece:uncefact:data:standard:UnqualifiedDataType:100"
+    xmlns:qdt="urn:un:unece:uncefact:data:standard:QualifiedDataType:100">
+  <rsm:ExchangedDocumentContext>
+    <ram:GuidelineSpecifiedDocumentContextParameter><ram:ID>{FACTURX_BASIC}</ram:ID></ram:GuidelineSpecifiedDocumentContextParameter>
+  </rsm:ExchangedDocumentContext>
+  <rsm:ExchangedDocument>
+    <ram:ID>{doc["document"]["number"]}</ram:ID>
+    <ram:TypeCode>380</ram:TypeCode>
+    <ram:IssueDateTime>{cii_date(doc["document"]["issued_on"])}</ram:IssueDateTime>
+{notes}
+  </rsm:ExchangedDocument>
+  <rsm:SupplyChainTradeTransaction>
+{chr(10).join(cii_line(i, l) for i, l in enumerate(lines, start=1))}
+    <ram:ApplicableHeaderTradeAgreement>
+{party("SellerTradeParty", doc["issuer"])}
+{party("BuyerTradeParty", doc["customer"])}
+    </ram:ApplicableHeaderTradeAgreement>
+    <ram:ApplicableHeaderTradeDelivery>
+      <ram:ActualDeliverySupplyChainEvent><ram:OccurrenceDateTime>{cii_date(facts["delivered_on"])}</ram:OccurrenceDateTime></ram:ActualDeliverySupplyChainEvent>
+    </ram:ApplicableHeaderTradeDelivery>
+    <ram:ApplicableHeaderTradeSettlement>
+      <ram:InvoiceCurrencyCode>EUR</ram:InvoiceCurrencyCode>
+      <ram:SpecifiedTradeSettlementPaymentMeans>
+        <ram:TypeCode>30</ram:TypeCode>
+        <ram:PayeePartyCreditorFinancialAccount><ram:IBANID>{facts["iban"]}</ram:IBANID></ram:PayeePartyCreditorFinancialAccount>
+      </ram:SpecifiedTradeSettlementPaymentMeans>
+{taxes}
+      <ram:SpecifiedTradePaymentTerms>
+        <ram:Description>{escape(facts["payment_terms"])}</ram:Description>
+        <ram:DueDateDateTime>{cii_date(facts["due_on"])}</ram:DueDateDateTime>
+      </ram:SpecifiedTradePaymentTerms>
+      <ram:SpecifiedTradeSettlementHeaderMonetarySummation>
+        <ram:LineTotalAmount>{t["excl_vat"]}</ram:LineTotalAmount>
+        <ram:TaxBasisTotalAmount>{t["excl_vat"]}</ram:TaxBasisTotalAmount>
+        <ram:TaxTotalAmount currencyID="EUR">{t["vat"]}</ram:TaxTotalAmount>
+        <ram:GrandTotalAmount>{t["incl_vat"]}</ram:GrandTotalAmount>
+        <ram:DuePayableAmount>{t["incl_vat"]}</ram:DuePayableAmount>
+      </ram:SpecifiedTradeSettlementHeaderMonetarySummation>
+    </ram:ApplicableHeaderTradeSettlement>
+  </rsm:SupplyChainTradeTransaction>
+</rsm:CrossIndustryInvoice>
+"""
+
+
 # Pagination stress test: the same quote with its sections repeated three times.
 LONG_QUOTE = document(dict(QUOTE["document"], number="D-2026-0043"), QUOTE["mentions"], repeat=3)
 
@@ -220,3 +356,5 @@ if __name__ == "__main__":
             encoding="utf-8",
         )
         print("wrote", name)
+    (here / "factur-x.xml").write_text(cii_invoice(INVOICE, INVOICE_FACTS), encoding="utf-8")
+    print("wrote factur-x.xml")
