@@ -69,7 +69,14 @@ chaque pull request.
   à plusieurs entreprises, et son identifiant doit être impossible à deviner. L'agent avait supposé une
   instance par émetteur ([ADR-0007](docs/adr/ADR-0007-saas-multi-emetteur.md)). Samir a ensuite
   relevé qu'un même client réel, s'il l'est de deux entreprises, doit avoir deux fiches indépendantes ; le
-  code le faisait déjà, l'ADR-0007 en fait une décision explicite. Sur les arrondis, Samir
+  code le faisait déjà, l'ADR-0007 en fait une décision explicite. Pour la
+  persistance, l'agent proposait une méthode `ToSnapshot` ; Samir a exigé un contrat (une interface qui
+  garantit la présence des méthodes dans les classes à persister), puis a soulevé deux risques : un
+  objet alourdi, et des objets reconstruits dans un état faux quand le domaine évolue. Il en est sorti des
+  fichiers partiels, des invariants revérifiés à la reconstruction, un numéro de version et des fichiers
+  de référence ([CDR-0006](docs/cdr/CDR-0006-etat-persistant-des-agregats.md)). Samir a choisi des
+  migrations de version en version, à la lecture, et a demandé un ADR pour leur cause légale : un document
+  émis n'est jamais réécrit ([ADR-0009](docs/adr/ADR-0009-documents-legaux-jamais-reecrits.md)). Sur les arrondis, Samir
   pensait que tout devait se faire au rendu. L'agent a montré, sources à l'appui, que les montants légaux
   doivent être arrondis au centime dans le domaine, sinon le PDF et le XML se contrediraient. Samir a
   demandé que cette règle soit écrite dans un ADR ([ADR-0008](docs/adr/ADR-0008-arrondis.md)).
@@ -113,6 +120,8 @@ chaque pull request.
   - l'argument d'un CDR se démontre : avant d'écrire la règle du taux réduit, l'agent a écrit la version
     fondée sur le delta que le CDR-0001 écarte, et le scénario l'a fait échouer au retrait de la première
     ligne à 10 %.
+  - un fichier de référence prouve sa valeur : en renommant un champ de l'état d'une ligne, tous les
+    tests d'aller-retour passaient encore, et seul le fichier de référence v1 a échoué.
   - une casse doit aussi compiler : deux casses rendaient du code inaccessible, ce que
     `TreatWarningsAsErrors` refuse. Aucun test n'a tourné, et l'absence de sortie n'était pas une preuve.
     L'agent les a refaites, en vérifiant le build avant de lire les tests.
@@ -165,6 +174,14 @@ chaque pull request.
 - **Un fichier généré commité.** Le code produit par Reqnroll (`*.feature.cs`) est entré dans un commit.
   L'agent l'a vu en relisant le commit, l'a ajouté au `.gitignore` et a corrigé le commit, qui n'était
   pas encore poussé.
+- **Un adaptateur en mémoire trop gentil.** Il stockait des références : une modification non enregistrée
+  y « persistait », mais aurait été perdue avec des fichiers. L'agent l'a trouvé en écrivant la suite de
+  contrat. La règle « une modification non enregistrée n'est pas conservée » y est entrée, vue en échec
+  sur la mémoire avant la correction.
+- **Du code de production écrit pour les tests.** Stryker a montré une égalité écrite à la main pour
+  comparer des états dans les tests, et des invariants de reconstruction non testés un par un. L'égalité
+  a été supprimée, et chaque invariant a maintenant son cas : le score de mutation est remonté de 76,5 %
+  à 82,6 %.
 - **Un écart à la règle TDD.** Pour le client particulier, l'agent a écrit le contrôleur avant ses tests
   d'API. Il l'a signalé, puis a rattrapé l'écart en faisant échouer chaque test par une casse ciblée.
 - **Une DLL périmée.** Après avoir restauré l'adaptateur qu'il avait cassé exprès, l'agent a vu le test

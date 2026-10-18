@@ -42,6 +42,15 @@ Stack : C# / .NET, avec `dotnet test`, `dotnet format --verify-no-changes` et `d
 On y trouve les scénarios d'acceptation en français, avec le résultat de chaque étape, la couverture du code et
 le rapport des tests par mutation (Stryker.NET), dont le score bloque la CI sous 70 %.
 
+## Lancer l'API
+
+```
+dotnet run --project src/InvoiceKata.Api
+```
+
+Les données sont des fichiers JSON, un dossier par émetteur, sous `src/InvoiceKata.Api/data`
+(réglage `Persistence:Directory`). Elles survivent au redémarrage.
+
 ## Périmètre retenu
 
 La partie back d'un logiciel de devis et de factures, exposée par une **API** ([docs/API.md](docs/API.md)) :
