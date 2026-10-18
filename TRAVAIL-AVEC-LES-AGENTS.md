@@ -144,6 +144,11 @@ chaque pull request.
 - **Une question posée en jargon.** L'agent a demandé s'il fallait « tenter Factur-X » sans expliquer ce
   que c'était. Samir pensait y avoir répondu, et l'agent a cru comprendre que le sujet était écarté. Une
   fois Factur-X expliqué, Samir a demandé de le vérifier dans le spike.
+- **Des scénarios pris pour des tests unitaires.** Les règles de mention et le dispatcher n'étaient testés
+  que par les scénarios Gherkin, et aucun projet ne testait la couche Application. Samir l'a relevé : « la
+  présence d'un test d'acceptation ne dispense pas d'un TU ». Le projet `InvoiceKata.Application.Tests` les
+  teste désormais, et chaque test a été vu en échec par une casse ciblée. Ces tests ont aussitôt trouvé un
+  défaut : la mention légale arrondissait le capital social (1 000,50 € y devenait « 1 001 € »).
 - **Un chemin déformé dans le spike.** Git Bash a converti le chemin passé à Typst en chemin Windows, et
   la première compilation a échoué. L'agent a diagnostiqué la cause, puis l'a contournée.
 - **Un spike conclu trop vite.** Samir avait annoncé « POC, discutons ». L'agent a pourtant enchaîné le
