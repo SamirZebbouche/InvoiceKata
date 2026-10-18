@@ -59,7 +59,8 @@ l'émetteur et du client, et tout contexte non pris en charge est refusé
 
 ## Roadmap
 
-Chaque lot laisse un système fonctionnel : la fin de chaque lot est un point d'arrêt possible.
+Chaque PR laisse un système fonctionnel : la fin de chaque PR est un point d'arrêt possible. Le détail des
+PR, des scénarios et des questions à trancher se trouve dans [docs/ROADMAP.md](docs/ROADMAP.md).
 
 | Lot | Contenu | Ce qui apparaît |
 |---|---|---|
