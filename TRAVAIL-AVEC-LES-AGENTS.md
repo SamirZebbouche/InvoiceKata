@@ -16,7 +16,11 @@ chaque pull request.
   frictions : « je vois à peu près où je veux aller ».
 - **Les décisions de conception.** L'agent propose des options et réfute celles qui ne tiennent pas ;
   Samir tranche.
-- **Le périmètre**, encore à définir.
+- **La démarche.** Samir décrit d'abord un cadre large, que l'on conçoit ensemble par ADR. On construit
+  ensuite une roadmap découpée en lots, avec un POC d'abord, puis un MVP enrichi petit à petit. La
+  contrainte est que chaque PR laisse un système fonctionnel : où que le travail s'arrête, la solution
+  est opérationnelle.
+- **Le périmètre**, qui découlera du cadre et de la roadmap.
 
 ## Comment c'est vérifié
 
