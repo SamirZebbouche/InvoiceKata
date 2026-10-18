@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/InvoiceKata.Adapters.Persistence/InvoiceKata.Adapters.Persistence.csproj" />
+    <Project Path="src/InvoiceKata.Adapters.Rendering/InvoiceKata.Adapters.Rendering.csproj" />
     <Project Path="src/InvoiceKata.Api/InvoiceKata.Api.csproj" />
     <Project Path="src/InvoiceKata.Application/InvoiceKata.Application.csproj" />
     <Project Path="src/InvoiceKata.Domain/InvoiceKata.Domain.csproj" />
@@ -11,5 +12,6 @@
     <Project Path="tests/InvoiceKata.Application.Tests/InvoiceKata.Application.Tests.csproj" />
     <Project Path="tests/InvoiceKata.Domain.Tests/InvoiceKata.Domain.Tests.csproj" />
     <Project Path="tests/InvoiceKata.Persistence.ContractTests/InvoiceKata.Persistence.ContractTests.csproj" />
+    <Project Path="tests/InvoiceKata.Rendering.Tests/InvoiceKata.Rendering.Tests.csproj" />
   </Folder>
 </Solution>

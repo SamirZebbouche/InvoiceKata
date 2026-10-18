@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\InvoiceKata.Application\InvoiceKata.Application.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <!-- The templates travel inside the assembly: the renderer never depends on where the API runs from. -->
+  <ItemGroup>
+    <EmbeddedResource Include="Templates\*.typ" LogicalName="Templates.%(Filename)%(Extension)" />
+  </ItemGroup>
+
+</Project>
