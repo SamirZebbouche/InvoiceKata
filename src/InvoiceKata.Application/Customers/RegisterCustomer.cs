@@ -3,7 +3,7 @@ using InvoiceKata.Domain;
 
 namespace InvoiceKata.Application.Customers;
 
-public sealed record RegisterCustomerCommand(string Name, string Siren, string VatNumber, Address Address);
+public sealed record RegisterCustomerCommand(string Name, Siren Siren, VatNumber VatNumber, Address Address);
 
 public sealed class RegisterCustomer(IIssuerRepository issuers, ICustomerRepository customers)
 {

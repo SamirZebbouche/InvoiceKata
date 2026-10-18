@@ -19,9 +19,9 @@ public sealed class IssuerSteps(AcceptanceContext context)
             Name: fields["dénomination"],
             LegalForm: fields["forme juridique"],
             ShareCapital: decimal.Parse(fields["capital"], System.Globalization.CultureInfo.InvariantCulture),
-            Siren: fields["SIREN"],
-            VatNumber: fields["numéro de TVA"],
-            Address: new Address(fields["adresse"], fields["code postal"], fields["ville"]));
+            Siren: new Siren(fields["SIREN"]),
+            VatNumber: new VatNumber(fields["numéro de TVA"]),
+            Address: new Address { Street = fields["adresse"], PostalCode = fields["code postal"], City = fields["ville"] });
         _issuerId = await context.ConfigureIssuer.HandleAsync(_command, CancellationToken.None);
     }
 

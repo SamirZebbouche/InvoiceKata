@@ -28,11 +28,11 @@ public static class CustomerEndpoints
 
 public sealed record RegisterCustomerRequest(string Name, string Siren, string VatNumber, AddressBody Address)
 {
-    public RegisterCustomerCommand ToCommand() => new(Name, Siren, VatNumber, Address.ToAddress());
+    public RegisterCustomerCommand ToCommand() => new(Name, new Siren(Siren), new VatNumber(VatNumber), Address.ToAddress());
 }
 
 public sealed record CustomerResponse(Guid Id, string Kind, string Name, string Siren, string VatNumber, AddressBody Address)
 {
     public static CustomerResponse From(Customer customer) =>
-        new(customer.Id.Value, customer.Kind.ToString(), customer.Name, customer.Siren, customer.VatNumber, AddressBody.From(customer.Address));
+        new(customer.Id.Value, customer.Kind.ToString(), customer.Name, customer.Siren.Value, customer.VatNumber.Value, AddressBody.From(customer.Address));
 }

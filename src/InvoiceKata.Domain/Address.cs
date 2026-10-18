@@ -1,3 +1,11 @@
 namespace InvoiceKata.Domain;
 
-public sealed record Address(string Street, string PostalCode, string City);
+// Required init properties: every call site names each part, so street, postal code and city cannot be swapped.
+public sealed record Address
+{
+    public required string Street { get; init; }
+
+    public required string PostalCode { get; init; }
+
+    public required string City { get; init; }
+}

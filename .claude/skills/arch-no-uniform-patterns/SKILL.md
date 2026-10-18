@@ -28,4 +28,4 @@ beyond the context that justified it.
 <!-- /ai-core:arch-no-uniform-patterns -->
 
 ## In this project
-Event sourcing is rejected (ADR-0006); domain events serve reactions only (ADR-0003), never as a persistence model. Typed ids (`IssuerId`, `CustomerId`) meet the swap criterion; API requests and persistence contracts stay primitive. `Siren` and `VatNumber` are plain strings side by side in commands: value-object candidates once validation or a mix-up shows up.
+Event sourcing is rejected (ADR-0006); domain events serve reactions only (ADR-0003), never as a persistence model. Typed ids (`IssuerId`, `CustomerId`) meet the swap criterion; API requests and persistence contracts stay primitive. `Siren` and `VatNumber` became value objects once the owner flagged the mix-up risk (types only; validation will be a behaviour of its own). `Address` stays one record with `required` init properties: named at every call site, without a type per part.

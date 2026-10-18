@@ -17,7 +17,8 @@ public sealed class CustomerSteps(AcceptanceContext context)
     public async Task GivenACompanyIssuer(string name)
     {
         var command = new ConfigureIssuerCommand(
-            name, "SAS", 20000m, "912345678", "FR12912345678", new Address("12 rue des Artisans", "47000", "Agen"));
+            name, "SAS", 20000m, new Siren("912345678"), new VatNumber("FR12912345678"),
+            new Address { Street = "12 rue des Artisans", PostalCode = "47000", City = "Agen" });
         context.IssuersByName[name] = await context.ConfigureIssuer.HandleAsync(command, CancellationToken.None);
     }
 
@@ -27,15 +28,16 @@ public sealed class CustomerSteps(AcceptanceContext context)
         var fields = table.Rows.ToDictionary(row => row["champ"], row => row["valeur"]);
         await RegisterAsync(issuer, new RegisterCustomerCommand(
             fields["nom"],
-            fields["SIREN"],
-            fields["numéro de TVA"],
-            new Address(fields["adresse"], fields["code postal"], fields["ville"])));
+            new Siren(fields["SIREN"]),
+            new VatNumber(fields["numéro de TVA"]),
+            new Address { Street = fields["adresse"], PostalCode = fields["code postal"], City = fields["ville"] }));
     }
 
     [Given("{string} a enregistré le client professionnel {string}")]
     public Task GivenTheIssuerRegisteredAProfessionalCustomer(string issuer, string name) =>
         RegisterAsync(issuer, new RegisterCustomerCommand(
-            name, "834567890", "FR45834567890", new Address("4 place du Marché", "33000", "Bordeaux")));
+            name, new Siren("834567890"), new VatNumber("FR45834567890"),
+            new Address { Street = "4 place du Marché", PostalCode = "33000", City = "Bordeaux" }));
 
     [Then("{string} retrouve ce client professionnel avec ces informations")]
     public async Task ThenTheIssuerFindsThisProfessionalCustomer(string issuer)
