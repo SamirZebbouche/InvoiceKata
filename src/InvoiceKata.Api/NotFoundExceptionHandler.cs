@@ -1,4 +1,4 @@
-using InvoiceKata.Application.Issuers;
+using InvoiceKata.Application;
 
 using Microsoft.AspNetCore.Diagnostics;
 
@@ -9,7 +9,7 @@ public sealed class NotFoundExceptionHandler(IProblemDetailsService problemDetai
 {
     public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
     {
-        if (exception is not IssuerNotFoundException)
+        if (exception is not ResourceNotFoundException)
         {
             return false;
         }
