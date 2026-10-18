@@ -47,7 +47,7 @@ gestionnaire qui ne serait pas fondé sur l'état.
 
 ## Conséquences
 
-- La base est le seul endroit où vivent l'approche fondée sur l'état et l'idempotence. Un test de rejeu
+- La classe de base `LegalMentionRule` est le seul endroit où vivent l'approche fondée sur l'état et l'idempotence. Un test de rejeu
   sur la base les couvre pour toutes les mentions.
 - Le catalogue des textes grandit avec chaque mention : c'est voulu, puisqu'il est la future table de
   traduction.

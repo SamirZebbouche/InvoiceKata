@@ -12,11 +12,13 @@ result pattern (ADR-0002).
 
 ## Décision
 
-1. **Une exception par raison métier**, regroupée sous une classe de base quand plusieurs partagent la
-   même réponse : `ResourceNotFoundException`, dont dérivent `IssuerNotFoundException`,
+1. **Une exception par raison métier**, regroupée sous une exception de base quand plusieurs partagent
+   la même réponse : `ResourceNotFoundException`, dont dérivent `IssuerNotFoundException`,
    `CustomerNotFoundException`, `QuoteNotFoundException` (application) et `QuoteLineNotFoundException`
-   (domaine). La base vit dans le domaine, pour qu'un agrégat puisse refuser lui-même ce qu'il ne contient
-   pas.
+   (domaine). L'exception de base vit dans le domaine : le devis peut ainsi refuser
+   lui-même de retirer une ligne qu'il ne contient pas (« tell, don't ask »), et l'API répond `404`
+   comme pour toute ressource introuvable. Le domaine ne voit pas l'application, et une exception du
+   domaine ne pourrait pas dériver d'une exception de base définie dans l'application.
 2. **La traduction se fait à un seul endroit, au plus haut niveau** : un gestionnaire d'exceptions de
    l'API (`IExceptionHandler`) traduit chaque classe en code HTTP, au format Problem Details. Aucune
    exception générique n'est attrapée ailleurs (règle `dotnet-error-handling`).
