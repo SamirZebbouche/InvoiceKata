@@ -32,7 +32,12 @@ chaque pull request.
   a écarté la recommandation de l'agent, qui voulait merger le POC. Samir a aussi demandé une chorégraphie
   par événements pour certaines parties, chaque événement étant traité de façon idempotente. L'agent a
   délimité ces parties : le noyau légal reste synchrone, et seules les réactions à un fait acquis sont
-  chorégraphiées ([ADR-0003](docs/adr/ADR-0003-reactions-par-evenements-idempotentes.md)).
+  chorégraphiées ([ADR-0003](docs/adr/ADR-0003-reactions-par-evenements-idempotentes.md)). Chaque
+  cas d'usage est livré en ATDD couplé au BDD, choix de Samir, avec des scénarios en français
+  ([ADR-0004](docs/adr/ADR-0004-atdd-et-bdd-par-cas-d-usage.md)).
+- **La roadmap.** L'agent a proposé un découpage en lots, et Samir l'a validé. L'agent a signalé un
+  risque : à J-2, toujours aucune ligne de code, alors que l'énoncé demande « quelques heures ». La suite
+  doit donc surtout être de l'exécution.
 - **Le rôle de PO.** Dans la réalité, les règles légales viendraient d'un PO ou d'un juriste. Ici, Samir
   tient ce rôle : l'agent fournit une recherche sourcée sur les sites officiels, Samir décide.
 
