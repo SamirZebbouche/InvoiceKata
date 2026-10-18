@@ -58,7 +58,8 @@ Any task large enough to need several commits. A single small change is one batc
 <!-- /ai-core:method-reviewable-batches -->
 
 ### In this project
-No project-specific notes.
+The owner reviews per pull request: keep one commit per TDD increment, but pause only at the end of a pull
+request or when a question needs the owner, not every two commits.
 
 <!-- ai-core:method-verify-before-claiming@v1 -->
 ## Verify before claiming
