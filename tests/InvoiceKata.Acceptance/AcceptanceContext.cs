@@ -15,11 +15,11 @@ public sealed class AcceptanceContext
     private readonly InMemoryQuoteRepository _quotes = new();
     private readonly QuoteEventDispatcher _events;
     private readonly QuoteScopes _scopes;
+    private readonly FrenchMentionTexts _texts = new();
 
     public AcceptanceContext()
     {
-        var texts = new FrenchMentionTexts();
-        QuoteEventHandlers = [new IssuerLegalIdentityMention(texts), new ReducedVatRateMention(texts)];
+        QuoteEventHandlers = [new IssuerLegalIdentityMention(_texts), new ReducedVatRateMention(_texts)];
         _events = new QuoteEventDispatcher(QuoteEventHandlers);
         _scopes = new QuoteScopes(_issuers, _customers);
     }
@@ -45,6 +45,10 @@ public sealed class AcceptanceContext
     public AddQuoteLine AddQuoteLine => new(_quotes, _scopes, _events);
 
     public RemoveQuoteLine RemoveQuoteLine => new(_quotes, _scopes, _events);
+
+    public FinalizeQuote FinalizeQuote => new(_quotes, _texts, Clock);
+
+    public FixedClock Clock { get; } = new();
 
     // Scenarios name issuers ("Batifolio"); the steps resolve those names to identifiers.
     public Dictionary<string, IssuerId> IssuersByName { get; } = [];

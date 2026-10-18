@@ -16,6 +16,10 @@ public sealed class FrenchMentionTexts : IMentionTexts
         "Taux de TVA réduit de 10 % appliqué aux travaux d'amélioration d'un logement achevé depuis plus de "
         + "deux ans (art. 279-0 bis du CGI).";
 
+    // Stryker disable once String : equivalent, fr-FR's short date is already dd/MM/yyyy; kept explicit on purpose
+    public string QuoteValidity(int validityDays, DateOnly validUntil) =>
+        $"Devis valable {validityDays} {(validityDays == 1 ? "jour" : "jours")}, jusqu'au {validUntil.ToString("dd/MM/yyyy", French)}.";
+
     // "20 000", but "7 622,45": a capital converted from francs keeps its cents, never rounded.
     private static string Written(decimal shareCapital) =>
         shareCapital.ToString(decimal.IsInteger(shareCapital) ? "#,0" : "#,0.00", French);

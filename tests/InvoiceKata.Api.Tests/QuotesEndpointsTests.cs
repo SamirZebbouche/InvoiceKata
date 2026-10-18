@@ -166,6 +166,106 @@ public sealed class QuotesEndpointsTests(ApiFactory factory) : IClassFixture<Api
         Assert.Contains(quote!.Mentions, mention => mention.Code == "ReducedVatRate");
     }
 
+    [Fact]
+    public async Task Should_ReturnTheQuoteWithItsNumberAndDates_When_Finalizing()
+    {
+        var client = factory.CreateClient();
+        var (issuerId, quoteId) = await DraftQuoteAsync(client);
+        await AddLineAsync(client, issuerId, quoteId, "Audit", 800m);
+
+        var finalized = await client.PostAsync($"/issuers/{issuerId}/quotes/{quoteId}/finalization", content: null);
+
+        Assert.Equal(HttpStatusCode.OK, finalized.StatusCode);
+        var quote = await finalized.Content.ReadFromJsonAsync<FinalizedQuoteBody>();
+        Assert.Equal(("Finalized", "D-2026-0001", "2026-10-18", "2026-11-17"), (quote!.Status, quote.Number, quote.IssuedOn, quote.ValidUntil));
+        Assert.Contains(new MentionBody("QuoteValidity", "Devis valable 30 jours, jusqu'au 17/11/2026."), quote.Mentions);
+        Assert.Equal(quote, await client.GetFromJsonAsync<FinalizedQuoteBody>($"/issuers/{issuerId}/quotes/{quoteId}"), FinalizedQuoteBody.Comparer);
+    }
+
+    [Fact]
+    public async Task Should_EndTheValidityAfterTheDaysAsked_When_FinalizingWithAValidity()
+    {
+        var client = factory.CreateClient();
+        var (issuerId, quoteId) = await DraftQuoteAsync(client);
+        await AddLineAsync(client, issuerId, quoteId, "Audit", 800m);
+
+        var finalized = await client.PostAsJsonAsync($"/issuers/{issuerId}/quotes/{quoteId}/finalization", new { validityDays = 15 });
+
+        Assert.Equal("2026-11-02", (await finalized.Content.ReadFromJsonAsync<FinalizedQuoteBody>())!.ValidUntil);
+    }
+
+    [Fact]
+    public async Task Should_HaveNoNumberNorDates_When_StillADraft()
+    {
+        var client = factory.CreateClient();
+        var (issuerId, quoteId) = await DraftQuoteAsync(client);
+
+        var quote = await client.GetFromJsonAsync<FinalizedQuoteBody>($"/issuers/{issuerId}/quotes/{quoteId}");
+
+        Assert.Equal(((string?)null, (string?)null, (string?)null), (quote!.Number, quote.IssuedOn, quote.ValidUntil));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(366)]
+    public async Task Should_ReturnBadRequestAndKeepTheDraft_When_TheValidityIsOutOfRange(int validityDays)
+    {
+        var client = factory.CreateClient();
+        var (issuerId, quoteId) = await DraftQuoteAsync(client);
+        await AddLineAsync(client, issuerId, quoteId, "Audit", 800m);
+
+        var response = await client.PostAsJsonAsync($"/issuers/{issuerId}/quotes/{quoteId}/finalization", new { validityDays });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("Draft", (await client.GetFromJsonAsync<FinalizedQuoteBody>($"/issuers/{issuerId}/quotes/{quoteId}"))!.Status);
+    }
+
+    [Fact]
+    public async Task Should_ReturnConflict_When_AddingALineToAFinalizedQuote()
+    {
+        var client = factory.CreateClient();
+        var (issuerId, quoteId) = await DraftQuoteAsync(client);
+        await AddLineAsync(client, issuerId, quoteId, "Audit", 800m);
+        await client.PostAsync($"/issuers/{issuerId}/quotes/{quoteId}/finalization", content: null);
+
+        var response = await client.PostAsJsonAsync($"/issuers/{issuerId}/quotes/{quoteId}/lines", new
+        {
+            designation = "Formation",
+            quantity = 1m,
+            unit = "jour",
+            unitPriceExcludingVat = 600m,
+            vatRate = 20m,
+        });
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+    }
+
+    [Fact]
+    public async Task Should_ReturnConflict_When_FinalizingAQuoteWithoutLines()
+    {
+        var client = factory.CreateClient();
+        var (issuerId, quoteId) = await DraftQuoteAsync(client);
+
+        var response = await client.PostAsync($"/issuers/{issuerId}/quotes/{quoteId}/finalization", content: null);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Should_ReturnNotFound_When_FinalizingAnotherIssuersQuote()
+    {
+        var client = factory.CreateClient();
+        var (issuerId, quoteId) = await DraftQuoteAsync(client);
+        await AddLineAsync(client, issuerId, quoteId, "Audit", 800m);
+        var other = await ConfigureIssuerAsync(client);
+
+        var response = await client.PostAsync($"/issuers/{other}/quotes/{quoteId}/finalization", content: null);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+    }
+
     private static async Task<(Guid IssuerId, Guid QuoteId)> DraftQuoteAsync(HttpClient client)
     {
         var issuerId = await ConfigureIssuerAsync(client);
@@ -230,6 +330,13 @@ public sealed class QuotesEndpointsTests(ApiFactory factory) : IClassFixture<Api
     private sealed record MentionBody(string Code, string Text);
 
     private sealed record QuoteWithMentionsBody(IReadOnlyList<MentionBody> Mentions);
+
+    private sealed record FinalizedQuoteBody(Guid Id, string Status, string? Number, string? IssuedOn, string? ValidUntil, IReadOnlyList<MentionBody> Mentions)
+    {
+        public static IEqualityComparer<FinalizedQuoteBody?> Comparer { get; } = EqualityComparer<FinalizedQuoteBody?>.Create(
+            (left, right) => (left?.Id, left?.Status, left?.Number, left?.IssuedOn, left?.ValidUntil) == (right?.Id, right?.Status, right?.Number, right?.IssuedOn, right?.ValidUntil)
+                && (left?.Mentions ?? []).SequenceEqual(right?.Mentions ?? []));
+    }
 
     private sealed record QuoteWithTotalsBody(IReadOnlyList<LineBody> Lines, TotalsBody Totals, IReadOnlyList<VatBreakdownBody> VatBreakdown);
 }

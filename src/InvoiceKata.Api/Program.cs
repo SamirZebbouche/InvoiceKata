@@ -34,6 +34,8 @@ builder.Services.AddTransient<CreateQuote>();
 builder.Services.AddTransient<GetQuote>();
 builder.Services.AddTransient<AddQuoteLine>();
 builder.Services.AddTransient<RemoveQuoteLine>();
+builder.Services.AddTransient<FinalizeQuote>();
+builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddTransient<QuoteScopes>();
 builder.Services.AddTransient<QuoteEventDispatcher>();
 builder.Services.AddSingleton<IMentionTexts, FrenchMentionTexts>();

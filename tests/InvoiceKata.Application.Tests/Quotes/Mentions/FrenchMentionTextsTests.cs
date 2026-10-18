@@ -39,6 +39,14 @@ public sealed class FrenchMentionTextsTests
         Assert.Contains($"SARL au capital de {written}{Space}€,", identity, StringComparison.Ordinal);
     }
 
+    [Theory]
+    [InlineData(30, "2026-11-17", "Devis valable 30 jours, jusqu'au 17/11/2026.")]
+    [InlineData(1, "2026-10-19", "Devis valable 1 jour, jusqu'au 19/10/2026.")]
+    public void Should_StateTheDurationAndTheLastDay_When_ComposingTheQuoteValidity(int validityDays, string validUntil, string expected)
+    {
+        Assert.Equal(expected, _texts.QuoteValidity(validityDays, DateOnly.Parse(validUntil, System.Globalization.CultureInfo.InvariantCulture)));
+    }
+
     private static Issuer Issuer(LegalForm legalForm, decimal shareCapital) => InvoiceKata.Domain.Issuer.ConfigureCompany(
         "Batifolio", legalForm, shareCapital, new Siren("912345678"), new VatNumber("FR12912345678"),
         new Address { Street = "12 rue des Artisans", PostalCode = "47000", City = "Agen" });

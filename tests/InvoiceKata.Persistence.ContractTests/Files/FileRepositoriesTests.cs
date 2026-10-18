@@ -38,5 +38,19 @@ public sealed class FileQuoteRepositoryTests : QuoteRepositoryContract, IDisposa
 
     protected override IQuoteRepository CreateRepository() => new FileQuoteRepository(new JsonFileStore(_directory.Path));
 
+    // A crash during an atomic write can leave a temporary file next to the quotes: it is not a quote.
+    [Fact]
+    public async Task Should_IgnoreALeftoverTemporaryFile_When_ReadingTheTakenNumbers()
+    {
+        var issuerId = InvoiceKata.Domain.IssuerId.New();
+        var quotes = System.IO.Path.Combine(_directory.Path, "issuers", issuerId.Value.ToString(), "quotes");
+        Directory.CreateDirectory(quotes);
+        await File.WriteAllTextAsync(System.IO.Path.Combine(quotes, $"{Guid.NewGuid()}.json.{Guid.NewGuid():N}.tmp"), "{ \"version\": 2, \"half");
+
+        var taken = await CreateRepository().TakenNumbersAsync(issuerId, CancellationToken.None);
+
+        Assert.Empty(taken);
+    }
+
     public void Dispose() => _directory.Dispose();
 }

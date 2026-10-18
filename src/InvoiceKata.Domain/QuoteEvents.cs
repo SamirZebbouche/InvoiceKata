@@ -8,3 +8,5 @@ public sealed record QuoteDrafted(QuoteId QuoteId) : IQuoteEvent;
 public sealed record QuoteLineAdded(QuoteId QuoteId, QuoteLineId LineId) : IQuoteEvent;
 
 public sealed record QuoteLineRemoved(QuoteId QuoteId, QuoteLineId LineId) : IQuoteEvent;
+
+public sealed record QuoteFinalized(QuoteId QuoteId, QuoteNumber Number) : IQuoteEvent;

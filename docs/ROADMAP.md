@@ -71,11 +71,19 @@ Ajoutée en chemin : un scénario d'acceptation ne dispense pas d'un test unitai
 ### PR 2.1 — Finaliser le devis
 
 - **Scénarios** :
-  - finaliser un devis, qui reçoit alors un numéro et une date de validité ;
-  - toute modification d'un devis finalisé est refusée.
+  - finaliser un devis, qui reçoit alors un numéro, une date et une date de validité (30 jours par défaut,
+    ou la durée demandée) ;
+  - les numéros se suivent par émetteur et repartent à 1 chaque année ;
+  - toute modification d'un devis finalisé est refusée, comme une seconde finalisation ou celle d'un devis
+    sans ligne.
 - **Ce qui apparaît** :
+  - `QuoteNumber` et `QuoteNumbering`, et le refus d'un doublon par le port
+    ([CDR-0007](cdr/CDR-0007-numerotation-des-devis.md)) ;
   - l'événement `QuoteFinalized` ;
-  - les mentions qui dépendent de la finalisation, comme la durée de validité.
+  - la mention de validité, composée à la finalisation (amendement du
+    [CDR-0001](cdr/CDR-0001-mentions-en-template-method.md)) ;
+  - l'état v2 du devis, qui garde ses montants tels qu'émis, et le premier convertisseur de version ;
+  - la route `POST …/finalization` et les refus en `409`.
 
 ### PR 2.2 — Le rendu du PDF
 
@@ -134,6 +142,6 @@ PostgreSQL, l'authentification et le multi-utilisateur.
 
 | Quand | Question |
 |---|---|
-| PR 2.1 | Le format du numéro de devis, et la durée de validité par défaut |
+| PR 2.1 | Le format du numéro de devis, et la durée de validité par défaut. **Tranché** : `D-2026-0001` et 30 jours ([CDR-0007](cdr/CDR-0007-numerotation-des-devis.md)) |
 | PR 3.1 | Faut-il l'acceptation du client (« bon pour accord ») avant de pouvoir facturer, ou un devis finalisé suffit-il ? |
 | PR 3.1 | Le format du numéro de facture et ses séries |

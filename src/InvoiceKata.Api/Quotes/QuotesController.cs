@@ -1,13 +1,17 @@
+using System.ComponentModel.DataAnnotations;
+
 using InvoiceKata.Application.Quotes;
 using InvoiceKata.Domain;
 
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace InvoiceKata.Api.Quotes;
 
 [ApiController]
 [Route("issuers/{issuerId:guid}/quotes")]
-public sealed class QuotesController(CreateQuote createQuote, GetQuote getQuote, AddQuoteLine addQuoteLine, RemoveQuoteLine removeQuoteLine)
+public sealed class QuotesController(
+    CreateQuote createQuote, GetQuote getQuote, AddQuoteLine addQuoteLine, RemoveQuoteLine removeQuoteLine, FinalizeQuote finalizeQuote)
     : ControllerBase
 {
     [HttpPost]
@@ -35,7 +39,19 @@ public sealed class QuotesController(CreateQuote createQuote, GetQuote getQuote,
         await removeQuoteLine.HandleAsync(new IssuerId(issuerId), new QuoteId(quoteId), new QuoteLineId(lineId), cancellationToken);
         return QuoteResponse.From(await getQuote.HandleAsync(new IssuerId(issuerId), new QuoteId(quoteId), cancellationToken));
     }
+
+    // The body is optional: without it, the quote is valid for the default duration.
+    [HttpPost("{quoteId:guid}/finalization")]
+    public async Task<QuoteResponse> FinalizeAsync(
+        Guid issuerId, Guid quoteId, [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)] FinalizeQuoteRequest? request, CancellationToken cancellationToken)
+    {
+        var validityDays = request?.ValidityDays ?? FinalizeQuote.DefaultValidityDays;
+        await finalizeQuote.HandleAsync(new IssuerId(issuerId), new QuoteId(quoteId), validityDays, cancellationToken);
+        return QuoteResponse.From(await getQuote.HandleAsync(new IssuerId(issuerId), new QuoteId(quoteId), cancellationToken));
+    }
 }
+
+public sealed record FinalizeQuoteRequest([Range(1, 365)] int? ValidityDays);
 
 public sealed record CreateQuoteRequest(Guid CustomerId);
 
@@ -69,6 +85,9 @@ public sealed record QuoteResponse(
     Guid Id,
     Guid CustomerId,
     string Status,
+    string? Number,
+    DateOnly? IssuedOn,
+    DateOnly? ValidUntil,
     IReadOnlyList<QuoteLineResponse> Lines,
     TotalsResponse Totals,
     IReadOnlyList<VatBreakdownResponse> VatBreakdown,
@@ -78,6 +97,9 @@ public sealed record QuoteResponse(
         quote.Id.Value,
         quote.CustomerId.Value,
         quote.Status.ToString(),
+        quote.Number?.ToString(),
+        quote.IssuedOn,
+        quote.ValidUntil,
         [.. quote.Lines.Select(QuoteLineResponse.From)],
         new TotalsResponse(quote.TotalExcludingVat.Amount, quote.TotalVat.Amount, quote.TotalIncludingVat.Amount),
         [.. quote.VatBreakdown.Select(rate => new VatBreakdownResponse(rate.Rate.Percent, rate.BaseExcludingVat.Amount, rate.Vat.Amount))],

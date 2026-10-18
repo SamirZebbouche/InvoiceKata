@@ -24,7 +24,7 @@ Cette documentation vit avec le code : chaque nouvelle route y entre avec son di
 
 ## Les routes
 
-### Émetteurs, clients et devis brouillon
+### Émetteurs, clients et devis
 
 | Méthode et route | Rôle | Réponse |
 |---|---|---|
@@ -35,7 +35,12 @@ Cette documentation vit avec le code : chaque nouvelle route y entre avec son di
 | `POST /issuers/{issuerId}/quotes` `{ customerId }` | Créer un devis brouillon pour ce client | `201`, avec `Location: /issuers/{issuerId}/quotes/{id}` ; `422` si le contexte de facturation n'est pas pris en charge (seul le contexte société × professionnel l'est) |
 | `POST /issuers/{issuerId}/quotes/{id}/lines` | Ajouter une ligne : désignation, quantité, unité, prix unitaire HT, taux de TVA, et une remise en % facultative | `201`, avec `Location: …/lines/{lineId}` et le devis recalculé dans le corps |
 | `DELETE /issuers/{issuerId}/quotes/{id}/lines/{lineId}` | Retirer une ligne | `200`, avec le devis recalculé ; `404` si la ligne n'est pas sur le devis |
-| `GET /issuers/{issuerId}/quotes/{id}` | Lire le devis : lignes, totaux (HT, TVA, TTC), ventilation de la TVA par taux, mentions légales (`code` et `text`) | `200` |
+| `GET /issuers/{issuerId}/quotes/{id}` | Lire le devis : statut, numéro et dates (vides pour un brouillon), lignes, totaux (HT, TVA, TTC), ventilation de la TVA par taux, mentions légales (`code` et `text`) | `200` |
+| `POST /issuers/{issuerId}/quotes/{id}/finalization` `{ validityDays }` | Finaliser le devis : il reçoit son numéro (`D-2026-0001`, une séquence par émetteur et par année), sa date (le jour de la finalisation, à l'heure de Paris), sa date de validité et la mention de validité, puis il est figé. `validityDays` est facultatif : 30 jours par défaut, de 1 à 365 | `200`, avec le devis finalisé ; `400` si la validité sort de 1 à 365 jours ; `409` si le devis est déjà finalisé, s'il n'a aucune ligne, ou si une finalisation simultanée a pris le même numéro (on relance alors la finalisation) |
+
+Un devis finalisé refuse toute modification : ajouter ou retirer une ligne répond `409`. Ses montants sont
+enregistrés tels qu'émis, et ne sont plus recalculés ([ADR-0009](adr/ADR-0009-documents-legaux-jamais-reecrits.md)).
+La numérotation est décrite par le [CDR-0007](cdr/CDR-0007-numerotation-des-devis.md).
 
 Les montants légaux (total de ligne, TVA par taux, totaux) sont arrondis au centime, à mi-chemin vers le haut (0,125 donne 0,13) ; les valeurs saisies, comme le prix unitaire et le prix net après remise (33,33 € − 10 % = 29,997 €), restent en pleine précision. La TVA est calculée une fois par taux, sur le total HT de ce taux, et non ligne par ligne ([ADR-0008](adr/ADR-0008-arrondis.md)).
 
@@ -96,8 +101,10 @@ amendement) :
 
 Le validateur final ne s'exécute qu'une fois terminées toutes les réactions déclenchées.
 
-Exemple avec la finalisation d'un devis (route à venir). L'événement n'est publié **qu'après
-l'enregistrement** du devis figé, pour qu'aucune réaction ne parte d'un fait qui n'a pas été enregistré :
+La finalisation d'un devis. Le domaine calcule le numéro à partir de ceux que l'émetteur a déjà pris, et
+le port refuse un doublon sous son verrou ([CDR-0007](cdr/CDR-0007-numerotation-des-devis.md)). L'événement
+`QuoteFinalized` n'est publié **qu'après l'enregistrement** du devis figé, pour qu'aucune réaction ne parte
+d'un fait qui n'a pas été enregistré. Sa première réaction, le rendu du PDF, est à venir :
 
 ```mermaid
 sequenceDiagram
@@ -110,13 +117,16 @@ sequenceDiagram
     participant H as Gestionnaire « rendre le PDF du devis »
     participant T as Rendu (Typst)
 
-    U->>API: POST /issuers/{issuerId}/quotes/{id}/finalization
+    U->>API: POST /issuers/{issuerId}/quotes/{id}/finalization {validityDays}
     API->>UC: FinalizeQuote
     UC->>R: Get(quoteId)
-    UC->>D: quote.Finalize(number, validUntil)
-    Note over D: le devis est figé<br/>et lève QuoteFinalized
+    UC->>R: TakenNumbers(issuerId)
+    UC->>D: QuoteNumbering.Next(année)
+    UC->>D: quote.Finalize(numéro, date, validité, mention)
+    Note over D: le devis pose la mention de validité,<br/>est figé et lève QuoteFinalized
     UC->>R: Save(quote)
-    UC->>E: Publish(QuoteFinalized)
+    Note over R: sous le verrou : refuse un numéro déjà pris<br/>et n'écrase jamais un devis finalisé
+    UC->>E: Publish(QuoteFinalized) (à venir)
     API-->>U: 200 devis finalisé
 
     E-)H: QuoteFinalized
@@ -137,7 +147,6 @@ Toutes sous `/issuers/{issuerId}` :
 
 | Fonctionnalité | Routes |
 |---|---|
-| Finalisation du devis | `POST /quotes/{id}/finalization` |
 | PDF du devis | `GET /quotes/{id}/pdf` |
 | Facture | `POST /invoices` `{ quoteId }`, `GET /invoices/{id}`, `GET /invoices/{id}/pdf` |
 

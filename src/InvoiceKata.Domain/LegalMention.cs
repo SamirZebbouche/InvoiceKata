@@ -5,6 +5,7 @@ public enum MentionCode
 {
     IssuerLegalIdentity,
     ReducedVatRate,
+    QuoteValidity,
 }
 
 public sealed record LegalMention(MentionCode Code, string Text);

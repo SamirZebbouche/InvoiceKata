@@ -87,6 +87,11 @@ chaque pull request.
   l'extension, au profit du Template Method : une mention, une classe ([docs/cdr](docs/cdr/README.md)).
   En relecture, Samir a aussi écarté les minimal APIs de l'agent (« on appelle des `Map` dans tous les
   sens ») au profit de contrôleurs ([CDR-0005](docs/cdr/CDR-0005-controleurs-plutot-que-minimal-apis.md)).
+  Pour la numérotation des devis, l'agent proposait que seul le port bloque un numéro en double. Samir a
+  exigé « ceinture et bretelles » : le domaine doit aussi empêcher la collision. Il a demandé si un
+  *interlock* conviendrait. L'agent l'a placé dans l'adaptateur, où un verrou existait déjà, et a laissé
+  au domaine un calcul pur à partir des numéros déjà pris. Samir a demandé que ce partage soit consigné
+  dans un CDR ([CDR-0007](docs/cdr/CDR-0007-numerotation-des-devis.md)).
 - **La roadmap.** L'agent a proposé un découpage en lots, et Samir l'a validé. Samir a ensuite validé la
   structure de la solution (projets et sens des dépendances), et l'agent a rédigé le détail PR par PR
   dans [docs/ROADMAP.md](docs/ROADMAP.md), avec les questions à trancher en chemin. L'agent a signalé un

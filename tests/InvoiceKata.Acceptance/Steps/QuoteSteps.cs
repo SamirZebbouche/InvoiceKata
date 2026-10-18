@@ -8,7 +8,7 @@ using Reqnroll;
 namespace InvoiceKata.Acceptance.Steps;
 
 [Binding]
-public sealed class QuoteSteps(AcceptanceContext context)
+public sealed partial class QuoteSteps(AcceptanceContext context)
 {
     private IssuerId _issuerId;
     private QuoteId _quoteId;

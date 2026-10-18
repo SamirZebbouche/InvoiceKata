@@ -11,4 +11,7 @@ public interface IQuoteRepository
 
     /// <exception cref="QuoteNotFoundException">No quote with this identifier belongs to this issuer.</exception>
     Task<Quote> GetAsync(IssuerId issuerId, QuoteId quoteId, CancellationToken cancellationToken);
+
+    // The numbers of this issuer's finalized quotes, from which the domain computes the next one (CDR-0007).
+    Task<IReadOnlyList<QuoteNumber>> TakenNumbersAsync(IssuerId issuerId, CancellationToken cancellationToken);
 }
