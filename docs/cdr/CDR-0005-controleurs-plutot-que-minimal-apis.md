@@ -33,4 +33,4 @@ sens ».
 - Le refactoring n'a changé aucun test : les 19 tests d'API passent tels quels.
 - Avec `[ApiController]` et les types non nullables, un champ obligatoire absent du JSON est refusé en
   `400` (Problem Details) avant d'atteindre le cas d'usage. C'est plus strict qu'avec les minimal APIs, et
-  un test d'API le couvrira.
+  un test d'API le couvre.

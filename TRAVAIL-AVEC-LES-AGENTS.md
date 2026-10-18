@@ -66,6 +66,8 @@ chaque pull request.
   proposé par l'agent imposait de modifier une structure commune à chaque nouvelle mention, et il
   demandait si un builder aiderait. L'agent a écarté le builder, qui règle la construction et non
   l'extension, au profit du Template Method : une mention, une classe ([docs/cdr](docs/cdr/README.md)).
+  En relecture, Samir a aussi écarté les minimal APIs de l'agent (« on appelle des `Map` dans tous les
+  sens ») au profit de contrôleurs ([CDR-0005](docs/cdr/CDR-0005-controleurs-plutot-que-minimal-apis.md)).
 - **La roadmap.** L'agent a proposé un découpage en lots, et Samir l'a validé. Samir a ensuite validé la
   structure de la solution (projets et sens des dépendances), et l'agent a rédigé le détail PR par PR
   dans [docs/ROADMAP.md](docs/ROADMAP.md), avec les questions à trancher en chemin. L'agent a signalé un
@@ -86,6 +88,9 @@ chaque pull request.
     Problem Details.
   - une version volontairement naïve du calcul (arrondi au pair, TVA arrondie ligne par ligne) a fait
     échouer les deux tests des règles de calcul : 0,12 au lieu de 0,13, et 0,02 au lieu de 0,01.
+  - une casse doit être ciblée : retirer `[ApiController]` faisait échouer une dizaine de tests à la
+    fois, ce qui ne prouvait rien du test visé. L'agent a recommencé avec une casse précise (un seul champ
+    rendu facultatif), qui ne fait échouer que ce test.
 - **La documentation et les décisions** : Samir les relit, pull request par pull request.
 - **Les rapports publics** : à chaque passage sur `main`, la CI publie sur GitHub Pages le rapport des
   scénarios Gherkin et la couverture. Dans chaque PR, le résumé du job donne la synthèse des tests et de la
