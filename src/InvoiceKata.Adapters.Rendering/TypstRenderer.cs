@@ -10,7 +10,8 @@ namespace InvoiceKata.Adapters.Rendering;
 
 // Renders through the Typst CLI, in a working folder of its own that is Typst's --root (ADR-0005): the
 // template never sees a host path. The resolved document goes in as JSON (ADR-0005 amendment).
-public sealed class TypstRenderer(string executable) : IDocumentRenderer
+// The working folders go under workRoot, the system's temporary folder by default.
+public sealed class TypstRenderer(string executable, string? workRoot = null) : IDocumentRenderer
 {
     private const string Template = "societe.typ";
 
@@ -24,7 +25,7 @@ public sealed class TypstRenderer(string executable) : IDocumentRenderer
     /// <exception cref="InvalidOperationException">Typst cannot be run, or fails to compile the document.</exception>
     public async Task<byte[]> RenderAsync(ResolvedDocument document, CancellationToken cancellationToken)
     {
-        var work = Directory.CreateTempSubdirectory("invoicekata-render-");
+        var work = Directory.CreateDirectory(Path.Combine(workRoot ?? Path.GetTempPath(), $"invoicekata-render-{Guid.NewGuid():N}"));
         try
         {
             await using (var template = File.Create(Path.Combine(work.FullName, Template)))

@@ -58,6 +58,7 @@ builder.Services.AddSingleton<IDocumentPartValidator, TotalsValidator>();
 builder.Services.AddSingleton<IDocumentPartValidator, MentionsValidator>();
 builder.Services.AddSingleton<FinalDocumentValidator>();
 builder.Services.AddTransient<RenderQuotePdf>();
+// Stryker disable once Statement : killed by the API tests when applied by hand; a shared test host never re-runs startup under a mutant
 builder.Services.AddTransient<IQuoteReaction, RenderQuotePdf>();
 builder.Services.AddTransient<QuoteReactions>();
 builder.Services.AddTransient<QuoteScopes>();

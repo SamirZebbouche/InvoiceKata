@@ -33,7 +33,7 @@ public sealed class QuoteReactionsTests
 
         Assert.Null(failure);
         Assert.Equal([("after", drafted)], _received);
-        Assert.Equal(1, logger.Errors);
+        Assert.Contains("FailingReaction", Assert.Single(logger.Errors), StringComparison.Ordinal);
     }
 
     private RecordingReaction Recording(string name) => new(name, _received);
@@ -54,7 +54,7 @@ public sealed class QuoteReactionsTests
 
     private sealed class CountingLogger : ILogger<QuoteReactions>
     {
-        public int Errors { get; private set; }
+        public List<string> Errors { get; } = [];
 
         public IDisposable? BeginScope<TState>(TState state)
             where TState : notnull => null;
@@ -65,7 +65,7 @@ public sealed class QuoteReactionsTests
         {
             if (logLevel == LogLevel.Error && exception is not null)
             {
-                Errors++;
+                Errors.Add(formatter(state, exception));
             }
         }
     }

@@ -30,6 +30,7 @@ public sealed class FinalDocumentValidatorTests
         { "validity before issue", "the validity does not end after the issue date", document => document with { Document = document.Document with { ValidUntil = "2026-10-18" } } },
         { "issuer without name", "the issuer has no name", document => document with { Issuer = document.Issuer with { Name = " " } } },
         { "issuer with a short SIREN", "the issuer's SIREN '91234' is not nine digits", document => document with { Issuer = document.Issuer with { Siren = "91234" } } },
+        { "issuer with a SIREN not all digits", "the issuer's SIREN '91234567X' is not nine digits", document => document with { Issuer = document.Issuer with { Siren = "91234567X" } } },
         { "issuer without VAT number", "the issuer has no VAT number", document => document with { Issuer = document.Issuer with { VatNumber = "" } } },
         { "issuer without address", "the issuer has no address", document => document with { Issuer = document.Issuer with { Address = [] } } },
         { "customer without name", "the customer has no name", document => document with { Customer = document.Customer with { Name = "" } } },
@@ -80,10 +81,33 @@ public sealed class FinalDocumentValidatorTests
         return ResolvedDocument.OfQuote(scope);
     }
 
+    // One line at 10 % among others is enough to require the mention.
     private static ResolvedDocument ReducedRateWithoutItsMention(ResolvedDocument document) => document with
     {
-        Lines = [document.Lines[0] with { VatRate = "10", TotalExclVat = "100.00" }],
-        VatBreakdown = [new DocumentVatRate("10", "100.00", "10.00")],
-        Totals = new DocumentTotals("100.00", "10.00", "110.00"),
+        Lines = [document.Lines[0], document.Lines[0] with { VatRate = "10" }],
+        VatBreakdown = [document.VatBreakdown[0], new DocumentVatRate("10", "100.00", "10.00")],
+        Totals = new DocumentTotals("200.00", "30.00", "230.00"),
     };
+
+    // Each defect is reported once, by its own part: an unknown kind is not also read as a quote, and an
+    // unreadable amount is not also reported as totals that do not add up.
+    [Fact]
+    public void Should_ReportTheKindOnly_When_TheKindIsUnknown()
+    {
+        var document = ValidDocument();
+
+        var refusal = Assert.Throws<InvalidDocumentException>(() => Validator.Validate(document with { Document = document.Document with { Kind = "letter", Number = "L-1" } }));
+
+        Assert.Equal(["the document kind 'letter' is unknown"], refusal.Violations);
+    }
+
+    [Fact]
+    public void Should_ReportTheLineOnly_When_ALineAmountIsUnreadable()
+    {
+        var document = ValidDocument();
+
+        var refusal = Assert.Throws<InvalidDocumentException>(() => Validator.Validate(document with { Lines = [document.Lines[0] with { TotalExclVat = "cent" }] }));
+
+        Assert.Equal(["line 1 has an amount that is not a number"], refusal.Violations);
+    }
 }

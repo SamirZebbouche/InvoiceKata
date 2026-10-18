@@ -57,6 +57,25 @@ public sealed class TypstRendererTests
         Assert.All(["Total TTC", "Devis valable 30 jours", "Bon pour accord"], fragment => Assert.Contains(Flat(fragment), last, StringComparison.Ordinal));
     }
 
+    // Each rendering works in a folder of its own, removed afterwards, whether Typst succeeds or not.
+    [Theory]
+    [InlineData("typst")]
+    [InlineData("typst-is-not-installed")]
+    public async Task Should_LeaveNoWorkingFolderBehind_When_TheRenderingEnds(string executable)
+    {
+        var root = Directory.CreateTempSubdirectory("invoicekata-render-root-");
+        try
+        {
+            await Record.ExceptionAsync(() => new TypstRenderer(executable, root.FullName).RenderAsync(Quote(lines: 1), CancellationToken.None));
+
+            Assert.Empty(root.EnumerateFileSystemInfos());
+        }
+        finally
+        {
+            root.Delete(recursive: true);
+        }
+    }
+
     [Fact]
     public async Task Should_FailAndSayWhy_When_TypstCannotBeRun()
     {
