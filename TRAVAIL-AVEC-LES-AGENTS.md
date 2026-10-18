@@ -42,7 +42,12 @@ chaque pull request.
   cas d'usage est livré en ATDD couplé au BDD, choix de Samir, avec des scénarios en français
   ([ADR-0004](docs/adr/ADR-0004-atdd-et-bdd-par-cas-d-usage.md)). Pour le contrat entre le domaine et
   le rendu, Samir choisit un validateur final, composé des validateurs de chaque partie, qui refuse tout
-  document invalide avant le rendu ([ADR-0005](docs/adr/ADR-0005-rendu-pdf-par-typst.md)).
+  document invalide avant le rendu ([ADR-0005](docs/adr/ADR-0005-rendu-pdf-par-typst.md)). La
+  persistance est cachée derrière un port secondaire : des fichiers pour le kata, PostgreSQL à terme.
+  L'agent a d'abord écarté les fichiers, faute de transactions. Samir les a proposés, et l'agent a montré
+  à quelles conditions ils tiennent : un numéro déduit des factures stockées, des écritures atomiques et
+  une suite de contrat commune à tous les adaptateurs
+  ([ADR-0006](docs/adr/ADR-0006-persistance-par-port-secondaire.md)).
 - **La roadmap.** L'agent a proposé un découpage en lots, et Samir l'a validé. L'agent a signalé un
   risque : à J-2, toujours aucune ligne de code, alors que l'énoncé demande « quelques heures ». La suite
   doit donc surtout être de l'exécution.
@@ -73,6 +78,9 @@ chaque pull request.
   existait. L'agent n'a rien poussé et a posé la question ; la règle a été corrigée.
 - **Une première version trop détaillée de cette page.** Samir recadre : la page sert à l'évaluer, elle
   doit être synthétique.
+- **« La partie back » mal comprise.** Pour Samir, c'était une API depuis le début. L'agent l'a lu comme
+  « le domaine seul », a proposé « aucun point d'entrée » et a même écrit dans l'ADR-0004 qu'il n'y avait
+  « pas d'API dans le périmètre ». L'ADR-0004 est amendé, et le README le précise désormais.
 - **Une question posée en jargon.** L'agent a demandé s'il fallait « tenter Factur-X » sans expliquer ce
   que c'était. Samir pensait y avoir répondu, et l'agent a cru comprendre que le sujet était écarté. Une
   fois Factur-X expliqué, Samir a demandé de le vérifier dans le spike.
