@@ -19,6 +19,20 @@ public sealed class FinalizedQuoteStateTests
         Assert.Empty(restored.TakeEvents());
     }
 
+    // The issued totals add up over every rate of the breakdown, not only the first.
+    [Fact]
+    public void Should_RebuildTheSameFinalizedQuote_When_ItHasTwoVatRates()
+    {
+        var quote = Quotes.Draft();
+        quote.AddLine(Quotes.Line(unitPrice: 100m, vatRate: 20m));
+        quote.AddLine(Quotes.Line(unitPrice: 300m, vatRate: 10m));
+        quote.Finalize(Number, IssuedOn, ValidUntil, "Devis valable 30 jours, jusqu'au 17/11/2026.");
+
+        var restored = Quote.FromState(quote.ToState());
+
+        Assert.Equivalent(quote.ToState(), restored.ToState(), strict: true);
+    }
+
     [Fact]
     public void Should_StillRefuseAnyChange_When_RestoredFromAFinalizedState()
     {
@@ -75,6 +89,11 @@ public sealed class FinalizedQuoteStateTests
     {
         { "quote of an unknown version", "version 3 is not supported", () => Quote.FromState(Finalized().ToState() with { Version = 3 }) },
         { "finalized quote of version 1", "a version 1 quote is a draft", () => Quote.FromState(Finalized().ToState() with { Version = 1 }) },
+        { "version 1 quote finalized without its finalization", "a version 1 quote is a draft", () => Quote.FromState(Finalized().ToState() with { Version = 1, Finalization = null }) },
+        { "version 1 draft with a finalization", "a version 1 quote is a draft", () => Quote.FromState(Finalized().ToState() with { Version = 1, Status = QuoteStatus.Draft }) },
+        { "finalized quote whose total including VAT does not add up", "the issued totals do not add up", () => Quote.FromState(WithFinalization(finalization => finalization with { TotalIncludingVat = 999m })) },
+        { "finalized quote whose VAT total is not its breakdown's", "the issued totals do not add up", () => Quote.FromState(WithFinalization(finalization => finalization with { TotalVat = 1m, TotalIncludingVat = 101m })) },
+        { "finalized quote whose total excluding VAT is not its breakdown's", "the issued totals do not add up", () => Quote.FromState(WithFinalization(finalization => finalization with { TotalExcludingVat = 50m, TotalIncludingVat = 70m })) },
         { "finalized quote without its finalization", "a quote is finalized if and only if it has a finalization", () => Quote.FromState(Finalized().ToState() with { Finalization = null }) },
         { "draft with a finalization", "a quote is finalized if and only if it has a finalization", () => Quote.FromState(Finalized().ToState() with { Status = QuoteStatus.Draft }) },
         { "finalized quote with an unreadable number", "number 'D-26-1' is not a quote number", () => Quote.FromState(WithFinalization(finalization => finalization with { Number = "D-26-1" })) },
