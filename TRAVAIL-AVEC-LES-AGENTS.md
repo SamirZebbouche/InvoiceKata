@@ -8,6 +8,12 @@ chaque pull request.
 - La documentation : le [README](README.md), cette page, et la rédaction des ADR, que Samir ratifie.
 - La recherche légale (mentions obligatoires des devis et des factures, facturation électronique), puis
   sa confrontation avec le scénario de Samir.
+- L'analyse de modèles réels de factures et d'un devis fournis par Samir. Elle a relevé des erreurs dans
+  ces modèles : une TVA totale à 0 €, l'indemnité de 40 € réclamée à un particulier, une échéance
+  antérieure à la date de la facture.
+- Le spike de rendu, de bout en bout : les données, le template Typst, la console .NET et les constats.
+  Samir avait fixé le cadre : Typst, un YAML résolu en entrée, un PDF en sortie, un template par type
+  d'entreprise.
 - Les gestes git : commits, push de branche et ouverture des pull requests (niveau `autonomous-pr`). Le
   merge reste à Samir.
 
@@ -34,7 +40,9 @@ chaque pull request.
   délimité ces parties : le noyau légal reste synchrone, et seules les réactions à un fait acquis sont
   chorégraphiées ([ADR-0003](docs/adr/ADR-0003-reactions-par-evenements-idempotentes.md)). Chaque
   cas d'usage est livré en ATDD couplé au BDD, choix de Samir, avec des scénarios en français
-  ([ADR-0004](docs/adr/ADR-0004-atdd-et-bdd-par-cas-d-usage.md)).
+  ([ADR-0004](docs/adr/ADR-0004-atdd-et-bdd-par-cas-d-usage.md)). Pour le contrat entre le domaine et
+  le rendu, Samir choisit un validateur final, composé des validateurs de chaque partie, qui refuse tout
+  document invalide avant le rendu ([ADR-0005](docs/adr/ADR-0005-rendu-pdf-par-typst.md)).
 - **La roadmap.** L'agent a proposé un découpage en lots, et Samir l'a validé. L'agent a signalé un
   risque : à J-2, toujours aucune ligne de code, alors que l'énoncé demande « quelques heures ». La suite
   doit donc surtout être de l'exécution.
@@ -47,6 +55,11 @@ chaque pull request.
   `dotnet format --verify-no-changes` sont relancés après la dernière modification. Il n'y a pas encore
   de code.
 - **La documentation et les décisions** : Samir les relit, pull request par pull request.
+- **Le spike de rendu** : l'agent lit chaque PDF produit et en recalcule les totaux, plutôt que de se
+  fier au code de retour.
+- **Factur-X** : un validateur indépendant, Mustang, juge le résultat, pas l'agent. Mustang a trouvé un
+  bug de l'agent (`50` écrit `5E+1`) et des règles françaises que la recherche n'avait pas relevées
+  (mentions codées, adresses électroniques obligatoires).
 
 ## Ce qui n'a pas marché du premier coup
 
@@ -60,3 +73,15 @@ chaque pull request.
   existait. L'agent n'a rien poussé et a posé la question ; la règle a été corrigée.
 - **Une première version trop détaillée de cette page.** Samir recadre : la page sert à l'évaluer, elle
   doit être synthétique.
+- **Une question posée en jargon.** L'agent a demandé s'il fallait « tenter Factur-X » sans expliquer ce
+  que c'était. Samir pensait y avoir répondu, et l'agent a cru comprendre que le sujet était écarté. Une
+  fois Factur-X expliqué, Samir a demandé de le vérifier dans le spike.
+- **Un chemin déformé dans le spike.** Git Bash a converti le chemin passé à Typst en chemin Windows, et
+  la première compilation a échoué. L'agent a diagnostiqué la cause, puis l'a contournée.
+- **Un spike conclu trop vite.** Samir avait annoncé « POC, discutons ». L'agent a pourtant enchaîné le
+  spike, ses conclusions, un ADR, une PR et même la proposition du lot suivant, en tranchant seul le
+  contrat YAML entre le domaine et le rendu. Samir l'a arrêté : « tu es parti trop vite du spike ». La
+  leçon retenue : un spike se termine par un débrief, où l'agent montre les résultats et liste les choix
+  que le spike lui a fait faire. L'ADR vient ensuite. Le débrief a produit deux décisions de Samir : les
+  totaux, les mentions et la signature toujours sur la même page, et un devis court pour tester l'autre
+  extrême.

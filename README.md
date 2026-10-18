@@ -54,6 +54,7 @@ l'émetteur et du client, et tout contexte non pris en charge est refusé
 | [0002](docs/adr/ADR-0002-variations-selon-emetteur-et-client.md) | Les variations selon l'émetteur et le client, dans un monde fermé |
 | [0003](docs/adr/ADR-0003-reactions-par-evenements-idempotentes.md) | Les réactions par événements de domaine, idempotentes |
 | [0004](docs/adr/ADR-0004-atdd-et-bdd-par-cas-d-usage.md) | ATDD et BDD pour chaque cas d'usage |
+| [0005](docs/adr/ADR-0005-rendu-pdf-par-typst.md) | Le rendu PDF par Typst, à partir d'un document résolu |
 
 ## Roadmap
 
@@ -61,7 +62,7 @@ Chaque lot laisse un système fonctionnel : la fin de chaque lot est un point d'
 
 | Lot | Contenu | Ce qui apparaît |
 |---|---|---|
-| Spike | YAML + template → PDF, jamais mergé | Un ADR sur le rendu |
+| Spike ✅ | YAML + template → PDF, jamais mergé ([branche `spike/pdf-rendering`](https://github.com/SamirZebbouche/InvoiceKata/tree/spike/pdf-rendering/spike)) | [ADR-0005](docs/adr/ADR-0005-rendu-pdf-par-typst.md) |
 | 1 | Client, devis brouillon, ajout et retrait de lignes, TVA. Un seul contexte : une société au régime normal qui facture un professionnel. | Le premier scénario ATDD et le refus des contextes non pris en charge |
 | 2 | Finalisation du devis, qui est alors figé, et rendu de son PDF | `QuoteFinalized`, le premier gestionnaire idempotent |
 | 3 | Facture créée à partir du devis : numérotation continue, immuabilité, mentions de paiement | `InvoiceIssued` |
