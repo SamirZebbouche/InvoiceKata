@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+  "issuerId": "6f9a3c2e-1b4d-4e8a-9c7f-2d5e8a1b3c4d",
+  "kind": "Professional",
+  "name": "Les Toits Rouges SARL",
+  "siren": "834567890",
+  "vatNumber": "FR45834567890",
+  "address": {
+    "street": "4 place du Marché",
+    "postalCode": "33000",
+    "city": "Bordeaux"
+  }
+}

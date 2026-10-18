@@ -6,7 +6,7 @@ public enum QuoteStatus
 }
 
 // A quote is drafted for a customer and belongs to that customer's issuer: it cannot cross issuers by construction.
-public sealed class Quote
+public sealed partial class Quote
 {
     private readonly List<QuoteLine> _lines = [];
     private readonly SortedDictionary<MentionCode, LegalMention> _mentions = [];

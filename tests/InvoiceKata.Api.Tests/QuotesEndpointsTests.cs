@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace InvoiceKata.Api.Tests;
 
-public sealed class QuotesEndpointsTests(WebApplicationFactory<Program> factory) : IClassFixture<WebApplicationFactory<Program>>
+public sealed class QuotesEndpointsTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
     [Fact]
     public async Task Should_ReturnAnEmptyDraftAtItsLocation_When_CreatingAQuote()
@@ -145,6 +145,25 @@ public sealed class QuotesEndpointsTests(WebApplicationFactory<Program> factory)
         var mention = Assert.Single(quote!.Mentions);
         Assert.Equal("IssuerLegalIdentity", mention.Code);
         Assert.StartsWith("Batifolio, SAS au capital de", mention.Text, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Should_ExposeTheReducedVatRateMention_When_ALineIsAtTenPercent()
+    {
+        var client = factory.CreateClient();
+        var (issuerId, quoteId) = await DraftQuoteAsync(client);
+
+        var added = await client.PostAsJsonAsync($"/issuers/{issuerId}/quotes/{quoteId}/lines", new
+        {
+            designation = "Pose de faïence",
+            quantity = 1m,
+            unit = "forfait",
+            unitPriceExcludingVat = 500m,
+            vatRate = 10m,
+        });
+
+        var quote = await added.Content.ReadFromJsonAsync<QuoteWithMentionsBody>();
+        Assert.Contains(quote!.Mentions, mention => mention.Code == "ReducedVatRate");
     }
 
     private static async Task<(Guid IssuerId, Guid QuoteId)> DraftQuoteAsync(HttpClient client)

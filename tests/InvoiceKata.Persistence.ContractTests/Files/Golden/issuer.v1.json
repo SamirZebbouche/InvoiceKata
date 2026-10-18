@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "id": "6f9a3c2e-1b4d-4e8a-9c7f-2d5e8a1b3c4d",
+  "name": "Batifolio",
+  "legalForm": "Sas",
+  "shareCapital": 20000,
+  "siren": "912345678",
+  "vatNumber": "FR12912345678",
+  "address": {
+    "street": "12 rue des Artisans",
+    "postalCode": "47000",
+    "city": "Agen"
+  }
+}

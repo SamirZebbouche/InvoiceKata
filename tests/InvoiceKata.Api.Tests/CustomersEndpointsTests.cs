@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace InvoiceKata.Api.Tests;
 
-public sealed class CustomersEndpointsTests(WebApplicationFactory<Program> factory) : IClassFixture<WebApplicationFactory<Program>>
+public sealed class CustomersEndpointsTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
     private static readonly object LesToitsRouges = new
     {

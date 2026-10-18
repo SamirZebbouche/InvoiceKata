@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace InvoiceKata.Api.Tests;
 
-public sealed class IssuersEndpointsTests(WebApplicationFactory<Program> factory) : IClassFixture<WebApplicationFactory<Program>>
+public sealed class IssuersEndpointsTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
     private static readonly object Batifolio = new
     {
