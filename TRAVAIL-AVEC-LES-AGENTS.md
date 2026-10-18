@@ -24,6 +24,16 @@ chaque pull request.
 - **Le cadre.** Samir installe sa base de pratiques personnelle, `ai-core`, dans le dépôt : six règles
   dans le [CLAUDE.md](CLAUDE.md) et quinze skills. Il choisit ces règles d'emblée, sans attendre les
   frictions : « je vois à peu près où je veux aller ».
+- **Un cadre qui évolue dans les deux sens.** Le cadre n'est pas figé au départ :
+  - **de `ai-core` vers le projet**, quand une friction montre un manque. Après l'obsession des types
+    primitifs relevée en relecture, Samir a installé la règle `arch-no-uniform-patterns`, qui existait
+    dans sa base mais pas dans le projet ;
+  - **du projet vers `ai-core`**, quand le projet invente une pratique qui vaut ailleurs. Les tests par
+    mutation, nés ici des casses ciblées de l'agent puis outillés avec Stryker.NET, ont été récoltés par
+    Samir dans sa base, pour servir à ses autres projets.
+
+  Le projet complète aussi ses propres notes : le ruleset de `main`, l'exception de langue des
+  scénarios Gherkin, la zone des spikes, et maintenant Stryker parmi les preuves.
 - **Les décisions de conception.** L'agent propose des options et réfute celles qui ne tiennent pas ;
   Samir tranche.
 - **La démarche.** Samir décrit d'abord un cadre large, que l'on conçoit ensemble par ADR. On construit
