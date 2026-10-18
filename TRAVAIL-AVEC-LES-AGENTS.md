@@ -14,6 +14,8 @@ chaque pull request.
 - Le spike de rendu, de bout en bout : les données, le template Typst, la console .NET et les constats.
   Samir avait fixé le cadre : Typst, un YAML résolu en entrée, un PDF en sortie, un template par type
   d'entreprise.
+- Le code, lot par lot : le squelette de la solution, la CI, puis chaque cas d'usage en ATDD et en TDD.
+  Samir valide la structure et les routes avant, et relit tous les deux commits.
 - Les gestes git : commits, push de branche et ouverture des pull requests (niveau `autonomous-pr`). Le
   merge reste à Samir.
 
@@ -74,6 +76,8 @@ chaque pull request.
   - le filtre par émetteur, retiré un instant de l'adaptateur, a fait échouer le scénario d'isolation ;
   - un test de `404` passait déjà parce que la route n'existait pas : il exige désormais une réponse
     Problem Details.
+  - une version volontairement naïve du calcul (arrondi au pair, TVA arrondie ligne par ligne) a fait
+    échouer les deux tests des règles de calcul : 0,12 au lieu de 0,13, et 0,02 au lieu de 0,01.
 - **La documentation et les décisions** : Samir les relit, pull request par pull request.
 - **Le spike de rendu** : l'agent lit chaque PDF produit et en recalcule les totaux, plutôt que de se
   fier au code de retour.
