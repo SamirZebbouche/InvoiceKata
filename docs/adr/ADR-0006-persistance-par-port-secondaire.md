@@ -1,6 +1,6 @@
 # ADR-0006 : La persistance derrière un port secondaire, des fichiers pour le kata
 
-- **Statut** : proposé, ratifié par le merge de la PR qui l'introduit
+- **Statut** : accepté le 2026-10-18
 - **Date** : 2026-10-18
 - **Décideur** : Samir
 

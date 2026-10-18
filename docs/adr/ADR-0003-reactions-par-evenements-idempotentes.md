@@ -1,6 +1,6 @@
 # ADR-0003 : Des réactions par événements de domaine, idempotentes
 
-- **Statut** : proposé, ratifié par le merge de la PR qui l'introduit
+- **Statut** : accepté le 2026-10-18
 - **Date** : 2026-10-18
 - **Décideur** : Samir
 

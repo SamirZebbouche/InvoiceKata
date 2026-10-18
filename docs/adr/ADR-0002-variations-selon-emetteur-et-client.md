@@ -1,6 +1,6 @@
 # ADR-0002 : Les variations selon l'émetteur et le client
 
-- **Statut** : proposé, ratifié par le merge de la PR qui l'introduit
+- **Statut** : accepté le 2026-10-18
 - **Date** : 2026-10-18
 - **Décideur** : Samir
 
