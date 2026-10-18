@@ -58,6 +58,7 @@ l'émetteur et du client, et tout contexte non pris en charge est refusé
 | [0005](docs/adr/ADR-0005-rendu-pdf-par-typst.md) | Le rendu PDF par Typst, à partir d'un document résolu |
 | [0006](docs/adr/ADR-0006-persistance-par-port-secondaire.md) | La persistance derrière un port secondaire, des fichiers pour le kata |
 | [0007](docs/adr/ADR-0007-saas-multi-emetteur.md) | Un SaaS multi-émetteur, l'émetteur dans la route |
+| [0008](docs/adr/ADR-0008-arrondis.md) | Les arrondis : précision dans le domaine, centimes pour les montants légaux |
 
 ## Roadmap
 

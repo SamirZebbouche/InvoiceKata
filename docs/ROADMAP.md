@@ -77,7 +77,8 @@ est un incrément TDD.
   - l'adaptateur Typst, avec le template « société » repris du spike ;
   - le gestionnaire de `QuoteFinalized`, idempotent et couvert par un test de rejeu ;
   - l'endpoint de téléchargement du PDF ;
-  - Typst installé dans la CI.
+  - Typst installé dans la CI ;
+  - les PDF produits par les tests, publiés en artefacts de la CI pour qu'on puisse les télécharger.
 
 ## Lot 3 — La facture
 

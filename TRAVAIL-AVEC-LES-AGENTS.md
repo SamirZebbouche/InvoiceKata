@@ -57,7 +57,10 @@ chaque pull request.
   de l'[ADR-0003](docs/adr/ADR-0003-reactions-par-evenements-idempotentes.md)). Pour l'API, Samir a
   retenu `quotes` et des routes préfixées par l'émetteur, et il a imposé deux points : l'émetteur est configurable, parce que l'éditeur de l'application vend un SaaS
   à plusieurs entreprises, et son identifiant doit être impossible à deviner. L'agent avait supposé une
-  instance par émetteur ([ADR-0007](docs/adr/ADR-0007-saas-multi-emetteur.md)).
+  instance par émetteur ([ADR-0007](docs/adr/ADR-0007-saas-multi-emetteur.md)). Sur les arrondis, Samir
+  pensait que tout devait se faire au rendu. L'agent a montré, sources à l'appui, que les montants légaux
+  doivent être arrondis au centime dans le domaine, sinon le PDF et le XML se contrediraient. Samir a
+  demandé que cette règle soit écrite dans un ADR ([ADR-0008](docs/adr/ADR-0008-arrondis.md)).
 - **La roadmap.** L'agent a proposé un découpage en lots, et Samir l'a validé. Samir a ensuite validé la
   structure de la solution (projets et sens des dépendances), et l'agent a rédigé le détail PR par PR
   dans [docs/ROADMAP.md](docs/ROADMAP.md), avec les questions à trancher en chemin. L'agent a signalé un
