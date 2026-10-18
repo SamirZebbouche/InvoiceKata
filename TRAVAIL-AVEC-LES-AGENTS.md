@@ -29,7 +29,10 @@ chaque pull request.
   qui ne teste que le moteur de rendu ([ADR-0001](docs/adr/ADR-0001-spike-jetable-puis-lots-livrables.md)).
   Samir a proposé le motif Strategy ; l'agent l'a affiné en réservant la Strategy au régime de TVA, qui
   est exclusif, et en traitant les mentions légales, qui s'additionnent, comme une liste de règles. Samir
-  a écarté la recommandation de l'agent, qui voulait merger le POC.
+  a écarté la recommandation de l'agent, qui voulait merger le POC. Samir a aussi demandé une chorégraphie
+  par événements pour certaines parties, chaque événement étant traité de façon idempotente. L'agent a
+  délimité ces parties : le noyau légal reste synchrone, et seules les réactions à un fait acquis sont
+  chorégraphiées ([ADR-0003](docs/adr/ADR-0003-reactions-par-evenements-idempotentes.md)).
 - **Le rôle de PO.** Dans la réalité, les règles légales viendraient d'un PO ou d'un juriste. Ici, Samir
   tient ce rôle : l'agent fournit une recherche sourcée sur les sites officiels, Samir décide.
 
