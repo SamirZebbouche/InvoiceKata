@@ -58,6 +58,14 @@ est un incrément TDD.
   - l'adaptateur fichiers en JSON, qui respecte les règles de l'[ADR-0006](adr/ADR-0006-persistance-par-port-secondaire.md) ;
   - l'API branchée sur les fichiers, de sorte que les données survivent à un redémarrage.
 
+### PR 1.4 — Les tests unitaires de la couche Application
+
+Ajoutée en chemin : un scénario d'acceptation ne dispense pas d'un test unitaire.
+- **Ce qui apparaît** :
+  - le projet `InvoiceKata.Application.Tests` ;
+  - les tests unitaires des règles de mention, de leurs textes et du dispatcher d'événements ;
+  - la correction du capital social, qui était arrondi dans la mention légale.
+
 ## Lot 2 — La finalisation et le PDF du devis
 
 ### PR 2.1 — Finaliser le devis
