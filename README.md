@@ -16,7 +16,15 @@ logiciel qui établit des **devis** et des **factures**.
 
 1. **Le logiciel**, dans ce dépôt.
 2. **[Une page sur le travail avec les agents](TRAVAIL-AVEC-LES-AGENTS.md)** : ce qui leur a été délégué, ce qui a été gardé, comment
-   leur production a été vérifiée, et ce qui n'a pas marché du premier coup.
+   leur production a été vérifiée, et ce qui n'a pas marché du premier coup. Le journal tenu au fil du travail
+   reste disponible dans le détail : [TRAVAIL-AVEC-LES-AGENTS-BRUT.md](TRAVAIL-AVEC-LES-AGENTS-BRUT.md).
+
+En complément :
+
+- **[Une revue critique](REVUE-CRITIQUE.md)** du logiciel et des dérives du travail avec les agents, avec
+  la façon de lancer le programme en local et les limites assumées du projet ;
+- **[Le plan d'un agent contradicteur](docs/PLAN-CONTRADICTEUR.md)**, et son mode d'emploi, tiré de cette
+  revue.
 
 ## Calendrier
 
