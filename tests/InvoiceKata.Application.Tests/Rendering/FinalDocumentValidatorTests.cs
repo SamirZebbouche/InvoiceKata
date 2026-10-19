@@ -72,6 +72,46 @@ public sealed class FinalDocumentValidatorTests
         Assert.Contains("the issuer has no name; the customer has no name", refusal.Message, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void Should_AcceptTheInvoice_When_EveryPartIsComplete()
+    {
+        var refusal = Record.Exception(() => Validator.Validate(ValidInvoice()));
+
+        Assert.Null(refusal);
+    }
+
+    public static TheoryData<string, string, Func<ResolvedDocument, ResolvedDocument>> InvoiceDefects => new()
+    {
+        { "quote number for an invoice", "number 'D-2026-0001' is not an invoice number", document => document with { Document = document.Document with { Number = "D-2026-0001" } } },
+        { "no quote reference", "an invoice refers to no quote", document => document with { Document = document.Document with { Quote = null } } },
+        { "unreadable quote reference", "the invoice refers to 'D-1' dated '', not to a quote", document => document with { Document = document.Document with { Quote = new QuoteReference("D-1", "") } } },
+        { "acceptance box", "an invoice has no acceptance box", document => document with { Document = document.Document with { AcceptanceBox = true } } },
+        { "no due date mention", "the mention PaymentDueDate is missing", document => document with { Mentions = [.. document.Mentions.Where(mention => mention.Code != "PaymentDueDate")] } },
+        { "no recovery indemnity", "the mention RecoveryIndemnity is missing", document => document with { Mentions = [.. document.Mentions.Where(mention => mention.Code != "RecoveryIndemnity")] } },
+    };
+
+    [Theory]
+    [MemberData(nameof(InvoiceDefects))]
+    public void Should_RefuseTheInvoiceAndSayWhy_When_APartIsDefective(string defect, string violation, Func<ResolvedDocument, ResolvedDocument> corrupt)
+    {
+        var refusal = Record.Exception(() => Validator.Validate(corrupt(ValidInvoice())));
+
+        var invalid = Assert.IsType<InvalidDocumentException>(refusal);
+        Assert.True(invalid.Violations.Contains(violation), $"An invoice with {defect} was not refused for: {violation}. Violations: {string.Join(" | ", invalid.Violations)}");
+    }
+
+    private static ResolvedDocument ValidInvoice()
+    {
+        var scope = Scopes.Draft();
+        var texts = new FrenchMentionTexts();
+        scope.Quote.AddLine(Scopes.Line(vatRate: 20m));
+        scope.Quote.PutMention(new LegalMention(MentionCode.IssuerLegalIdentity, texts.IssuerLegalIdentity(scope.Issuer)));
+        scope.Quote.Finalize(new QuoteNumber(2026, 1), new DateOnly(2026, 10, 18), new DateOnly(2026, 11, 17), "Devis valable 30 jours, jusqu'au 17/11/2026.");
+        var invoice = Invoice.IssueFor(scope.Quote, new InvoiceNumber(2026, 1), new DateOnly(2026, 11, 30), new DateOnly(2026, 12, 30), new PaymentMentionTexts(
+            texts.InvoiceDueDate(new DateOnly(2026, 12, 30)), texts.NoEarlyPaymentDiscount(), texts.LatePaymentPenalties(), texts.RecoveryIndemnity()));
+        return ResolvedDocument.OfInvoice(invoice, scope.Issuer, scope.Customer);
+    }
+
     private static ResolvedDocument ValidDocument()
     {
         var scope = Scopes.Draft();

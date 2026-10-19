@@ -6,24 +6,22 @@ namespace InvoiceKata.Application.Rendering;
 
 // The validators of each part of a resolved document (ADR-0005, decision 9). They check the contract
 // independently of the code that resolved the document: a defect upstream cannot reach a PDF.
+// The header of each kind of document: a quote is valid until a date and has an acceptance box; an invoice refers to
+// its quote and has none.
 public sealed class HeaderValidator : IDocumentPartValidator
 {
-    public IEnumerable<string> ViolationsIn(ResolvedDocument document)
+    public IEnumerable<string> ViolationsIn(ResolvedDocument document) => document.Document.Kind switch
     {
-        var header = document.Document;
-        if (header.Kind != "quote")
-        {
-            yield return $"the document kind '{header.Kind}' is unknown";
-            yield break;
-        }
+        "quote" => QuoteViolations(document.Document),
+        "invoice" => InvoiceViolations(document.Document),
+        _ => [$"the document kind '{document.Document.Kind}' is unknown"],
+    };
 
-        if (header.Number.Length == 0)
+    private static IEnumerable<string> QuoteViolations(DocumentHeader header)
+    {
+        if (NumberViolation(header, number => QuoteNumber.TryParse(number, out _), "a quote number") is { } number)
         {
-            yield return "the document has no number";
-        }
-        else if (!QuoteNumber.TryParse(header.Number, out _))
-        {
-            yield return $"number '{header.Number}' is not a quote number";
+            yield return number;
         }
 
         if (!Dates.TryRead(header.IssuedOn, out var issuedOn))
@@ -39,6 +37,38 @@ public sealed class HeaderValidator : IDocumentPartValidator
             yield return "the validity does not end after the issue date";
         }
     }
+
+    private static IEnumerable<string> InvoiceViolations(DocumentHeader header)
+    {
+        if (NumberViolation(header, number => InvoiceNumber.TryParse(number, out _), "an invoice number") is { } number)
+        {
+            yield return number;
+        }
+
+        if (!Dates.TryRead(header.IssuedOn, out _))
+        {
+            yield return $"the issue date '{header.IssuedOn}' is not a date";
+        }
+
+        if (header.Quote is null)
+        {
+            yield return "an invoice refers to no quote";
+        }
+        else if (!QuoteNumber.TryParse(header.Quote.Number, out _) || !Dates.TryRead(header.Quote.IssuedOn, out _))
+        {
+            yield return $"the invoice refers to '{header.Quote.Number}' dated '{header.Quote.IssuedOn}', not to a quote";
+        }
+
+        if (header.AcceptanceBox)
+        {
+            yield return "an invoice has no acceptance box";
+        }
+    }
+
+    private static string? NumberViolation(DocumentHeader header, Func<string, bool> isNumber, string expected) =>
+        header.Number.Length == 0 ? "the document has no number"
+        : isNumber(header.Number) ? null
+        : $"number '{header.Number}' is not {expected}";
 }
 
 public sealed class IssuerValidator : IDocumentPartValidator
@@ -161,13 +191,16 @@ public sealed class TotalsValidator : IDocumentPartValidator
     }
 }
 
-// The mentions a quote cannot go without, checked apart from the rules that put them.
+// The mentions a quote or an invoice cannot go without, checked apart from the code that put them.
 public sealed class MentionsValidator : IDocumentPartValidator
 {
     public IEnumerable<string> ViolationsIn(ResolvedDocument document)
     {
         var codes = document.Mentions.Select(mention => mention.Code).ToHashSet();
-        var required = new List<MentionCode> { MentionCode.IssuerLegalIdentity, MentionCode.QuoteValidity };
+        var required = new List<MentionCode> { MentionCode.IssuerLegalIdentity };
+        required.AddRange(document.Document.Kind == "invoice"
+            ? [MentionCode.PaymentDueDate, MentionCode.EarlyPaymentDiscount, MentionCode.LatePaymentPenalties, MentionCode.RecoveryIndemnity]
+            : [MentionCode.QuoteValidity]);
         if (document.Lines.Any(line => Amounts.TryRead(line.VatRate, out var rate) && rate == 10m))
         {
             required.Add(MentionCode.ReducedVatRate);

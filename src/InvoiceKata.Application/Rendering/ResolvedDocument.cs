@@ -22,21 +22,43 @@ public sealed record ResolvedDocument(
         var (quote, issuer, customer) = (scope.Quote, scope.Issuer, scope.Customer);
         return new ResolvedDocument(
             new DocumentHeader("quote", quote.Number?.ToString() ?? "", Text(quote.IssuedOn), quote.ValidUntil is { } validUntil ? Text(validUntil) : null, AcceptanceBox: true),
-            new DocumentIssuer(issuer.Name, LegalFormLabels.Of(issuer.LegalForm), issuer.Siren.Value, issuer.VatNumber.Value, AddressLines(issuer.Address)),
-            new DocumentCustomer(customer.Name, AddressLines(customer.Address), customer.Siren?.Value, customer.VatNumber?.Value),
-            [.. quote.Lines.Select(line => new DocumentLine(
-                line.Designation,
-                Text(line.Quantity.Value),
-                line.Unit,
-                Text(line.UnitPriceExcludingVat.Amount),
-                line.Discount == DiscountRate.None ? null : Text(line.Discount.Percent),
-                Text(line.NetUnitPriceExcludingVat.Amount),
-                Cents(line.TotalExcludingVat.Amount),
-                Text(line.VatRate.Percent)))],
-            [.. quote.VatBreakdown.Select(rate => new DocumentVatRate(Text(rate.Rate.Percent), Cents(rate.BaseExcludingVat.Amount), Cents(rate.Vat.Amount)))],
+            Of(issuer),
+            Of(customer),
+            [.. quote.Lines.Select(Of)],
+            [.. quote.VatBreakdown.Select(Of)],
             new DocumentTotals(Cents(quote.TotalExcludingVat.Amount), Cents(quote.TotalVat.Amount), Cents(quote.TotalIncludingVat.Amount)),
-            [.. quote.Mentions.Select(mention => new DocumentMention(mention.Code.ToString(), mention.Text))]);
+            [.. quote.Mentions.Select(Of)]);
     }
+
+    public static ResolvedDocument OfInvoice(Invoice invoice, Issuer issuer, Customer customer) => new(
+        new DocumentHeader(
+            "invoice", invoice.Number.ToString(), Text(invoice.IssuedOn), null, AcceptanceBox: false,
+            new QuoteReference(invoice.QuoteNumber.ToString(), Text(invoice.QuoteIssuedOn))),
+        Of(issuer),
+        Of(customer),
+        [.. invoice.Lines.Select(Of)],
+        [.. invoice.VatBreakdown.Select(Of)],
+        new DocumentTotals(Cents(invoice.TotalExcludingVat.Amount), Cents(invoice.TotalVat.Amount), Cents(invoice.TotalIncludingVat.Amount)),
+        [.. invoice.Mentions.Select(Of)]);
+
+    private static DocumentIssuer Of(Issuer issuer) =>
+        new(issuer.Name, LegalFormLabels.Of(issuer.LegalForm), issuer.Siren.Value, issuer.VatNumber.Value, AddressLines(issuer.Address));
+
+    private static DocumentCustomer Of(Customer customer) => new(customer.Name, AddressLines(customer.Address), customer.Siren?.Value, customer.VatNumber?.Value);
+
+    private static DocumentLine Of(QuoteLine line) => new(
+        line.Designation,
+        Text(line.Quantity.Value),
+        line.Unit,
+        Text(line.UnitPriceExcludingVat.Amount),
+        line.Discount == DiscountRate.None ? null : Text(line.Discount.Percent),
+        Text(line.NetUnitPriceExcludingVat.Amount),
+        Cents(line.TotalExcludingVat.Amount),
+        Text(line.VatRate.Percent));
+
+    private static DocumentVatRate Of(VatBreakdownLine rate) => new(Text(rate.Rate.Percent), Cents(rate.BaseExcludingVat.Amount), Cents(rate.Vat.Amount));
+
+    private static DocumentMention Of(LegalMention mention) => new(mention.Code.ToString(), mention.Text);
 
     private static IReadOnlyList<string> AddressLines(Address address) => [address.Street, $"{address.PostalCode} {address.City}"];
 
@@ -48,7 +70,10 @@ public sealed record ResolvedDocument(
     private static string Text(DateOnly? date) => date?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? "";
 }
 
-public sealed record DocumentHeader(string Kind, string Number, string IssuedOn, string? ValidUntil, bool AcceptanceBox);
+public sealed record DocumentHeader(string Kind, string Number, string IssuedOn, string? ValidUntil, bool AcceptanceBox, QuoteReference? Quote = null);
+
+// The quote an invoice was issued from, which the template refers to.
+public sealed record QuoteReference(string Number, string IssuedOn);
 
 public sealed record DocumentIssuer(string Name, string LegalForm, string Siren, string VatNumber, IReadOnlyList<string> Address);
 
