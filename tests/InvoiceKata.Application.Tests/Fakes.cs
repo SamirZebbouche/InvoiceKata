@@ -1,4 +1,5 @@
 using InvoiceKata.Application.Customers;
+using InvoiceKata.Application.Invoices;
 using InvoiceKata.Application.Issuers;
 using InvoiceKata.Application.Quotes;
 using InvoiceKata.Application.Rendering;
@@ -26,6 +27,29 @@ internal sealed class StoredQuotes : IQuoteRepository
         Task.FromResult<IReadOnlyList<QuoteNumber>>(
             [.. _states.Values.Where(state => state.IssuerId == issuerId.Value && state.Finalization is not null)
                 .Select(state => QuoteNumber.Parse(state.Finalization!.Number))]);
+}
+
+internal sealed class StoredInvoices : IInvoiceRepository
+{
+    private readonly Dictionary<Guid, InvoiceState> _states = [];
+
+    public IReadOnlyCollection<InvoiceState> All => _states.Values;
+
+    public Task AddAsync(Invoice invoice, CancellationToken cancellationToken)
+    {
+        _states.Add(invoice.Id.Value, invoice.ToState());
+        return Task.CompletedTask;
+    }
+
+    public Task<Invoice> GetAsync(IssuerId issuerId, InvoiceId invoiceId, CancellationToken cancellationToken) =>
+        Task.FromResult(Invoice.FromState(_states[invoiceId.Value]));
+
+    public Task<Invoice?> FindByQuoteAsync(IssuerId issuerId, QuoteId quoteId, CancellationToken cancellationToken) =>
+        Task.FromResult(_states.Values.Where(state => state.QuoteId == quoteId.Value).Select(Invoice.FromState).SingleOrDefault());
+
+    public Task<IReadOnlyList<InvoiceNumber>> TakenNumbersAsync(IssuerId issuerId, CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<InvoiceNumber>>(
+            [.. _states.Values.Where(state => state.IssuerId == issuerId.Value).Select(state => InvoiceNumber.Parse(state.Number))]);
 }
 
 internal sealed class StoredIssuers(params Issuer[] issuers) : IIssuerRepository

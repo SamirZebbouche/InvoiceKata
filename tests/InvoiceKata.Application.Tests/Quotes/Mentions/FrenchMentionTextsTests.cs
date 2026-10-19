@@ -47,6 +47,19 @@ public sealed class FrenchMentionTextsTests
         Assert.Equal(expected, _texts.QuoteValidity(validityDays, DateOnly.Parse(validUntil, System.Globalization.CultureInfo.InvariantCulture)));
     }
 
+    [Fact]
+    public void Should_StateThePaymentTerms_When_ComposingTheInvoicePaymentMentions()
+    {
+        Assert.Equal(
+            [
+                "Échéance : 30/12/2026.",
+                "Escompte pour paiement anticipé : néant.",
+                "Pénalités de retard : trois fois le taux d'intérêt légal.",
+                $"Indemnité forfaitaire pour frais de recouvrement : 40{Space}€.",
+            ],
+            [_texts.InvoiceDueDate(new DateOnly(2026, 12, 30)), _texts.NoEarlyPaymentDiscount(), _texts.LatePaymentPenalties(), _texts.RecoveryIndemnity()]);
+    }
+
     private static Issuer Issuer(LegalForm legalForm, decimal shareCapital) => InvoiceKata.Domain.Issuer.ConfigureCompany(
         "Batifolio", legalForm, shareCapital, new Siren("912345678"), new VatNumber("FR12912345678"),
         new Address { Street = "12 rue des Artisans", PostalCode = "47000", City = "Agen" });

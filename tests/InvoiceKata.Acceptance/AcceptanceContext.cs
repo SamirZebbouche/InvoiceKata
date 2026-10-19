@@ -1,6 +1,7 @@
 using InvoiceKata.Adapters.Persistence.InMemory;
 using InvoiceKata.Adapters.Rendering;
 using InvoiceKata.Application.Customers;
+using InvoiceKata.Application.Invoices;
 using InvoiceKata.Application.Issuers;
 using InvoiceKata.Application.Quotes;
 using InvoiceKata.Application.Quotes.Mentions;
@@ -16,6 +17,7 @@ public sealed class AcceptanceContext
     private readonly InMemoryIssuerRepository _issuers = new();
     private readonly InMemoryCustomerRepository _customers = new();
     private readonly InMemoryQuoteRepository _quotes = new();
+    private readonly InMemoryInvoiceRepository _invoices = new();
     private readonly QuoteEventDispatcher _events;
     private readonly QuoteScopes _scopes;
     private readonly FrenchMentionTexts _texts = new();
@@ -57,6 +59,12 @@ public sealed class AcceptanceContext
     public RemoveQuoteLine RemoveQuoteLine => new(_quotes, _scopes, _events);
 
     public FinalizeQuote FinalizeQuote => new(_quotes, _texts, Clock, QuoteReactions);
+
+    public IssueInvoice IssueInvoice => new(_quotes, _invoices, _texts, Clock, InvoiceReactions);
+
+    public GetInvoice GetInvoice => new(_invoices);
+
+    public InvoiceReactions InvoiceReactions { get; } = new([], Microsoft.Extensions.Logging.Abstractions.NullLogger<InvoiceReactions>.Instance);
 
     public RenderQuotePdf RenderQuotePdf { get; }
 

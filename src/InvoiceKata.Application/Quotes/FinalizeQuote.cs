@@ -7,8 +7,6 @@ public sealed class FinalizeQuote(IQuoteRepository quotes, IMentionTexts texts, 
 {
     public const int DefaultValidityDays = 30;
 
-    private static readonly TimeZoneInfo France = TimeZoneInfo.FindSystemTimeZoneById("Europe/Paris");
-
     // The validity mention is composed here, not by a rule: the quote puts it and freezes in one step
     // (CDR-0001 amendment). QuoteFinalized is published after the save, to reactions such as the PDF rendering.
     /// <exception cref="QuoteNotFoundException">The quote does not belong to this issuer.</exception>
@@ -19,7 +17,7 @@ public sealed class FinalizeQuote(IQuoteRepository quotes, IMentionTexts texts, 
         ArgumentOutOfRangeException.ThrowIfLessThan(validityDays, 1);
         var quote = await quotes.GetAsync(issuerId, quoteId, cancellationToken);
 
-        var issuedOn = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(clock.GetUtcNow(), France).DateTime);
+        var issuedOn = ParisCalendar.Today(clock);
         var number = new QuoteNumbering(await quotes.TakenNumbersAsync(issuerId, cancellationToken)).Next(issuedOn.Year);
         var validUntil = issuedOn.AddDays(validityDays);
         quote.Finalize(number, issuedOn, validUntil, texts.QuoteValidity(validityDays, validUntil));
