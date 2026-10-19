@@ -49,8 +49,9 @@ arrondis justes et prouvés, une numérotation sûre, des décisions tracées et
 Mais l'effort est allé à la rigueur interne plutôt qu'à ce qu'un utilisateur rencontre dans la première
 minute. Et le volume produit par l'agent (135 commits, 12 ADR, 7 CDR, 523 tests) dépasse ce qu'un énoncé
 qui valorise « un résultat partiel assumé » semblait attendre. Ce n'est pas une question de temps passé :
-Samir a cadré, tranché et relu, l'agent a produit. C'est une question de proportion, et de volume à relire
-pour qui évalue.
+l'historique git compte environ 10 heures d'activité de l'agent, dont une partie où il travaillait seul,
+et Samir a surtout cadré, tranché et relu. C'est une question de proportion, et de volume à relire pour
+qui évalue.
 
 ## Les points forts
 

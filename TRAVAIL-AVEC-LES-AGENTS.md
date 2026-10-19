@@ -86,8 +86,10 @@ Cette page est la synthèse. Le journal tenu au fil du travail est
   paires connues : le refus d'un contexte non pris en charge n'a plus d'exemple réel. L'agent l'a vu après
   avoir construit, pas en délibérant. C'est le cas qui motive le
   [plan d'un agent contradicteur](docs/PLAN-CONTRADICTEUR.md).
-- **Le périmètre a débordé.** Le temps de Samir est resté limité : il cadre, tranche et relit, l'agent
-  produit. Mais à ce débit, chaque lot semblait possible, et toute la roadmap a été exécutée, quand
+- **Le périmètre a débordé.** L'historique git compte environ 10 heures d'activité de l'agent (des commits
+  espacés de moins de 20 minutes), sur deux jours. Une partie de ce temps, l'agent a travaillé seul
+  pendant que Samir faisait autre chose : son temps à lui est allé au cadrage, aux décisions et aux
+  relectures. Mais à ce débit, chaque lot semblait possible, et toute la roadmap a été exécutée, quand
   l'énoncé valorise un résultat partiel assumé. Rien n'a posé la question « on continue ou on coupe ? ».
   Cette page elle-même, recadrée tôt (« elle doit être synthétique »), avait regrossi : d'où ce découpage
   entre synthèse et journal.
