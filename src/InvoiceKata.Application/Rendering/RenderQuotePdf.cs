@@ -21,7 +21,7 @@ public sealed class RenderQuotePdf(IQuoteRepository quotes, QuoteScopes scopes, 
     /// <exception cref="InvalidDocumentException">The final validator refuses the document: no PDF is rendered.</exception>
     public async Task<byte[]> PdfOfAsync(IssuerId issuerId, QuoteId quoteId, CancellationToken cancellationToken)
     {
-        if (await pdfs.FindAsync(issuerId, quoteId, cancellationToken) is { } stored)
+        if (await pdfs.FindAsync(issuerId, DocumentReference.Of(quoteId), cancellationToken) is { } stored)
         {
             return stored;
         }
@@ -34,7 +34,7 @@ public sealed class RenderQuotePdf(IQuoteRepository quotes, QuoteScopes scopes, 
 
         var document = ResolvedDocument.OfQuote(await scopes.ForAsync(quote, cancellationToken));
         validator.Validate(document);
-        await pdfs.SaveIfAbsentAsync(issuerId, quoteId, await renderer.RenderAsync(document, cancellationToken), cancellationToken);
-        return (await pdfs.FindAsync(issuerId, quoteId, cancellationToken))!;
+        await pdfs.SaveIfAbsentAsync(issuerId, DocumentReference.Of(quoteId), await renderer.RenderAsync(document, cancellationToken), cancellationToken);
+        return (await pdfs.FindAsync(issuerId, DocumentReference.Of(quoteId), cancellationToken))!;
     }
 }

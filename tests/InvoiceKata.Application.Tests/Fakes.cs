@@ -69,16 +69,16 @@ internal sealed class StoredCustomers(params Customer[] customers) : ICustomerRe
 
 internal sealed class StoredPdfs : IPdfStore
 {
-    private readonly Dictionary<Guid, byte[]> _pdfs = [];
+    private readonly Dictionary<DocumentReference, byte[]> _pdfs = [];
 
-    public Task SaveIfAbsentAsync(IssuerId issuerId, QuoteId quoteId, byte[] pdf, CancellationToken cancellationToken)
+    public Task SaveIfAbsentAsync(IssuerId issuerId, DocumentReference document, byte[] pdf, CancellationToken cancellationToken)
     {
-        _pdfs.TryAdd(quoteId.Value, pdf);
+        _pdfs.TryAdd(document, pdf);
         return Task.CompletedTask;
     }
 
-    public Task<byte[]?> FindAsync(IssuerId issuerId, QuoteId quoteId, CancellationToken cancellationToken) =>
-        Task.FromResult(_pdfs.GetValueOrDefault(quoteId.Value));
+    public Task<byte[]?> FindAsync(IssuerId issuerId, DocumentReference document, CancellationToken cancellationToken) =>
+        Task.FromResult(_pdfs.GetValueOrDefault(document));
 }
 
 // Renders a document as the bytes of its number, and remembers what it was asked to render.

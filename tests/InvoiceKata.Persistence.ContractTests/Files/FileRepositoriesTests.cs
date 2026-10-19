@@ -68,9 +68,10 @@ public sealed class FilePdfStoreTests : PdfStoreContract, IDisposable
     {
         var store = CreateStore();
         var (issuerId, quoteId) = (InvoiceKata.Domain.IssuerId.New(), InvoiceKata.Domain.QuoteId.New());
-        await store.SaveIfAbsentAsync(issuerId, quoteId, "%PDF first"u8.ToArray(), CancellationToken.None);
+        var document = DocumentReference.Of(quoteId);
+        await store.SaveIfAbsentAsync(issuerId, document, "%PDF first"u8.ToArray(), CancellationToken.None);
 
-        await store.SaveIfAbsentAsync(issuerId, quoteId, "%PDF second"u8.ToArray(), CancellationToken.None);
+        await store.SaveIfAbsentAsync(issuerId, document, "%PDF second"u8.ToArray(), CancellationToken.None);
 
         var folder = System.IO.Path.Combine(_directory.Path, "issuers", issuerId.Value.ToString(), "quotes");
         Assert.Equal([$"{quoteId.Value}.pdf"], Directory.EnumerateFiles(folder).Select(System.IO.Path.GetFileName));

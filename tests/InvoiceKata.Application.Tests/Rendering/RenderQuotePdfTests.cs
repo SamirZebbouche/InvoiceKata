@@ -20,7 +20,7 @@ public sealed class RenderQuotePdfTests
         await Reaction().ReactAsync(finalized, CancellationToken.None);
 
         Assert.Equal("D-2026-0001", Assert.Single(_renderer.Rendered).Document.Number);
-        Assert.Equal("PDF D-2026-0001 #1"u8.ToArray(), await _pdfs.FindAsync(_scope.Issuer.Id, _scope.Quote.Id, CancellationToken.None));
+        Assert.Equal("PDF D-2026-0001 #1"u8.ToArray(), await _pdfs.FindAsync(_scope.Issuer.Id, DocumentReference.Of(_scope.Quote.Id), CancellationToken.None));
     }
 
     // The replay test of the reaction (ADR-0003): handling QuoteFinalized again renders nothing more.
@@ -34,7 +34,7 @@ public sealed class RenderQuotePdfTests
         await reaction.ReactAsync(finalized, CancellationToken.None);
 
         Assert.Single(_renderer.Rendered);
-        Assert.Equal("PDF D-2026-0001 #1"u8.ToArray(), await _pdfs.FindAsync(_scope.Issuer.Id, _scope.Quote.Id, CancellationToken.None));
+        Assert.Equal("PDF D-2026-0001 #1"u8.ToArray(), await _pdfs.FindAsync(_scope.Issuer.Id, DocumentReference.Of(_scope.Quote.Id), CancellationToken.None));
     }
 
     [Fact]
@@ -55,7 +55,7 @@ public sealed class RenderQuotePdfTests
 
         Assert.Contains("the mention IssuerLegalIdentity is missing", Assert.IsType<InvalidDocumentException>(refusal).Violations);
         Assert.Empty(_renderer.Rendered);
-        Assert.Null(await _pdfs.FindAsync(_scope.Issuer.Id, _scope.Quote.Id, CancellationToken.None));
+        Assert.Null(await _pdfs.FindAsync(_scope.Issuer.Id, DocumentReference.Of(_scope.Quote.Id), CancellationToken.None));
     }
 
     // Reading the PDF renders it if the reaction failed after the save: the quote stays finalized either way.
@@ -67,7 +67,7 @@ public sealed class RenderQuotePdfTests
         var pdf = await Reaction().PdfOfAsync(_scope.Issuer.Id, _scope.Quote.Id, CancellationToken.None);
 
         Assert.Equal("PDF D-2026-0001 #1"u8.ToArray(), pdf);
-        Assert.Equal(pdf, await _pdfs.FindAsync(_scope.Issuer.Id, _scope.Quote.Id, CancellationToken.None));
+        Assert.Equal(pdf, await _pdfs.FindAsync(_scope.Issuer.Id, DocumentReference.Of(_scope.Quote.Id), CancellationToken.None));
     }
 
     [Fact]
