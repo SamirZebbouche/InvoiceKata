@@ -75,7 +75,12 @@ public sealed class QuoteVatRegimeTests
         quote.AddLine(Quotes.Line(unitPrice: 800m, quantity: 2m, vatRate: 0m));
         quote.Finalize(new QuoteNumber(2026, 1), new DateOnly(2026, 10, 18), new DateOnly(2026, 11, 17), "Devis valable 30 jours, jusqu'au 17/11/2026.");
         var invoice = Invoice.IssueFor(quote, new InvoiceNumber(2026, 1), new DateOnly(2026, 11, 30), new DateOnly(2026, 12, 30),
-            new PaymentMentionTexts("Échéance : 30/12/2026.", "Escompte : néant.", "Pénalités : trois fois le taux légal.", "Indemnité : 40 €."));
+            [
+            new(MentionCode.PaymentDueDate, "Échéance : 30/12/2026."),
+            new(MentionCode.EarlyPaymentDiscount, "Escompte : néant."),
+            new(MentionCode.LatePaymentPenalties, "Pénalités : trois fois le taux légal."),
+            new(MentionCode.RecoveryIndemnity, "Indemnité : 40 €."),
+        ]);
 
         var restored = Invoice.FromState(invoice.ToState());
 

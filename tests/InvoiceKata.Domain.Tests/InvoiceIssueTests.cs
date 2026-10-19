@@ -5,9 +5,13 @@ public sealed class InvoiceIssueTests
     private static readonly InvoiceNumber Number = new(2026, 1);
     private static readonly DateOnly IssuedOn = new(2026, 11, 30);
     private static readonly DateOnly DueOn = new(2026, 12, 30);
-    private static readonly PaymentMentionTexts Payment = new(
-        "Échéance : 30/12/2026.", "Escompte pour paiement anticipé : néant.",
-        "Pénalités de retard : trois fois le taux d'intérêt légal.", "Indemnité forfaitaire pour frais de recouvrement : 40 €.");
+    private static readonly LegalMention[] Payment =
+    [
+        new(MentionCode.PaymentDueDate, "Échéance : 30/12/2026."),
+        new(MentionCode.EarlyPaymentDiscount, "Escompte pour paiement anticipé : néant."),
+        new(MentionCode.LatePaymentPenalties, "Pénalités de retard : trois fois le taux d'intérêt légal."),
+        new(MentionCode.RecoveryIndemnity, "Indemnité forfaitaire pour frais de recouvrement : 40 €."),
+    ];
 
     [Fact]
     public void Should_CopyTheQuoteAsIssued_When_Issued()
@@ -29,14 +33,21 @@ public sealed class InvoiceIssueTests
 
         Assert.Equal((Number, IssuedOn, DueOn), (invoice.Number, invoice.IssuedOn, invoice.DueOn));
         Assert.Equal(4, invoice.Id.Value.Version);
-        LegalMention[] payment =
-        [
-            new(MentionCode.PaymentDueDate, Payment.DueDate),
-            new(MentionCode.EarlyPaymentDiscount, Payment.EarlyPaymentDiscount),
-            new(MentionCode.LatePaymentPenalties, Payment.LatePaymentPenalties),
-            new(MentionCode.RecoveryIndemnity, Payment.RecoveryIndemnity),
-        ];
-        Assert.All(payment, mention => Assert.Contains(mention, invoice.Mentions));
+        Assert.All(Payment, mention => Assert.Contains(mention, invoice.Mentions));
+    }
+
+    // An invoice without one of its payment mentions could not be read back: it is never issued.
+    [Theory]
+    [InlineData(MentionCode.PaymentDueDate)]
+    [InlineData(MentionCode.EarlyPaymentDiscount)]
+    [InlineData(MentionCode.LatePaymentPenalties)]
+    [InlineData(MentionCode.RecoveryIndemnity)]
+    public void Should_RefuseToIssue_When_APaymentMentionIsMissing(MentionCode missing)
+    {
+        var refusal = Record.Exception(() =>
+            Invoice.IssueFor(FinalizedQuote(), Number, IssuedOn, DueOn, [.. Payment.Where(mention => mention.Code != missing)]));
+
+        Assert.Contains("an invoice lacks a payment mention", Assert.IsType<ArgumentException>(refusal).Message, StringComparison.Ordinal);
     }
 
     // The quote's mentions stay on the invoice, except its validity, which only concerns the quote.

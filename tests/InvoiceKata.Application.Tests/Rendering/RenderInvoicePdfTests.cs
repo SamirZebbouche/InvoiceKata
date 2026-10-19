@@ -80,8 +80,12 @@ public sealed class RenderInvoicePdfTests
         }
 
         quote.Finalize(new QuoteNumber(2026, 1), new DateOnly(2026, 10, 18), new DateOnly(2026, 11, 17), "Devis valable 30 jours, jusqu'au 17/11/2026.");
-        var invoice = Invoice.IssueFor(quote, new InvoiceNumber(2026, 1), new DateOnly(2026, 11, 30), new DateOnly(2026, 12, 30), new PaymentMentionTexts(
-            texts.InvoiceDueDate(new DateOnly(2026, 12, 30)), texts.NoEarlyPaymentDiscount(), texts.LatePaymentPenalties(), texts.RecoveryIndemnity()));
+        var invoice = Invoice.IssueFor(quote, new InvoiceNumber(2026, 1), new DateOnly(2026, 11, 30), new DateOnly(2026, 12, 30), [
+            new(MentionCode.PaymentDueDate, texts.InvoiceDueDate(new DateOnly(2026, 12, 30))),
+            new(MentionCode.EarlyPaymentDiscount, texts.NoEarlyPaymentDiscount()),
+            new(MentionCode.LatePaymentPenalties, texts.LatePaymentPenalties()),
+            new(MentionCode.RecoveryIndemnity, texts.RecoveryIndemnity()),
+        ]);
         await _invoices.AddAsync(invoice, CancellationToken.None);
         return Assert.IsType<InvoiceIssued>(Assert.Single(invoice.TakeEvents()));
     }

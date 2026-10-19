@@ -125,7 +125,12 @@ public sealed class ResolvedDocumentTests
     }
 
     private Invoice Invoiced() => Invoice.IssueFor(Finalized().Quote, new InvoiceNumber(2026, 1), new DateOnly(2026, 11, 30), new DateOnly(2026, 12, 30),
-        new PaymentMentionTexts("Échéance : 30/12/2026.", "Escompte : néant.", "Pénalités : trois fois le taux légal.", "Indemnité : 40 €."));
+        [
+        new(MentionCode.PaymentDueDate, "Échéance : 30/12/2026."),
+        new(MentionCode.EarlyPaymentDiscount, "Escompte : néant."),
+        new(MentionCode.LatePaymentPenalties, "Pénalités : trois fois le taux légal."),
+        new(MentionCode.RecoveryIndemnity, "Indemnité : 40 €."),
+    ]);
 
     private QuoteScope Finalized()
     {

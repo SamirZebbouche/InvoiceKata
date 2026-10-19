@@ -1,4 +1,5 @@
 using InvoiceKata.Application.Invoices;
+using InvoiceKata.Application.Invoices.Mentions;
 using InvoiceKata.Application.Quotes;
 using InvoiceKata.Application.Quotes.Mentions;
 using InvoiceKata.Domain;
@@ -95,7 +96,9 @@ public sealed class IssueInvoiceTests
     }
 
     private IssueInvoice UseCase(string at, params IInvoiceReaction[] reactions) => new(
-        _quotes, _invoices, _texts, new FixedClock(DateTimeOffset.Parse(at, System.Globalization.CultureInfo.InvariantCulture)),
+        _quotes, _invoices,
+        [new PaymentDueDateMention(_texts), new EarlyPaymentDiscountMention(_texts), new LatePaymentPenaltiesMention(_texts), new RecoveryIndemnityMention(_texts)],
+        new FixedClock(DateTimeOffset.Parse(at, System.Globalization.CultureInfo.InvariantCulture)),
         new InvoiceReactions(reactions, NullLogger<InvoiceReactions>.Instance));
 
     private async Task<Quote> StoredFinalizedQuoteAsync(Quote quote)

@@ -2,6 +2,7 @@ using InvoiceKata.Adapters.Persistence.InMemory;
 using InvoiceKata.Adapters.Rendering;
 using InvoiceKata.Application.Customers;
 using InvoiceKata.Application.Invoices;
+using InvoiceKata.Application.Invoices.Mentions;
 using InvoiceKata.Application.Issuers;
 using InvoiceKata.Application.Quotes;
 using InvoiceKata.Application.Quotes.Mentions;
@@ -64,7 +65,10 @@ public sealed class AcceptanceContext
 
     public FinalizeQuote FinalizeQuote => new(_quotes, _texts, Clock, QuoteReactions);
 
-    public IssueInvoice IssueInvoice => new(_quotes, _invoices, _texts, Clock, InvoiceReactions);
+    public IssueInvoice IssueInvoice => new(
+        _quotes, _invoices,
+        [new PaymentDueDateMention(_texts), new EarlyPaymentDiscountMention(_texts), new LatePaymentPenaltiesMention(_texts), new RecoveryIndemnityMention(_texts)],
+        Clock, InvoiceReactions);
 
     public GetInvoice GetInvoice => new(_invoices);
 

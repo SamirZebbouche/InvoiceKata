@@ -1,8 +1,5 @@
 namespace InvoiceKata.Domain;
 
-// The texts of the payment mentions an invoice must carry, composed by the application from its text catalog.
-public sealed record PaymentMentionTexts(string DueDate, string EarlyPaymentDiscount, string LatePaymentPenalties, string RecoveryIndemnity);
-
 // An invoice is issued from a finalized quote and never changes afterwards (ADR-0009, ADR-0010): it has no method that
 // alters it. It copies the quote as issued, its lines, amounts and mentions, and keeps them even if a rule changes later.
 public sealed partial class Invoice
@@ -60,7 +57,8 @@ public sealed partial class Invoice
     public IReadOnlyList<LegalMention> Mentions => [.. _mentions.Values];
 
     /// <exception cref="QuoteNotFinalizedException">The quote is a draft: only a finalized quote is invoiced.</exception>
-    public static Invoice IssueFor(Quote quote, InvoiceNumber number, DateOnly issuedOn, DateOnly dueOn, PaymentMentionTexts payment)
+    // The payment mentions are retained by the application's rules, which know the customer (ADR-0012).
+    public static Invoice IssueFor(Quote quote, InvoiceNumber number, DateOnly issuedOn, DateOnly dueOn, IReadOnlyList<LegalMention> paymentMentions)
     {
         if (quote.Status != QuoteStatus.Finalized)
         {
@@ -77,6 +75,12 @@ public sealed partial class Invoice
             throw new ArgumentException("The due date must come after the issue date.", nameof(dueOn));
         }
 
+        // The same payment mentions as the stored state requires: an invoice is never issued that could not be read back.
+        if (!PaymentMentions.All(code => paymentMentions.Any(mention => mention.Code == code)))
+        {
+            throw new ArgumentException("an invoice lacks a payment mention", nameof(paymentMentions));
+        }
+
         var invoice = new Invoice(
             InvoiceId.New(), quote.IssuerId, quote.CustomerId, quote.Id, quote.Number!.Value, quote.IssuedOn!.Value,
             number, issuedOn, dueOn, quote.TotalExcludingVat, quote.VatBreakdown);
@@ -86,10 +90,11 @@ public sealed partial class Invoice
             invoice._mentions[mention.Code] = mention;
         }
 
-        invoice.Put(MentionCode.PaymentDueDate, payment.DueDate);
-        invoice.Put(MentionCode.EarlyPaymentDiscount, payment.EarlyPaymentDiscount);
-        invoice.Put(MentionCode.LatePaymentPenalties, payment.LatePaymentPenalties);
-        invoice.Put(MentionCode.RecoveryIndemnity, payment.RecoveryIndemnity);
+        foreach (var mention in paymentMentions)
+        {
+            invoice._mentions[mention.Code] = mention;
+        }
+
         invoice._events.Add(new InvoiceIssued(invoice.Id, invoice.IssuerId, number));
         return invoice;
     }
@@ -101,6 +106,4 @@ public sealed partial class Invoice
         _events.Clear();
         return taken;
     }
-
-    private void Put(MentionCode code, string text) => _mentions[code] = new LegalMention(code, text);
 }

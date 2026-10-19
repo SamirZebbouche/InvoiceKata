@@ -244,8 +244,12 @@ public sealed class TypstRendererTests
     private static ResolvedDocument Invoice()
     {
         var (quote, issuer, customer) = Finalized(lines: 1);
-        var invoice = InvoiceKata.Domain.Invoice.IssueFor(quote, new InvoiceNumber(2026, 1), new DateOnly(2026, 11, 30), new DateOnly(2026, 12, 30), new PaymentMentionTexts(
-            Texts.InvoiceDueDate(new DateOnly(2026, 12, 30)), Texts.NoEarlyPaymentDiscount(), Texts.LatePaymentPenalties(), Texts.RecoveryIndemnity()));
+        var invoice = InvoiceKata.Domain.Invoice.IssueFor(quote, new InvoiceNumber(2026, 1), new DateOnly(2026, 11, 30), new DateOnly(2026, 12, 30), [
+            new(MentionCode.PaymentDueDate, Texts.InvoiceDueDate(new DateOnly(2026, 12, 30))),
+            new(MentionCode.EarlyPaymentDiscount, Texts.NoEarlyPaymentDiscount()),
+            new(MentionCode.LatePaymentPenalties, Texts.LatePaymentPenalties()),
+            new(MentionCode.RecoveryIndemnity, Texts.RecoveryIndemnity()),
+        ]);
         return ResolvedDocument.OfInvoice(invoice, issuer, customer);
     }
 

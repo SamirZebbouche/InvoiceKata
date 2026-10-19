@@ -105,9 +105,12 @@ public abstract class InvoiceRepositoryContract
     private static Invoice Issued(Issuer issuer, InvoiceNumber number) => Issue(FinalizedQuote(issuer), number);
 
     private static Invoice Issue(Quote quote, InvoiceNumber number) => Invoice.IssueFor(
-        quote, number, new DateOnly(2026, 11, 30), new DateOnly(2026, 12, 30), new PaymentMentionTexts(
-            "Échéance : 30/12/2026.", "Escompte pour paiement anticipé : néant.",
-            "Pénalités de retard : trois fois le taux d'intérêt légal.", "Indemnité forfaitaire pour frais de recouvrement : 40 €."));
+        quote, number, new DateOnly(2026, 11, 30), new DateOnly(2026, 12, 30), [
+        new(MentionCode.PaymentDueDate, "Échéance : 30/12/2026."),
+        new(MentionCode.EarlyPaymentDiscount, "Escompte pour paiement anticipé : néant."),
+        new(MentionCode.LatePaymentPenalties, "Pénalités de retard : trois fois le taux d'intérêt légal."),
+        new(MentionCode.RecoveryIndemnity, "Indemnité forfaitaire pour frais de recouvrement : 40 €."),
+    ]);
 
     private static Quote FinalizedQuote(Issuer issuer)
     {

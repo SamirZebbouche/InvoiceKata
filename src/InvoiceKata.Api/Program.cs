@@ -3,6 +3,7 @@ using InvoiceKata.Adapters.Rendering;
 using InvoiceKata.Api;
 using InvoiceKata.Application.Customers;
 using InvoiceKata.Application.Invoices;
+using InvoiceKata.Application.Invoices.Mentions;
 using InvoiceKata.Application.Issuers;
 using InvoiceKata.Application.Quotes;
 using InvoiceKata.Application.Quotes.Mentions;
@@ -67,6 +68,10 @@ builder.Services.AddTransient<QuoteReactions>();
 // The invoice, issued from a finalized quote (ADR-0010), and its PDF as a reaction to InvoiceIssued.
 builder.Services.AddSingleton<IInvoiceRepository, FileInvoiceRepository>();
 builder.Services.AddTransient<IssueInvoice>();
+builder.Services.AddTransient<IInvoiceMentionRule, PaymentDueDateMention>();
+builder.Services.AddTransient<IInvoiceMentionRule, EarlyPaymentDiscountMention>();
+builder.Services.AddTransient<IInvoiceMentionRule, LatePaymentPenaltiesMention>();
+builder.Services.AddTransient<IInvoiceMentionRule, RecoveryIndemnityMention>();
 builder.Services.AddTransient<GetInvoice>();
 builder.Services.AddTransient<RenderInvoicePdf>();
 // Stryker disable once Statement : killed by the API tests when applied by hand; a shared test host never re-runs startup under a mutant
