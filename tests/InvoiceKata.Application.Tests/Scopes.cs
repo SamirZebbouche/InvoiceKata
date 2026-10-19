@@ -28,6 +28,15 @@ internal static class Scopes
         return new QuoteScope(Quote.DraftFor(issuer, customer), issuer, customer);
     }
 
+    // A draft for an individual customer (ADR-0012).
+    public static QuoteScope IndividualDraft()
+    {
+        var issuer = Draft().Issuer;
+        var customer = Customer.RegisterIndividual(
+            issuer.Id, "Jeanne Martin", new Address { Street = "3 rue des Lilas", PostalCode = "33000", City = "Bordeaux" });
+        return new QuoteScope(Quote.DraftFor(issuer, customer), issuer, customer);
+    }
+
     public static NewQuoteLine Line(decimal vatRate) => new()
     {
         Designation = "Prestation",

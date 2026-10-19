@@ -28,10 +28,24 @@ public sealed class IssueInvoiceTests
         [
             new(MentionCode.PaymentDueDate, _texts.InvoiceDueDate(new DateOnly(2026, 12, 30))),
             new(MentionCode.EarlyPaymentDiscount, _texts.NoEarlyPaymentDiscount()),
-            new(MentionCode.LatePaymentPenalties, _texts.LatePaymentPenalties()),
+            new(MentionCode.LatePaymentPenalties, _texts.LatePaymentPenalties(CustomerKind.Professional)),
             new(MentionCode.RecoveryIndemnity, _texts.RecoveryIndemnity()),
         ];
         Assert.All(payment, mention => Assert.Contains(mention, invoice.Mentions));
+    }
+
+    // The rules read the quote's customer: an individual is not asked for the 40 € indemnity (ADR-0012).
+    [Fact]
+    public async Task Should_LeaveTheRecoveryIndemnityOut_When_TheCustomerIsAnIndividual()
+    {
+        var individual = Scopes.IndividualDraft();
+        var quote = await StoredFinalizedQuoteAsync(individual.Quote);
+
+        var id = await UseCase(at: "2026-11-30T10:00:00Z", individual.Customer).HandleAsync(quote.IssuerId, quote.Id, IssueInvoice.DefaultPaymentDays, CancellationToken.None);
+
+        var invoice = await _invoices.GetAsync(quote.IssuerId, id, CancellationToken.None);
+        Assert.DoesNotContain(invoice.Mentions, mention => mention.Code == MentionCode.RecoveryIndemnity);
+        Assert.Contains(new LegalMention(MentionCode.LatePaymentPenalties, _texts.LatePaymentPenalties(CustomerKind.Individual)), invoice.Mentions);
     }
 
     [Fact]
@@ -95,8 +109,10 @@ public sealed class IssueInvoiceTests
         Assert.Equal([((IInvoiceEvent)new InvoiceIssued(id, quote.IssuerId, new InvoiceNumber(2026, 1)), 1)], heard);
     }
 
-    private IssueInvoice UseCase(string at, params IInvoiceReaction[] reactions) => new(
-        _quotes, _invoices,
+    private IssueInvoice UseCase(string at, params IInvoiceReaction[] reactions) => UseCase(at, _scope.Customer, reactions);
+
+    private IssueInvoice UseCase(string at, Customer customer, params IInvoiceReaction[] reactions) => new(
+        _quotes, new StoredCustomers(customer), _invoices,
         [new PaymentDueDateMention(_texts), new EarlyPaymentDiscountMention(_texts), new LatePaymentPenaltiesMention(_texts), new RecoveryIndemnityMention(_texts)],
         new FixedClock(DateTimeOffset.Parse(at, System.Globalization.CultureInfo.InvariantCulture)),
         new InvoiceReactions(reactions, NullLogger<InvoiceReactions>.Instance));

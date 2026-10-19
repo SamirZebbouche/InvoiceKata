@@ -49,9 +49,20 @@ public sealed class InvoiceStateTests
         { "two mentions with one code", "two mentions share a code", () => Invoice.FromState(WithMentions(state => [.. state.Mentions, state.Mentions[0]])) },
         {
             "no payment mention", "an invoice lacks a payment mention",
-            () => Invoice.FromState(State() with { Mentions = [.. State().Mentions.Where(mention => mention.Code != MentionCode.RecoveryIndemnity)] })
+            () => Invoice.FromState(State() with { Mentions = [.. State().Mentions.Where(mention => mention.Code != MentionCode.LatePaymentPenalties)] })
         },
     };
+
+    // The indemnity depends on the customer, whom the invoice does not know: the final validator checks it (ADR-0012).
+    [Fact]
+    public void Should_RestoreTheInvoice_When_ItHasNoRecoveryIndemnity()
+    {
+        var state = State() with { Mentions = [.. State().Mentions.Where(mention => mention.Code != MentionCode.RecoveryIndemnity)] };
+
+        var restored = Invoice.FromState(state);
+
+        Assert.DoesNotContain(restored.Mentions, mention => mention.Code == MentionCode.RecoveryIndemnity);
+    }
 
     [Theory]
     [MemberData(nameof(CorruptStates))]

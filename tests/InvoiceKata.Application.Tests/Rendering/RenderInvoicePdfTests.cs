@@ -83,7 +83,7 @@ public sealed class RenderInvoicePdfTests
         var invoice = Invoice.IssueFor(quote, new InvoiceNumber(2026, 1), new DateOnly(2026, 11, 30), new DateOnly(2026, 12, 30), [
             new(MentionCode.PaymentDueDate, texts.InvoiceDueDate(new DateOnly(2026, 12, 30))),
             new(MentionCode.EarlyPaymentDiscount, texts.NoEarlyPaymentDiscount()),
-            new(MentionCode.LatePaymentPenalties, texts.LatePaymentPenalties()),
+            new(MentionCode.LatePaymentPenalties, texts.LatePaymentPenalties(CustomerKind.Professional)),
             new(MentionCode.RecoveryIndemnity, texts.RecoveryIndemnity()),
         ]);
         await _invoices.AddAsync(invoice, CancellationToken.None);

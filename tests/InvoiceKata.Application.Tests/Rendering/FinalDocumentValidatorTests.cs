@@ -28,6 +28,7 @@ public sealed class FinalDocumentValidatorTests
         { "no issue date", "the issue date '' is not a date", document => document with { Document = document.Document with { IssuedOn = "" } } },
         { "no validity", "a quote has no validity date", document => document with { Document = document.Document with { ValidUntil = null } } },
         { "validity before issue", "the validity does not end after the issue date", document => document with { Document = document.Document with { ValidUntil = "2026-10-18" } } },
+        { "unknown customer kind", "the customer kind 'trust' is unknown", document => document with { Customer = document.Customer with { Kind = "trust" } } },
         { "unreadable validity", "the validity does not end after the issue date", document => document with { Document = document.Document with { ValidUntil = "17/11/2026" } } },
         { "issuer without name", "the issuer has no name", document => document with { Issuer = document.Issuer with { Name = " " } } },
         { "issuer with a short SIREN", "the issuer's SIREN '91234' is not nine digits", document => document with { Issuer = document.Issuer with { Siren = "91234" } } },
@@ -78,6 +79,22 @@ public sealed class FinalDocumentValidatorTests
     public void Should_AcceptTheInvoice_When_EveryPartIsComplete()
     {
         var refusal = Record.Exception(() => Validator.Validate(ValidInvoice()));
+
+        Assert.Null(refusal);
+    }
+
+    // The 40 € indemnity is only claimed from a professional customer (ADR-0012).
+    [Fact]
+    public void Should_AcceptTheInvoiceOfAnIndividual_When_ItHasNoRecoveryIndemnity()
+    {
+        var invoice = ValidInvoice();
+        var individual = invoice with
+        {
+            Customer = invoice.Customer with { Kind = "individual", Siren = null, VatNumber = null },
+            Mentions = [.. invoice.Mentions.Where(mention => mention.Code != "RecoveryIndemnity")],
+        };
+
+        var refusal = Record.Exception(() => Validator.Validate(individual));
 
         Assert.Null(refusal);
     }
@@ -164,7 +181,7 @@ public sealed class FinalDocumentValidatorTests
         var invoice = Invoice.IssueFor(scope.Quote, new InvoiceNumber(2026, 1), new DateOnly(2026, 11, 30), new DateOnly(2026, 12, 30), [
             new(MentionCode.PaymentDueDate, texts.InvoiceDueDate(new DateOnly(2026, 12, 30))),
             new(MentionCode.EarlyPaymentDiscount, texts.NoEarlyPaymentDiscount()),
-            new(MentionCode.LatePaymentPenalties, texts.LatePaymentPenalties()),
+            new(MentionCode.LatePaymentPenalties, texts.LatePaymentPenalties(CustomerKind.Professional)),
             new(MentionCode.RecoveryIndemnity, texts.RecoveryIndemnity()),
         ]);
         return ResolvedDocument.OfInvoice(invoice, scope.Issuer, scope.Customer);

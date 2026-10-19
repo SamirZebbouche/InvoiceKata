@@ -57,7 +57,26 @@ public sealed class FrenchMentionTextsTests
                 "Pénalités de retard : trois fois le taux d'intérêt légal.",
                 $"Indemnité forfaitaire pour frais de recouvrement : 40{Space}€.",
             ],
-            [_texts.InvoiceDueDate(new DateOnly(2026, 12, 30)), _texts.NoEarlyPaymentDiscount(), _texts.LatePaymentPenalties(), _texts.RecoveryIndemnity()]);
+            [_texts.InvoiceDueDate(new DateOnly(2026, 12, 30)), _texts.NoEarlyPaymentDiscount(), _texts.LatePaymentPenalties(CustomerKind.Professional), _texts.RecoveryIndemnity()]);
+    }
+
+    // Face to a consumer, the common law: the legal interest rate, from the formal notice (ADR-0012).
+    [Fact]
+    public void Should_CiteTheCivilCode_When_StatingTheLatePaymentPenaltiesOfAnIndividual()
+    {
+        Assert.Equal(
+            "Pénalités de retard : intérêts au taux légal, à compter de la mise en demeure (art. 1231-6 du code civil).",
+            _texts.LatePaymentPenalties(CustomerKind.Individual));
+    }
+
+    public static TheoryData<CustomerKind> AllCustomerKinds => [.. Enum.GetValues<CustomerKind>()];
+
+    // A kind of customer added without its penalties text would fall into the throwing default: this fails that day.
+    [Theory]
+    [MemberData(nameof(AllCustomerKinds))]
+    public void Should_StateTheLatePaymentPenalties_When_GivenAnyCustomerKind(CustomerKind kind)
+    {
+        Assert.StartsWith("Pénalités de retard : ", _texts.LatePaymentPenalties(kind), StringComparison.Ordinal);
     }
 
     // The individual entrepreneur's name, followed by "EI" (article R526-27 of the code de commerce, ADR-0011).

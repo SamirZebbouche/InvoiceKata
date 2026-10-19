@@ -59,7 +59,16 @@ public sealed record ResolvedDocument(
         _ => throw new ArgumentOutOfRangeException(nameof(regime), regime, "This VAT regime has no document."),
     };
 
-    private static DocumentCustomer Of(Customer customer) => new(customer.Name, AddressLines(customer.Address), customer.Siren?.Value, customer.VatNumber?.Value);
+    private static DocumentCustomer Of(Customer customer) => new(
+        customer.Name, AddressLines(customer.Address), customer.Siren?.Value, customer.VatNumber?.Value, Kind(customer.Kind));
+
+    // The kind decides the mentions the final validator requires: the 40 € indemnity is for a professional (ADR-0012).
+    private static string Kind(CustomerKind kind) => kind switch
+    {
+        CustomerKind.Professional => "professional",
+        CustomerKind.Individual => "individual",
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "This kind of customer has no document."),
+    };
 
     private static DocumentLine Of(QuoteLine line) => new(
         line.Designation,
@@ -93,7 +102,7 @@ public sealed record QuoteReference(string Number, string IssuedOn);
 public sealed record DocumentIssuer(
     string Name, string LegalForm, string Siren, string? VatNumber, IReadOnlyList<string> Address, string Kind = "company", string VatRegime = "normal");
 
-public sealed record DocumentCustomer(string Name, IReadOnlyList<string> Address, string? Siren, string? VatNumber);
+public sealed record DocumentCustomer(string Name, IReadOnlyList<string> Address, string? Siren, string? VatNumber, string Kind = "professional");
 
 public sealed record DocumentLine(
     string Designation, string Quantity, string Unit, string UnitPriceExclVat, string? DiscountRate, string NetUnitPriceExclVat, string TotalExclVat, string VatRate);

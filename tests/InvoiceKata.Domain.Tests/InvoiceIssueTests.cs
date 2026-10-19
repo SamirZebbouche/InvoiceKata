@@ -41,13 +41,21 @@ public sealed class InvoiceIssueTests
     [InlineData(MentionCode.PaymentDueDate)]
     [InlineData(MentionCode.EarlyPaymentDiscount)]
     [InlineData(MentionCode.LatePaymentPenalties)]
-    [InlineData(MentionCode.RecoveryIndemnity)]
     public void Should_RefuseToIssue_When_APaymentMentionIsMissing(MentionCode missing)
     {
         var refusal = Record.Exception(() =>
             Invoice.IssueFor(FinalizedQuote(), Number, IssuedOn, DueOn, [.. Payment.Where(mention => mention.Code != missing)]));
 
         Assert.Contains("an invoice lacks a payment mention", Assert.IsType<ArgumentException>(refusal).Message, StringComparison.Ordinal);
+    }
+
+    // An individual customer is not asked for the 40 € indemnity (ADR-0012).
+    [Fact]
+    public void Should_IssueTheInvoice_When_TheRecoveryIndemnityIsLeftOut()
+    {
+        var invoice = Invoice.IssueFor(FinalizedQuote(), Number, IssuedOn, DueOn, [.. Payment.Where(mention => mention.Code != MentionCode.RecoveryIndemnity)]);
+
+        Assert.DoesNotContain(invoice.Mentions, mention => mention.Code == MentionCode.RecoveryIndemnity);
     }
 
     // The quote's mentions stay on the invoice, except its validity, which only concerns the quote.

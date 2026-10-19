@@ -128,6 +128,11 @@ public sealed class CustomerValidator : IDocumentPartValidator
         {
             yield return "the customer has a SIREN and no VAT number, or the reverse";
         }
+
+        if (customer.Kind is not ("professional" or "individual"))
+        {
+            yield return $"the customer kind '{customer.Kind}' is unknown";
+        }
     }
 }
 
@@ -218,8 +223,14 @@ public sealed class MentionsValidator : IDocumentPartValidator
         var codes = document.Mentions.Select(mention => mention.Code).ToHashSet();
         var required = new List<MentionCode> { MentionCode.IssuerLegalIdentity };
         required.AddRange(document.Document.Kind == "invoice"
-            ? [MentionCode.PaymentDueDate, MentionCode.EarlyPaymentDiscount, MentionCode.LatePaymentPenalties, MentionCode.RecoveryIndemnity]
+            ? [MentionCode.PaymentDueDate, MentionCode.EarlyPaymentDiscount, MentionCode.LatePaymentPenalties]
             : [MentionCode.QuoteValidity]);
+
+        // Only a professional customer can be asked for the 40 € indemnity (ADR-0012).
+        if (document.Document.Kind == "invoice" && document.Customer.Kind == "professional")
+        {
+            required.Add(MentionCode.RecoveryIndemnity);
+        }
         if (document.Issuer.VatRegime == "franchise")
         {
             required.Add(MentionCode.VatFranchise);

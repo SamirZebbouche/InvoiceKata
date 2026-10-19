@@ -247,7 +247,7 @@ public sealed class TypstRendererTests
         var invoice = InvoiceKata.Domain.Invoice.IssueFor(quote, new InvoiceNumber(2026, 1), new DateOnly(2026, 11, 30), new DateOnly(2026, 12, 30), [
             new(MentionCode.PaymentDueDate, Texts.InvoiceDueDate(new DateOnly(2026, 12, 30))),
             new(MentionCode.EarlyPaymentDiscount, Texts.NoEarlyPaymentDiscount()),
-            new(MentionCode.LatePaymentPenalties, Texts.LatePaymentPenalties()),
+            new(MentionCode.LatePaymentPenalties, Texts.LatePaymentPenalties(CustomerKind.Professional)),
             new(MentionCode.RecoveryIndemnity, Texts.RecoveryIndemnity()),
         ]);
         return ResolvedDocument.OfInvoice(invoice, issuer, customer);

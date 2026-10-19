@@ -3,8 +3,8 @@ using InvoiceKata.Domain;
 
 namespace InvoiceKata.Application.Invoices.Mentions;
 
-// What a payment mention rule reads when the invoice is issued: the finalized quote and the due date chosen then.
-public sealed record InvoiceScope(Quote Quote, DateOnly DueOn);
+// What a payment mention rule reads when the invoice is issued: the finalized quote, its customer, and the due date.
+public sealed record InvoiceScope(Quote Quote, Customer Customer, DateOnly DueOn);
 
 // A payment mention of the invoice (ADR-0012), asked once, at issue: an invoice never changes afterwards.
 public interface IInvoiceMentionRule

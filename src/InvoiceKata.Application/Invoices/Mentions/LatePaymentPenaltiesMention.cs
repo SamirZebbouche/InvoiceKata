@@ -10,5 +10,5 @@ public sealed class LatePaymentPenaltiesMention(IMentionTexts texts) : InvoiceMe
 
     protected override bool AppliesTo(InvoiceScope scope) => true;
 
-    protected override string Compose(InvoiceScope scope) => Texts.LatePaymentPenalties();
+    protected override string Compose(InvoiceScope scope) => Texts.LatePaymentPenalties(scope.Customer.Kind);
 }

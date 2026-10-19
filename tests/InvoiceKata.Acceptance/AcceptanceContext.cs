@@ -66,7 +66,7 @@ public sealed class AcceptanceContext
     public FinalizeQuote FinalizeQuote => new(_quotes, _texts, Clock, QuoteReactions);
 
     public IssueInvoice IssueInvoice => new(
-        _quotes, _invoices,
+        _quotes, _customers, _invoices,
         [new PaymentDueDateMention(_texts), new EarlyPaymentDiscountMention(_texts), new LatePaymentPenaltiesMention(_texts), new RecoveryIndemnityMention(_texts)],
         Clock, InvoiceReactions);
 
