@@ -83,6 +83,8 @@ public sealed class FinalDocumentValidatorTests
     public static TheoryData<string, string, Func<ResolvedDocument, ResolvedDocument>> InvoiceDefects => new()
     {
         { "quote number for an invoice", "number 'D-2026-0001' is not an invoice number", document => document with { Document = document.Document with { Number = "D-2026-0001" } } },
+        { "no issue date", "the issue date '' is not a date", document => document with { Document = document.Document with { IssuedOn = "" } } },
+        { "no number", "the document has no number", document => document with { Document = document.Document with { Number = "" } } },
         { "no quote reference", "an invoice refers to no quote", document => document with { Document = document.Document with { Quote = null } } },
         { "unreadable quote reference", "the invoice refers to 'D-1' dated '', not to a quote", document => document with { Document = document.Document with { Quote = new QuoteReference("D-1", "") } } },
         { "acceptance box", "an invoice has no acceptance box", document => document with { Document = document.Document with { AcceptanceBox = true } } },
