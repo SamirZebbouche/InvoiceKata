@@ -17,7 +17,7 @@ Cette documentation vit avec le code : chaque nouvelle route y entre avec son di
   | `400` | Donnée invalide |
   | `404` | Ressource inconnue, ou appartenant à un autre émetteur |
   | `409` | Action interdite par l'état du document, par exemple modifier un devis finalisé |
-  | `422` | Contexte de facturation non pris en charge ([ADR-0002](adr/ADR-0002-variations-selon-emetteur-et-client.md)), ou ligne avec un taux de TVA sur un devis en franchise ([ADR-0011](adr/ADR-0011-ei-en-franchise-de-tva.md)) |
+  | `422` | Contexte de facturation non pris en charge ([ADR-0002](adr/ADR-0002-variations-selon-emetteur-et-client.md) ; toutes les paires actuelles le sont), ou ligne avec un taux de TVA sur un devis en franchise ([ADR-0011](adr/ADR-0011-ei-en-franchise-de-tva.md)) |
 
 - **Vocabulaire** : `quote` (une offre de prix ferme, qui engage une fois acceptée), et non `estimate`,
   qui désigne une estimation sans engagement.
@@ -32,7 +32,7 @@ Cette documentation vit avec le code : chaque nouvelle route y entre avec son di
 | `GET /issuers/{issuerId}` | Lire un émetteur, avec son type (`kind`) et son régime de TVA (`vatRegime`) | `200` |
 | `POST /issuers/{issuerId}/customers` | Enregistrer un client : `kind` (`Professional` par défaut, ou `Individual`), nom, adresse, et pour un professionnel le SIREN et le n° de TVA | `201`, avec `Location: /issuers/{issuerId}/customers/{id}` ; `400` si le type est inconnu, ou si un professionnel n'a pas de SIREN ou de n° de TVA |
 | `GET /issuers/{issuerId}/customers/{id}` | Lire un client | `200` |
-| `POST /issuers/{issuerId}/quotes` `{ customerId }` | Créer un devis brouillon pour ce client | `201`, avec `Location: /issuers/{issuerId}/quotes/{id}` ; `422` si le contexte de facturation n'est pas pris en charge (seuls société × professionnel et entrepreneur individuel × professionnel le sont) |
+| `POST /issuers/{issuerId}/quotes` `{ customerId }` | Créer un devis brouillon pour ce client | `201`, avec `Location: /issuers/{issuerId}/quotes/{id}` ; `422` si le contexte de facturation n'est pas pris en charge (une société comme un entrepreneur individuel facturent un professionnel ou un particulier : toutes les paires actuelles le sont) |
 | `POST /issuers/{issuerId}/quotes/{id}/lines` | Ajouter une ligne : désignation, quantité, unité, prix unitaire HT, taux de TVA, et une remise en % facultative | `201`, avec `Location: …/lines/{lineId}` et le devis recalculé dans le corps ; `422` si le devis est en franchise et que le taux n'est pas 0 |
 | `DELETE /issuers/{issuerId}/quotes/{id}/lines/{lineId}` | Retirer une ligne | `200`, avec le devis recalculé ; `404` si la ligne n'est pas sur le devis |
 | `GET /issuers/{issuerId}/quotes/{id}` | Lire le devis : statut, numéro et dates (vides pour un brouillon), lignes, totaux (HT, TVA, TTC), ventilation de la TVA par taux, mentions légales (`code` et `text`) | `200` |
@@ -49,17 +49,25 @@ art. L. 223 et s. du code des impositions sur les biens et services (CIBS) ». S
 facture, est rendu avec le template de l'entrepreneur individuel
 ([ADR-0011](adr/ADR-0011-ei-en-franchise-de-tva.md)).
 
+Un particulier n'a ni SIREN ni n° de TVA : ses documents n'en portent pas
+([ADR-0012](adr/ADR-0012-client-particulier.md)).
+
 ### Factures
 
 | Méthode et route | Rôle | Réponse |
 |---|---|---|
-| `POST /issuers/{issuerId}/invoices` `{ quoteId, paymentDays }` | Émettre la facture d'un devis finalisé : elle reprend le devis tel qu'émis, reçoit son numéro (`F-2026-0001`, une suite continue par émetteur et par année), sa date (à l'heure de Paris), son échéance et les mentions de paiement. `paymentDays` est facultatif : 30 jours par défaut, de 1 à 60 (le plafond légal entre professionnels) | `201`, avec `Location: /issuers/{issuerId}/invoices/{id}` et la facture dans le corps ; `400` si le délai sort de 1 à 60 jours ; `404` si le devis est inconnu ; `409` si le devis est encore un brouillon, s'il a déjà sa facture, ou si une émission simultanée a pris le même numéro |
+| `POST /issuers/{issuerId}/invoices` `{ quoteId, paymentDays }` | Émettre la facture d'un devis finalisé : elle reprend le devis tel qu'émis, reçoit son numéro (`F-2026-0001`, une suite continue par émetteur et par année), sa date (à l'heure de Paris), son échéance et les mentions de paiement. `paymentDays` est facultatif : 30 jours par défaut, de 1 à 60 (le plafond légal entre professionnels, gardé pour un particulier) | `201`, avec `Location: /issuers/{issuerId}/invoices/{id}` et la facture dans le corps ; `400` si le délai sort de 1 à 60 jours ; `404` si le devis est inconnu ; `409` si le devis est encore un brouillon, s'il a déjà sa facture, ou si une émission simultanée a pris le même numéro |
 | `GET /issuers/{issuerId}/invoices/{id}` | Lire la facture : numéro, dates, devis d'origine, lignes, totaux, ventilation de la TVA, mentions | `200` |
 | `GET /issuers/{issuerId}/invoices/{id}/pdf` | Télécharger le PDF de la facture, nommé d'après son numéro (`F-2026-0001.pdf`) | `200` `application/pdf` |
 
 Une facture ne se modifie jamais : aucune route ne la change, et le port ne sait que l'ajouter. Son PDF est
 rendu en réaction à `InvoiceIssued`, juste après l'enregistrement, avec le template du devis
 ([ADR-0010](adr/ADR-0010-facture-emise-depuis-un-devis-finalise.md)).
+
+Les mentions de paiement sont des règles, qui dépendent du client. Un professionnel se voit réclamer l'indemnité
+forfaitaire de 40 €, et des pénalités de retard à trois fois le taux d'intérêt légal. Un particulier, aucune
+indemnité, et des pénalités au taux légal, à compter de la mise en demeure (art. 1231-6 du code civil)
+([ADR-0012](adr/ADR-0012-client-particulier.md)).
 
 Les montants légaux (total de ligne, TVA par taux, totaux) sont arrondis au centime, à mi-chemin vers le haut (0,125 donne 0,13) ; les valeurs saisies, comme le prix unitaire et le prix net après remise (33,33 € − 10 % = 29,997 €), restent en pleine précision. La TVA est calculée une fois par taux, sur le total HT de ce taux, et non ligne par ligne ([ADR-0008](adr/ADR-0008-arrondis.md)).
 

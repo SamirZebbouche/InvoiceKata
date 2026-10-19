@@ -12,8 +12,10 @@ public sealed record InvoiceState(
 
 public sealed partial class Invoice : IPersistable<Invoice, InvoiceState>
 {
+    // The payment mentions every invoice carries. The 40 € indemnity depends on the customer, whom the invoice does not know:
+    // the final validator checks it (ADR-0012).
     private static readonly MentionCode[] PaymentMentions =
-        [MentionCode.PaymentDueDate, MentionCode.EarlyPaymentDiscount, MentionCode.LatePaymentPenalties, MentionCode.RecoveryIndemnity];
+        [MentionCode.PaymentDueDate, MentionCode.EarlyPaymentDiscount, MentionCode.LatePaymentPenalties];
 
     // Rebuilds a stored invoice: no event is raised, and its structural invariants are checked again.
     public static Invoice FromState(InvoiceState state)

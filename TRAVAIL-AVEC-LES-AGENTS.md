@@ -111,7 +111,13 @@ chaque pull request.
   individuel en franchise, l'agent a vérifié les règles sur les sites officiels : la mention de franchise
   renvoie au CIBS depuis le 1er septembre 2026, l'ancienne référence au CGI n'étant plus que tolérée. Samir a
   choisi la référence au CIBS, un même émetteur doté d'un type et d'un régime, le refus en `422` d'une ligne
-  avec un taux de TVA, et un template à part ([ADR-0011](docs/adr/ADR-0011-ei-en-franchise-de-tva.md)). Pour la démo, Samir a
+  avec un taux de TVA, et un template à part ([ADR-0011](docs/adr/ADR-0011-ei-en-franchise-de-tva.md)). Pour le
+  client particulier, l'agent a de nouveau vérifié les règles sur les sites officiels, et Samir a tranché :
+  les deux émetteurs peuvent facturer un particulier, sans indemnité de 40 € et avec des pénalités au taux
+  légal du code civil ; les mentions de paiement deviennent des règles, comme celles du devis ; le médiateur
+  de la consommation reste hors périmètre, documenté ([ADR-0012](docs/adr/ADR-0012-client-particulier.md)).
+  L'agent a signalé une conséquence de ce choix : la liste blanche nomme désormais toutes les paires
+  connues, et le refus d'un contexte n'a plus d'exemple réel. Pour la démo, Samir a
   demandé un front hors périmètre. Il a retenu une page sans framework, servie par l'API, et déclarée zone de
   démo : hors TDD, sauf le test qui vérifie que l'API la sert. L'agent l'a pilotée dans Edge et a regardé les
   captures : trois défauts sont apparus, invisibles dans les codes de retour, et ont été corrigés.

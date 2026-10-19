@@ -49,9 +49,20 @@ public sealed class InvoiceStateTests
         { "two mentions with one code", "two mentions share a code", () => Invoice.FromState(WithMentions(state => [.. state.Mentions, state.Mentions[0]])) },
         {
             "no payment mention", "an invoice lacks a payment mention",
-            () => Invoice.FromState(State() with { Mentions = [.. State().Mentions.Where(mention => mention.Code != MentionCode.RecoveryIndemnity)] })
+            () => Invoice.FromState(State() with { Mentions = [.. State().Mentions.Where(mention => mention.Code != MentionCode.LatePaymentPenalties)] })
         },
     };
+
+    // The indemnity depends on the customer, whom the invoice does not know: the final validator checks it (ADR-0012).
+    [Fact]
+    public void Should_RestoreTheInvoice_When_ItHasNoRecoveryIndemnity()
+    {
+        var state = State() with { Mentions = [.. State().Mentions.Where(mention => mention.Code != MentionCode.RecoveryIndemnity)] };
+
+        var restored = Invoice.FromState(state);
+
+        Assert.DoesNotContain(restored.Mentions, mention => mention.Code == MentionCode.RecoveryIndemnity);
+    }
 
     [Theory]
     [MemberData(nameof(CorruptStates))]
@@ -82,8 +93,11 @@ public sealed class InvoiceStateTests
         var quote = Quotes.Draft();
         quote.AddLine(Quotes.Line(unitPrice: 100m));
         quote.Finalize(new QuoteNumber(2026, 1), new DateOnly(2026, 10, 18), new DateOnly(2026, 11, 17), "Devis valable 30 jours, jusqu'au 17/11/2026.");
-        return Invoice.IssueFor(quote, new InvoiceNumber(2026, 1), new DateOnly(2026, 11, 30), new DateOnly(2026, 12, 30), new PaymentMentionTexts(
-            "Échéance : 30/12/2026.", "Escompte pour paiement anticipé : néant.",
-            "Pénalités de retard : trois fois le taux d'intérêt légal.", "Indemnité forfaitaire pour frais de recouvrement : 40 €."));
+        return Invoice.IssueFor(quote, new InvoiceNumber(2026, 1), new DateOnly(2026, 11, 30), new DateOnly(2026, 12, 30), [
+            new(MentionCode.PaymentDueDate, "Échéance : 30/12/2026."),
+            new(MentionCode.EarlyPaymentDiscount, "Escompte pour paiement anticipé : néant."),
+            new(MentionCode.LatePaymentPenalties, "Pénalités de retard : trois fois le taux d'intérêt légal."),
+            new(MentionCode.RecoveryIndemnity, "Indemnité forfaitaire pour frais de recouvrement : 40 €."),
+        ]);
     }
 }

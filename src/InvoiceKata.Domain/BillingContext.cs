@@ -14,6 +14,8 @@ public readonly record struct BillingContext(IssuerKind Issuer, CustomerKind Cus
     [
         new(IssuerKind.Company, CustomerKind.Professional),
         new(IssuerKind.IndividualEntrepreneur, CustomerKind.Professional),
+        new(IssuerKind.Company, CustomerKind.Individual),
+        new(IssuerKind.IndividualEntrepreneur, CustomerKind.Individual),
     ];
 
     public bool IsSupported => Supported.Contains(this);

@@ -30,8 +30,14 @@ public sealed class FrenchMentionTexts : IMentionTexts
 
     public string NoEarlyPaymentDiscount() => "Escompte pour paiement anticipé : néant.";
 
-    // Three times the legal interest rate: the minimum the law sets.
-    public string LatePaymentPenalties() => "Pénalités de retard : trois fois le taux d'intérêt légal.";
+    // Between professionals, three times the legal interest rate, the minimum the code de commerce sets; face to a consumer,
+    // the common law: the legal interest rate, from the formal notice (art. 1231-6 du code civil, ADR-0012).
+    public string LatePaymentPenalties(CustomerKind customerKind) => customerKind switch
+    {
+        CustomerKind.Professional => "Pénalités de retard : trois fois le taux d'intérêt légal.",
+        CustomerKind.Individual => "Pénalités de retard : intérêts au taux légal, à compter de la mise en demeure (art. 1231-6 du code civil).",
+        _ => throw new ArgumentOutOfRangeException(nameof(customerKind), customerKind, "This kind of customer has no late payment penalties text."),
+    };
 
     public string RecoveryIndemnity() => "Indemnité forfaitaire pour frais de recouvrement : 40 €.";
 

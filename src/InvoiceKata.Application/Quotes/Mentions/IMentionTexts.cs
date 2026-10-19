@@ -15,7 +15,7 @@ public interface IMentionTexts
 
     string NoEarlyPaymentDiscount();
 
-    string LatePaymentPenalties();
+    string LatePaymentPenalties(CustomerKind customerKind);
 
     string RecoveryIndemnity();
 

@@ -143,13 +143,20 @@ Ajoutée en chemin : un scénario d'acceptation ne dispense pas d'un test unitai
 
 ## Lot 5 — Un client particulier
 
-### PR 5.1
+### PR 5.1 — Un client particulier
 
 - **Scénarios** :
-  - un devis, puis une facture, pour un particulier : pas d'indemnité de 40 €, pas de SIREN client.
-- **Ce qui apparaît** :
-  - de nouvelles règles de mentions ;
-  - une ligne de plus dans la liste blanche.
+  - une société, puis un entrepreneur individuel, établissent un devis pour un particulier ;
+  - le PDF de ce devis porte le nom et l'adresse du particulier, sans SIREN ;
+  - sa facture ne réclame pas l'indemnité de 40 €, et ses pénalités de retard sont au taux légal, à compter de
+    la mise en demeure ;
+  - le PDF de cette facture ne porte pas l'indemnité.
+- **Ce qui apparaît** ([ADR-0012](adr/ADR-0012-client-particulier.md)) :
+  - deux lignes de plus dans la liste blanche, qui nomme désormais toutes les paires connues ;
+  - les mentions de paiement en règles de facture, sur le modèle des mentions du devis ;
+  - une indemnité réservée au client professionnel, et un texte de pénalités qui dépend du client ;
+  - le type de client dans le document résolu, et le validateur final qui n'exige l'indemnité que d'un
+    professionnel.
 
 ## Hors roadmap
 

@@ -1,10 +1,13 @@
+using InvoiceKata.Application.Customers;
+using InvoiceKata.Application.Invoices.Mentions;
 using InvoiceKata.Application.Quotes;
-using InvoiceKata.Application.Quotes.Mentions;
 using InvoiceKata.Domain;
 
 namespace InvoiceKata.Application.Invoices;
 
-public sealed class IssueInvoice(IQuoteRepository quotes, IInvoiceRepository invoices, IMentionTexts texts, TimeProvider clock, InvoiceReactions reactions)
+public sealed class IssueInvoice(
+    IQuoteRepository quotes, ICustomerRepository customers, IInvoiceRepository invoices, IEnumerable<IInvoiceMentionRule> mentions,
+    TimeProvider clock, InvoiceReactions reactions)
 {
     public const int DefaultPaymentDays = 30;
 
@@ -29,8 +32,8 @@ public sealed class IssueInvoice(IQuoteRepository quotes, IInvoiceRepository inv
         var issuedOn = ParisCalendar.Today(clock);
         var number = new InvoiceNumbering(await invoices.TakenNumbersAsync(issuerId, cancellationToken)).Next(issuedOn.Year);
         var dueOn = issuedOn.AddDays(paymentDays);
-        var invoice = Invoice.IssueFor(quote, number, issuedOn, dueOn, new PaymentMentionTexts(
-            texts.InvoiceDueDate(dueOn), texts.NoEarlyPaymentDiscount(), texts.LatePaymentPenalties(), texts.RecoveryIndemnity()));
+        var scope = new InvoiceScope(quote, await customers.GetAsync(issuerId, quote.CustomerId, cancellationToken), dueOn);
+        var invoice = Invoice.IssueFor(quote, number, issuedOn, dueOn, [.. mentions.Select(rule => rule.MentionFor(scope)).OfType<LegalMention>()]);
 
         await invoices.AddAsync(invoice, cancellationToken);
         await reactions.PublishAsync(invoice.TakeEvents(), cancellationToken);
