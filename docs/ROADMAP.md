@@ -127,8 +127,9 @@ Ajoutée en chemin : un scénario d'acceptation ne dispense pas d'un test unitai
 ### PR 4.1
 
 - **Scénarios** :
-  - un devis d'EI en franchise, sans TVA, avec la mention « TVA non applicable, art. 293 B du CGI » et la
-    mention « EI ».
+  - un devis d'EI en franchise, sans TVA, avec la mention « TVA non applicable, art. L. 223 et s. du CIBS »
+    (la référence en vigueur depuis le 1er septembre 2026, [ADR-0011](adr/ADR-0011-ei-en-franchise-de-tva.md))
+    et la mention « EI ».
 - **Ce qui apparaît** :
   - la Strategy `VatRegime`, qui a désormais deux implémentations ;
   - un template « EI », sans colonnes de TVA ;
