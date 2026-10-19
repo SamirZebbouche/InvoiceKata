@@ -149,5 +149,5 @@ PostgreSQL, l'authentification et le multi-utilisateur.
 | Quand | Question |
 |---|---|
 | PR 2.1 | Le format du numéro de devis, et la durée de validité par défaut. **Tranché** : `D-2026-0001` et 30 jours ([CDR-0007](cdr/CDR-0007-numerotation-des-devis.md)) |
-| PR 3.1 | Faut-il l'acceptation du client (« bon pour accord ») avant de pouvoir facturer, ou un devis finalisé suffit-il ? |
-| PR 3.1 | Le format du numéro de facture et ses séries |
+| PR 3.1 | Faut-il l'acceptation du client (« bon pour accord ») avant de pouvoir facturer, ou un devis finalisé suffit-il ? **Tranché** : un devis finalisé suffit ([ADR-0010](adr/ADR-0010-facture-emise-depuis-un-devis-finalise.md)) |
+| PR 3.1 | Le format du numéro de facture. **Tranché** : `F-2026-0001`, une seule série puisque les avoirs sont hors roadmap ([ADR-0010](adr/ADR-0010-facture-emise-depuis-un-devis-finalise.md)) |

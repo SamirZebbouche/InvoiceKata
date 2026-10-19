@@ -81,6 +81,7 @@ Les décisions d'**architecture** sont des ADR, ci-dessous. Les décisions de **
 | [0007](docs/adr/ADR-0007-saas-multi-emetteur.md) | Un SaaS multi-émetteur, l'émetteur dans la route |
 | [0008](docs/adr/ADR-0008-arrondis.md) | Les arrondis : précision dans le domaine, centimes pour les montants légaux |
 | [0009](docs/adr/ADR-0009-documents-legaux-jamais-reecrits.md) | Les documents légaux ne sont jamais réécrits, les migrations se font à la lecture |
+| [0010](docs/adr/ADR-0010-facture-emise-depuis-un-devis-finalise.md) | La facture, émise à partir d'un devis finalisé |
 
 ## Roadmap
 
