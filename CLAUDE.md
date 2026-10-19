@@ -169,6 +169,9 @@ regime: only what has a machine oracle is tested there.
 
 ### In this project
 Spikes live on `spike/*` branches: throwaway, never merged, outside this rule (ADR-0001).
+The demo front (`src/InvoiceKata.Api/wwwroot`, a page with no framework and no build, out of the kata's scope)
+is a demo zone under differential rigour: only its machine oracle is tested, an API test that the page is
+served. It is driven by hand in a real browser before its pull request, and the result is looked at.
 
 <!-- ai-core:lang-conversation-and-code@v2 -->
 ## Languages of conversation, code and messages
