@@ -1,0 +1,113 @@
+namespace InvoiceKata.Domain.Tests;
+
+public sealed class InvoiceIssueTests
+{
+    private static readonly InvoiceNumber Number = new(2026, 1);
+    private static readonly DateOnly IssuedOn = new(2026, 11, 30);
+    private static readonly DateOnly DueOn = new(2026, 12, 30);
+    private static readonly PaymentMentionTexts Payment = new(
+        "Échéance : 30/12/2026.", "Escompte pour paiement anticipé : néant.",
+        "Pénalités de retard : trois fois le taux d'intérêt légal.", "Indemnité forfaitaire pour frais de recouvrement : 40 €.");
+
+    [Fact]
+    public void Should_CopyTheQuoteAsIssued_When_Issued()
+    {
+        var quote = FinalizedQuote();
+
+        var invoice = Invoice.IssueFor(quote, Number, IssuedOn, DueOn, Payment);
+
+        Assert.Equal((quote.IssuerId, quote.CustomerId, quote.Id, quote.Number!.Value, quote.IssuedOn!.Value), (invoice.IssuerId, invoice.CustomerId, invoice.QuoteId, invoice.QuoteNumber, invoice.QuoteIssuedOn));
+        Assert.Equal(quote.Lines, invoice.Lines);
+        Assert.Equal((quote.TotalExcludingVat, quote.TotalVat, quote.TotalIncludingVat), (invoice.TotalExcludingVat, invoice.TotalVat, invoice.TotalIncludingVat));
+        Assert.Equal(quote.VatBreakdown, invoice.VatBreakdown);
+    }
+
+    [Fact]
+    public void Should_CarryItsNumberDatesAndPaymentMentions_When_Issued()
+    {
+        var invoice = Invoice.IssueFor(FinalizedQuote(), Number, IssuedOn, DueOn, Payment);
+
+        Assert.Equal((Number, IssuedOn, DueOn), (invoice.Number, invoice.IssuedOn, invoice.DueOn));
+        Assert.Equal(4, invoice.Id.Value.Version);
+        LegalMention[] payment =
+        [
+            new(MentionCode.PaymentDueDate, Payment.DueDate),
+            new(MentionCode.EarlyPaymentDiscount, Payment.EarlyPaymentDiscount),
+            new(MentionCode.LatePaymentPenalties, Payment.LatePaymentPenalties),
+            new(MentionCode.RecoveryIndemnity, Payment.RecoveryIndemnity),
+        ];
+        Assert.All(payment, mention => Assert.Contains(mention, invoice.Mentions));
+    }
+
+    // The quote's mentions stay on the invoice, except its validity, which only concerns the quote.
+    [Fact]
+    public void Should_KeepTheQuoteMentionsButItsValidity_When_Issued()
+    {
+        var quote = FinalizedQuote();
+
+        var invoice = Invoice.IssueFor(quote, Number, IssuedOn, DueOn, Payment);
+
+        Assert.Contains(new LegalMention(MentionCode.IssuerLegalIdentity, "Batifolio, SAS"), invoice.Mentions);
+        Assert.DoesNotContain(invoice.Mentions, mention => mention.Code == MentionCode.QuoteValidity);
+    }
+
+    [Fact]
+    public void Should_RaiseInvoiceIssued_When_Issued()
+    {
+        var invoice = Invoice.IssueFor(FinalizedQuote(), Number, IssuedOn, DueOn, Payment);
+
+        Assert.Equal([new InvoiceIssued(invoice.Id, invoice.IssuerId, Number)], invoice.TakeEvents());
+    }
+
+    // An amount computed by a rule that changed since the quote was issued stays as issued (ADR-0009).
+    [Fact]
+    public void Should_CopyTheQuoteAmountsAsIssued_When_TheyDifferFromARecomputation()
+    {
+        var state = FinalizedQuote().ToState();
+        var quote = Quote.FromState(state with
+        {
+            Finalization = state.Finalization! with
+            {
+                TotalExcludingVat = 99.99m,
+                VatBreakdown = [new VatBreakdownState(20m, 99.99m, 19.99m)],
+                TotalVat = 19.99m,
+                TotalIncludingVat = 119.98m,
+            },
+        });
+
+        var invoice = Invoice.IssueFor(quote, Number, IssuedOn, DueOn, Payment);
+
+        Assert.Equal((new Money(99.99m), new Money(19.99m), new Money(119.98m)), (invoice.TotalExcludingVat, invoice.TotalVat, invoice.TotalIncludingVat));
+    }
+
+    [Fact]
+    public void Should_RefuseToInvoice_When_TheQuoteIsADraft()
+    {
+        var draft = Quotes.Draft();
+        draft.AddLine(Quotes.Line(unitPrice: 100m));
+
+        Assert.Throws<QuoteNotFinalizedException>(() => Invoice.IssueFor(draft, Number, IssuedOn, DueOn, Payment));
+    }
+
+    [Fact]
+    public void Should_RefuseTheIssue_When_TheDueDateIsNotAfterTheIssueDate()
+    {
+        Assert.Throws<ArgumentException>(() => Invoice.IssueFor(FinalizedQuote(), Number, IssuedOn, IssuedOn, Payment));
+    }
+
+    [Fact]
+    public void Should_RefuseTheIssue_When_TheNumberIsOfAnotherYear()
+    {
+        Assert.Throws<ArgumentException>(() => Invoice.IssueFor(FinalizedQuote(), new InvoiceNumber(2025, 1), IssuedOn, DueOn, Payment));
+    }
+
+    private static Quote FinalizedQuote()
+    {
+        var quote = Quotes.Draft();
+        quote.AddLine(Quotes.Line(unitPrice: 100m));
+        quote.AddLine(Quotes.Line(unitPrice: 50m, vatRate: 10m));
+        quote.PutMention(new LegalMention(MentionCode.IssuerLegalIdentity, "Batifolio, SAS"));
+        quote.Finalize(new QuoteNumber(2026, 1), new DateOnly(2026, 10, 18), new DateOnly(2026, 11, 17), "Devis valable 30 jours, jusqu'au 17/11/2026.");
+        return quote;
+    }
+}
