@@ -90,6 +90,7 @@ Les décisions d'**architecture** sont des ADR, ci-dessous. Les décisions de **
 | [0009](docs/adr/ADR-0009-documents-legaux-jamais-reecrits.md) | Les documents légaux ne sont jamais réécrits, les migrations se font à la lecture |
 | [0010](docs/adr/ADR-0010-facture-emise-depuis-un-devis-finalise.md) | La facture, émise à partir d'un devis finalisé |
 | [0011](docs/adr/ADR-0011-ei-en-franchise-de-tva.md) | Un second contexte, l'entrepreneur individuel en franchise de TVA |
+| [0012](docs/adr/ADR-0012-client-particulier.md) | Un client particulier |
 
 ## Roadmap
 

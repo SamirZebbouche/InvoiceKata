@@ -146,7 +146,8 @@ Ajoutée en chemin : un scénario d'acceptation ne dispense pas d'un test unitai
 ### PR 5.1
 
 - **Scénarios** :
-  - un devis, puis une facture, pour un particulier : pas d'indemnité de 40 €, pas de SIREN client.
+  - un devis, puis une facture, pour un particulier : pas d'indemnité de 40 €, pas de SIREN client, et des
+    pénalités de retard au taux légal ([ADR-0012](adr/ADR-0012-client-particulier.md)).
 - **Ce qui apparaît** :
   - de nouvelles règles de mentions ;
   - une ligne de plus dans la liste blanche.
