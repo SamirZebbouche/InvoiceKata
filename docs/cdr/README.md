@@ -24,7 +24,7 @@ Chaque CDR suit la même trame : le problème, le motif retenu, où il s'appliqu
 | Motif | Où | Décision |
 |---|---|---|
 | Strategy | Le régime de TVA : normal ou franchise | [ADR-0002](../adr/ADR-0002-variations-selon-emetteur-et-client.md), [ADR-0011](../adr/ADR-0011-ei-en-franchise-de-tva.md) |
-| Template Method | Les règles de mentions légales | [CDR-0001](CDR-0001-mentions-en-template-method.md) |
+| Template Method | Les règles de mentions légales, du devis et de la facture | [CDR-0001](CDR-0001-mentions-en-template-method.md), [ADR-0012](../adr/ADR-0012-client-particulier.md) |
 | Monde fermé (liste blanche) | Les contextes de facturation pris en charge | [ADR-0002](../adr/ADR-0002-variations-selon-emetteur-et-client.md) |
 | Événements de domaine, chorégraphie | Les mentions (avant l'enregistrement), le PDF (après) | [ADR-0003](../adr/ADR-0003-reactions-par-evenements-idempotentes.md), [CDR-0002](CDR-0002-evenements-leves-par-l-agregat.md) |
 | Composite | Le validateur final du document résolu | [ADR-0005](../adr/ADR-0005-rendu-pdf-par-typst.md) |

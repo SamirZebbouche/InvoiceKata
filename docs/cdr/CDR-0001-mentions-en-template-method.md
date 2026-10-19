@@ -65,6 +65,20 @@ comprises, sans exception ([ADR-0009](../adr/ADR-0009-documents-legaux-jamais-re
 Les mentions de contexte gardent la valeur qu'elles avaient dans le brouillon. Si un émetteur peut un jour
 modifier son profil, la finalisation devra les réévaluer avant le gel.
 
+## Amendement du 2026-10-19 : les mentions de paiement de la facture sont aussi des règles
+
+Les mentions de paiement dépendent du client : l'indemnité de 40 € ne se réclame qu'à un professionnel, et les
+pénalités d'un particulier suivent le code civil ([ADR-0012](../adr/ADR-0012-client-particulier.md)). Elles
+deviennent des règles, sur le même modèle : la base `InvoiceMentionRule` fixe le mécanisme, et chaque règle dit
+quand elle s'applique et ce qu'elle dit. Une facture ne change jamais : ses règles ne réagissent à aucun
+événement. Le cas d'usage d'émission les interroge une fois, et `Invoice.IssueFor` reçoit les mentions
+retenues.
+
+| Option écartée | Raison |
+|---|---|
+| `IssueInvoice` qui choisit les textes selon le type de client | Un `if` sur le profil, que l'[ADR-0002](../adr/ADR-0002-variations-selon-emetteur-et-client.md) refuse. |
+| Des règles de facture qui réagissent à `InvoiceIssued`, comme celles du devis | La facture devrait accepter des mentions après son émission : le domaine ne garantirait plus qu'elle ne change jamais. |
+
 ## Conséquences
 
 - La classe de base `LegalMentionRule` est le seul endroit où vivent l'approche fondée sur l'état et
