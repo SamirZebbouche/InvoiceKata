@@ -63,11 +63,6 @@ Fonctionnalité: Créer un devis
       | total HT | total TVA | total TTC |
       | 561,54   | 56,15     | 617,69    |
 
-  Scénario: Un contexte de facturation non pris en charge est refusé dès la création du devis
-    Étant donné "Batifolio" a enregistré le client particulier "Jeanne Martin"
-    Quand "Batifolio" crée un devis pour "Jeanne Martin"
-    Alors le contexte de facturation n'est pas pris en charge
-
   Scénario: L'identité légale de l'émetteur figure sur le devis dès sa création
     Quand "Batifolio" crée un devis pour "Les Toits Rouges SARL"
     Alors le devis porte la mention "Batifolio, SAS au capital de 20 000 €, SIREN 912 345 678"

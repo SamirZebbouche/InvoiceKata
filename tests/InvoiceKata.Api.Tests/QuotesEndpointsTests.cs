@@ -116,8 +116,9 @@ public sealed class QuotesEndpointsTests(ApiFactory factory) : IClassFixture<Api
         Assert.Equal(561.54m, line.TotalExcludingVat);
     }
 
+    // An individual customer is quoted like a professional one (ADR-0012).
     [Fact]
-    public async Task Should_ReturnUnprocessableEntityAsProblemDetails_When_QuotingAnIndividualCustomer()
+    public async Task Should_CreateTheQuote_When_TheCustomerIsAnIndividual()
     {
         var client = factory.CreateClient();
         var issuerId = await ConfigureIssuerAsync(client);
@@ -130,8 +131,7 @@ public sealed class QuotesEndpointsTests(ApiFactory factory) : IClassFixture<Api
 
         var response = await client.PostAsJsonAsync($"/issuers/{issuerId}/quotes", new { customerId });
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
-        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
     }
 
     [Fact]

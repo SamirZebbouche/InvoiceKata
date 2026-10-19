@@ -28,7 +28,9 @@ SIREN ni numéro de TVA. Ses règles, vérifiées sur les sites officiels le 19 
 ## Décision
 
 1. **La liste blanche gagne deux lignes** : société × particulier et EI × particulier. Les règles propres au
-   particulier ne dépendent que du client, et valent pour les deux émetteurs.
+   particulier ne dépendent que du client, et valent pour les deux émetteurs. La liste couvre désormais toutes les
+   paires connues : le monde reste fermé ([ADR-0002](ADR-0002-variations-selon-emetteur-et-client.md)), et un
+   type futur, une entité publique par exemple, sera refusé tant qu'il n'y figure pas.
 2. **Les mentions de paiement deviennent des règles de facture**, sur le modèle des mentions du devis
    ([CDR-0001](../cdr/CDR-0001-mentions-en-template-method.md)) : une règle par mention, qui dit quand elle
    s'applique et ce qu'elle dit. Leur interface est rangée dans `Application/Invoices/Mentions`. `Invoice.IssueFor`

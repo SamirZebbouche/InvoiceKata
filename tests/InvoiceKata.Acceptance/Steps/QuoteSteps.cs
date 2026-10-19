@@ -71,9 +71,6 @@ public sealed partial class QuoteSteps(AcceptanceContext context)
     [Then("le devis porte exactement les mêmes mentions qu'avant")]
     public async Task ThenTheQuoteCarriesTheSameMentions() => Assert.Equal(_mentionsBeforeReplay, (await QuoteAsync()).Mentions);
 
-    [Then("le contexte de facturation n'est pas pris en charge")]
-    public void ThenTheBillingContextIsNotSupported() => Assert.IsType<UnsupportedBillingContextException>(context.LastFailure);
-
     [Given("un devis brouillon de {string} pour {string}")]
     public Task GivenADraftQuote(string issuer, string customer) => WhenTheIssuerCreatesAQuoteFor(issuer, customer);
 
