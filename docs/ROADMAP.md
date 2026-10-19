@@ -149,6 +149,9 @@ Ajoutée en chemin : un scénario d'acceptation ne dispense pas d'un test unitai
 Les avoirs, les factures d'acompte, Factur-X (la voie est connue : décision 8 de l'ADR-0005),
 PostgreSQL, l'authentification et le multi-utilisateur.
 
+Ajouté pour la démo, hors périmètre : un front de démonstration servi par l'API (une page sans framework ni
+build, zone de démo du CLAUDE.md).
+
 ## Questions à trancher en chemin
 
 | Quand | Question |
