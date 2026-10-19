@@ -2,10 +2,111 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>InvoiceKata — démo</title>
+  <link rel="icon" href="data:,">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <header class="top">
+    <div>
+      <h1>InvoiceKata</h1>
+      <p class="lead">Démo : un émetteur, un client, un devis, sa facture et leurs PDF, à travers l'API.</p>
+    </div>
+    <button type="button" id="reset" class="secondary">Recommencer</button>
+  </header>
+
+  <div id="message" class="message" role="status" hidden></div>
+
+  <main>
+    <section class="step" id="issuer-step">
+      <h2><span class="badge">1</span> L'émetteur</h2>
+      <form id="issuer-form" class="grid">
+        <label>Dénomination <input name="name" value="Batifolio" required></label>
+        <label>Forme juridique
+          <select name="legalForm">
+            <option>SAS</option><option>SASU</option><option>SA</option><option>SARL</option><option>EURL</option><option>SNC</option>
+          </select>
+        </label>
+        <label>Capital (€) <input name="shareCapital" type="number" step="0.01" min="0" value="20000" required></label>
+        <label>SIREN <input name="siren" value="912345678" required></label>
+        <label>N° de TVA <input name="vatNumber" value="FR12912345678" required></label>
+        <label>Rue <input name="street" value="12 rue des Artisans" required></label>
+        <label>Code postal <input name="postalCode" value="47000" required></label>
+        <label>Ville <input name="city" value="Agen" required></label>
+        <button type="submit">Configurer l'émetteur</button>
+      </form>
+      <p class="summary" id="issuer-summary" hidden></p>
+    </section>
+
+    <section class="step" id="customer-step">
+      <h2><span class="badge">2</span> Le client</h2>
+      <form id="customer-form" class="grid">
+        <label>Type
+          <select name="kind">
+            <option value="Professional">Professionnel</option>
+            <option value="Individual">Particulier (le devis sera refusé : contexte non pris en charge)</option>
+          </select>
+        </label>
+        <label>Nom <input name="name" value="Les Toits Rouges SARL" required></label>
+        <label>SIREN <input name="siren" value="834567890"></label>
+        <label>N° de TVA <input name="vatNumber" value="FR45834567890"></label>
+        <label>Rue <input name="street" value="4 place du Marché" required></label>
+        <label>Code postal <input name="postalCode" value="33000" required></label>
+        <label>Ville <input name="city" value="Bordeaux" required></label>
+        <button type="submit">Enregistrer le client</button>
+      </form>
+      <p class="summary" id="customer-summary" hidden></p>
+    </section>
+
+    <section class="step" id="quote-step">
+      <h2><span class="badge">3</span> Le devis</h2>
+      <button type="button" id="create-quote">Créer un devis brouillon</button>
+      <div id="quote" hidden>
+        <p class="summary" id="quote-summary"></p>
+        <table>
+          <thead>
+            <tr><th>Désignation</th><th class="num">Qté</th><th>U</th><th class="num">P.U. HT</th><th class="num">Remise</th><th class="num">Total HT</th><th class="num">TVA</th><th></th></tr>
+          </thead>
+          <tbody id="quote-lines"></tbody>
+        </table>
+        <form id="line-form" class="grid inline">
+          <label>Désignation <input name="designation" value="Pose de faïence" required></label>
+          <label>Quantité <input name="quantity" type="number" step="0.001" min="0.001" value="18.72" required></label>
+          <label>Unité <input name="unit" value="m²" required></label>
+          <label>P.U. HT (€) <input name="unitPriceExcludingVat" type="number" step="0.01" min="0" value="33.33" required></label>
+          <label>TVA (%)
+            <select name="vatRate"><option>20</option><option selected>10</option><option>5.5</option></select>
+          </label>
+          <label>Remise (%) <input name="discountRate" type="number" step="0.01" min="0" max="100" value="10"></label>
+          <button type="submit">Ajouter la ligne</button>
+        </form>
+        <div class="totals" id="quote-totals"></div>
+        <ul class="mentions" id="quote-mentions"></ul>
+        <form id="finalize-form" class="grid inline">
+          <label>Validité (jours) <input name="validityDays" type="number" min="1" max="365" value="30" required></label>
+          <button type="submit">Finaliser le devis</button>
+        </form>
+        <a class="button" id="quote-pdf" target="_blank" rel="noopener" hidden>Ouvrir le PDF du devis</a>
+      </div>
+    </section>
+
+    <section class="step" id="invoice-step">
+      <h2><span class="badge">4</span> La facture</h2>
+      <form id="invoice-form" class="grid inline">
+        <label>Délai de paiement (jours) <input name="paymentDays" type="number" min="1" max="60" value="30" required></label>
+        <button type="submit">Émettre la facture</button>
+      </form>
+      <div id="invoice" hidden>
+        <p class="summary" id="invoice-summary"></p>
+        <div class="totals" id="invoice-totals"></div>
+        <ul class="mentions" id="invoice-mentions"></ul>
+        <a class="button" id="invoice-pdf" target="_blank" rel="noopener">Ouvrir le PDF de la facture</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>Un front de démonstration, hors du périmètre du kata : il n'appelle que les routes de l'API.</footer>
   <script src="app.js"></script>
 </body>
 </html>
