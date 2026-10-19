@@ -27,7 +27,7 @@ seul mandat est de la réfuter, preuves à l'appui.
 - **Il ne fait pas** : il ne modifie aucun fichier, ne propose pas de solution complète, ne tranche rien.
   Samir décide ; l'agent principal construit.
 - **Il ne remplace pas** les oracles machine (tests, format, mutation), ni les portes de processus qu'il
-  ne voit pas : une règle que personne ne charge, le temps passé, la confidentialité.
+  ne voit pas : une règle que personne ne charge, le périmètre, la confidentialité.
 
 ## Les portes
 

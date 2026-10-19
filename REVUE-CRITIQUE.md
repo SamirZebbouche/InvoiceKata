@@ -47,8 +47,10 @@ français. Les tests de rendu et les scénarios marqués `@pdf` appellent Typst.
 Le dépôt montre un vrai savoir-faire : l'immuabilité des documents émis garantie par construction, des
 arrondis justes et prouvés, une numérotation sûre, des décisions tracées et une discipline de test réelle.
 Mais l'effort est allé à la rigueur interne plutôt qu'à ce qu'un utilisateur rencontre dans la première
-minute, et le volume (135 commits en deux jours, 12 ADR, 7 CDR, 523 tests) répond mal à un énoncé qui
-valorise « quelques heures » et « un résultat partiel assumé ».
+minute. Et le volume produit par l'agent (135 commits, 12 ADR, 7 CDR, 523 tests) dépasse ce qu'un énoncé
+qui valorise « un résultat partiel assumé » semblait attendre. Ce n'est pas une question de temps passé :
+Samir a cadré, tranché et relu, l'agent a produit. C'est une question de proportion, et de volume à relire
+pour qui évalue.
 
 ## Les points forts
 
@@ -168,7 +170,7 @@ par la mutation en CI. Elles se rangent en familles :
 | Des tests insuffisants | des scénarios pris pour des tests unitaires ; des tests écrits après le code ; des trous trouvés par la mutation à chaque lot ; une échéance calculée de tête | les oracles machine, qui les ont attrapées : c'est leur rôle |
 | Une conséquence non anticipée | l'invariant des totaux qui supposait le régime normal ; le refus d'un contexte non pris en charge devenu inatteignable une fois la liste blanche complète | un contradicteur indépendant au moment de la décision |
 | La confidentialité | le nom de l'entreprise destinataire écrit dans le dépôt public : retiré des fichiers, il reste dans deux messages de commit, que la protection de `main` empêche de réécrire | une règle « dépôt public : aucun nom de tiers », et un contrôle avant chaque push |
-| Le périmètre et le temps | 135 commits en deux jours pour « quelques heures » ; une page sur les agents recadrée puis regonflée ; une dette légale jamais reprise | une porte en fin de lot : « l'énoncé dit quelques heures, on continue ou on coupe ? », et un registre de dette relu à chaque lot |
+| Le périmètre | la roadmap entière exécutée, quand l'énoncé valorise un résultat partiel assumé ; une page sur les agents recadrée puis regonflée ; une dette légale jamais reprise | une porte en fin de lot : « l'énoncé demande peu, on continue ou on coupe ? », et un registre de dette relu à chaque lot |
 
 ### Un agent contradicteur les aurait-il empêchées ?
 
@@ -182,7 +184,7 @@ Un contradicteur séparé, au contexte neuf et chargé de réfuter, aurait attra
 dérives : les conséquences de conception, les affirmations des documents que le code ne tient pas, et
 surtout le constat 1, qu'un regard extérieur demandant « que produit une faute de frappe de
 l'utilisateur ? » aurait vu dès le premier lot. Il n'aurait rien changé aux dérives de processus et
-d'outillage : une règle que personne ne charge, le temps passé, la confidentialité. Celles-là demandent
+d'outillage : une règle que personne ne charge, le périmètre, la confidentialité. Celles-là demandent
 des règles et des portes, pas un agent de plus.
 
 Le plan pour l'ajouter, et son mode d'emploi : [docs/PLAN-CONTRADICTEUR.md](docs/PLAN-CONTRADICTEUR.md).
