@@ -132,6 +132,17 @@ public sealed class TypstRendererTests
         }
     }
 
+    // A document the template cannot lay out makes Typst fail: the renderer says so rather than return no PDF.
+    [Fact]
+    public async Task Should_FailAndSayWhy_When_TypstCannotCompileTheDocument()
+    {
+        var document = Quote(lines: 1);
+
+        var refusal = await Record.ExceptionAsync(() => _renderer.RenderAsync(document with { Document = document.Document with { Kind = "letter" } }, CancellationToken.None));
+
+        Assert.Contains("Typst failed to render the document", Assert.IsType<InvalidOperationException>(refusal).Message, StringComparison.Ordinal);
+    }
+
     [Fact]
     public async Task Should_FailAndSayWhy_When_TypstCannotBeRun()
     {

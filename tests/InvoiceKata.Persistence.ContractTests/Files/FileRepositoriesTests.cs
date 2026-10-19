@@ -63,6 +63,16 @@ public sealed class FilePdfStoreTests : PdfStoreContract, IDisposable
 
     protected override IPdfStore CreateStore() => new FilePdfStore(_directory.Path);
 
+    // A kind of document added without its folder fails loudly instead of landing somewhere unexpected.
+    [Fact]
+    public async Task Should_Refuse_When_TheKindOfDocumentHasNoFolder()
+    {
+        var unknown = new DocumentReference((DocumentKind)99, Guid.NewGuid());
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            CreateStore().SaveIfAbsentAsync(InvoiceKata.Domain.IssuerId.New(), unknown, "%PDF"u8.ToArray(), CancellationToken.None));
+    }
+
     [Fact]
     public async Task Should_LeaveOnlyThePdf_When_ASecondOneIsRefused()
     {

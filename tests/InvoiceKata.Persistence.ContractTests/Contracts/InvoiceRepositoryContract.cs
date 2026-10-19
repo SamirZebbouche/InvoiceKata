@@ -81,6 +81,16 @@ public abstract class InvoiceRepositoryContract
         Assert.Null(await repository.FindByQuoteAsync(issuer.Id, QuoteId.New(), CancellationToken.None));
     }
 
+    [Fact]
+    public async Task Should_FindNoInvoice_When_AnotherIssuerAsksForTheQuote()
+    {
+        var repository = CreateRepository();
+        var quote = FinalizedQuote(Samples.Issuer());
+        await repository.AddAsync(Issue(quote, new InvoiceNumber(2026, 1)), CancellationToken.None);
+
+        Assert.Null(await repository.FindByQuoteAsync(IssuerId.New(), quote.Id, CancellationToken.None));
+    }
+
     // An issued invoice is never written over (ADR-0006), even with itself.
     [Fact]
     public async Task Should_RefuseToWriteOverAnInvoice_When_ItIsAddedAgain()

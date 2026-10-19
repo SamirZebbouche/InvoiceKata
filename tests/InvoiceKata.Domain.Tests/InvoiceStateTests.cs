@@ -43,6 +43,8 @@ public sealed class InvoiceStateTests
         { "no line", "an invoice has no line", () => Invoice.FromState(State() with { Lines = [] }) },
         { "two lines with one id", "two lines share an identifier", () => Invoice.FromState(WithLines(state => [state.Lines[0], state.Lines[0]])) },
         { "totals not adding up", "the issued totals do not add up", () => Invoice.FromState(State() with { TotalIncludingVat = 999m }) },
+        { "VAT total not its breakdown's", "the issued totals do not add up", () => Invoice.FromState(State() with { TotalVat = 1m, TotalIncludingVat = 101m }) },
+        { "total excluding VAT not its breakdown's", "the issued totals do not add up", () => Invoice.FromState(State() with { TotalExcludingVat = 50m, TotalIncludingVat = 70m }) },
         { "unknown mention code", "a mention code is unknown", () => Invoice.FromState(State() with { Mentions = [.. State().Mentions, new LegalMention((MentionCode)99, "?")] }) },
         { "two mentions with one code", "two mentions share a code", () => Invoice.FromState(WithMentions(state => [.. state.Mentions, state.Mentions[0]])) },
         {
