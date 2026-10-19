@@ -17,6 +17,17 @@ internal static class Scopes
         return new QuoteScope(Quote.DraftFor(issuer, customer), issuer, customer);
     }
 
+    // A draft of an individual entrepreneur in VAT franchise (ADR-0011).
+    public static QuoteScope FranchiseDraft()
+    {
+        var issuer = Issuer.ConfigureIndividualEntrepreneur(
+            "Jean Dupont", new Siren("853123456"), new Address { Street = "8 chemin des Vignes", PostalCode = "47000", City = "Agen" });
+        var customer = Customer.RegisterProfessional(
+            issuer.Id, "Les Toits Rouges SARL", new Siren("834567890"), new VatNumber("FR45834567890"),
+            new Address { Street = "4 place du Marché", PostalCode = "33000", City = "Bordeaux" });
+        return new QuoteScope(Quote.DraftFor(issuer, customer), issuer, customer);
+    }
+
     public static NewQuoteLine Line(decimal vatRate) => new()
     {
         Designation = "Prestation",

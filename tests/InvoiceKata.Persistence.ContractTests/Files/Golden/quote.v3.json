@@ -1,0 +1,44 @@
+{
+  "version": 3,
+  "id": "0c1d2e3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f",
+  "issuerId": "6f9a3c2e-1b4d-4e8a-9c7f-2d5e8a1b3c4d",
+  "customerId": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+  "status": "Finalized",
+  "lines": [
+    {
+      "id": "f1e2d3c4-b5a6-4978-8a6b-5c4d3e2f1a0b",
+      "designation": "Faïence",
+      "quantity": 18.72,
+      "unit": "m²",
+      "unitPriceExcludingVat": 33.33,
+      "vatRate": 10,
+      "discountRate": 10
+    }
+  ],
+  "mentions": [
+    {
+      "code": "ReducedVatRate",
+      "text": "Taux de TVA réduit de 10 %."
+    },
+    {
+      "code": "QuoteValidity",
+      "text": "Devis valable 30 jours, jusqu'au 17/11/2026."
+    }
+  ],
+  "finalization": {
+    "number": "D-2026-0042",
+    "issuedOn": "2026-10-18",
+    "validUntil": "2026-11-17",
+    "totalExcludingVat": 561.54,
+    "vatBreakdown": [
+      {
+        "rate": 10,
+        "baseExcludingVat": 561.54,
+        "vat": 56.15
+      }
+    ],
+    "totalVat": 56.15,
+    "totalIncludingVat": 617.69
+  },
+  "vatRegime": "Normal"
+}

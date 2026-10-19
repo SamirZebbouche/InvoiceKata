@@ -89,6 +89,30 @@ public sealed class ResolvedDocumentTests
         Assert.Equal("Les Toits Rouges SARL", document.Customer.Name);
     }
 
+    // An individual entrepreneur (ADR-0011): "EI" stands for the legal form, no VAT number, and no VAT at all.
+    [Fact]
+    public void Should_ResolveTheIndividualEntrepreneurInFranchise_When_TheIssuerIsOne()
+    {
+        var scope = Scopes.FranchiseDraft();
+        scope.Quote.AddLine(Scopes.Line(vatRate: 0m));
+
+        var document = ResolvedDocument.OfQuote(scope);
+
+        Assert.Equivalent(
+            new DocumentIssuer("Jean Dupont", "EI", "853123456", null, ["8 chemin des Vignes", "47000 Agen"], "individual-entrepreneur", "franchise"),
+            document.Issuer, strict: true);
+        Assert.Equal(("0", new DocumentTotals("100.00", "0.00", "100.00")), (document.Lines[0].VatRate, document.Totals));
+        Assert.Empty(document.VatBreakdown);
+    }
+
+    [Fact]
+    public void Should_ResolveACompanyAtTheNormalRegime_When_TheIssuerIsOne()
+    {
+        var document = ResolvedDocument.OfQuote(_scope);
+
+        Assert.Equal(("company", "normal"), (document.Issuer.Kind, document.Issuer.VatRegime));
+    }
+
     // An individual has no SIREN nor VAT number: the document leaves them out rather than writing them empty.
     [Fact]
     public void Should_LeaveTheSirenAndVatNumberOut_When_TheCustomerIsAnIndividual()

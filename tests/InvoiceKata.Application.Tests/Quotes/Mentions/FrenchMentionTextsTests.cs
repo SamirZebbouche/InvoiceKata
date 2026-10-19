@@ -60,6 +60,23 @@ public sealed class FrenchMentionTextsTests
             [_texts.InvoiceDueDate(new DateOnly(2026, 12, 30)), _texts.NoEarlyPaymentDiscount(), _texts.LatePaymentPenalties(), _texts.RecoveryIndemnity()]);
     }
 
+    // The individual entrepreneur's name, followed by "EI" (article R526-27 of the code de commerce, ADR-0011).
+    [Fact]
+    public void Should_StateTheNameFollowedByEIAndTheSiren_When_TheIssuerIsAnIndividualEntrepreneur()
+    {
+        var entrepreneur = InvoiceKata.Domain.Issuer.ConfigureIndividualEntrepreneur(
+            "Jean Dupont", new Siren("853123456"), new Address { Street = "8 chemin des Vignes", PostalCode = "47000", City = "Agen" });
+
+        Assert.Equal($"Jean Dupont EI, SIREN 853{Space}123{Space}456", _texts.IssuerLegalIdentity(entrepreneur));
+    }
+
+    // The reference in force since 1 September 2026 (ADR-0011).
+    [Fact]
+    public void Should_CiteTheCibs_When_ComposingTheVatFranchiseMention()
+    {
+        Assert.Equal("TVA non applicable, art. L. 223 et s. du code des impositions sur les biens et services (CIBS)", _texts.VatFranchise());
+    }
+
     private static Issuer Issuer(LegalForm legalForm, decimal shareCapital) => InvoiceKata.Domain.Issuer.ConfigureCompany(
         "Batifolio", legalForm, shareCapital, new Siren("912345678"), new VatNumber("FR12912345678"),
         new Address { Street = "12 rue des Artisans", PostalCode = "47000", City = "Agen" });

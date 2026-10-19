@@ -22,6 +22,16 @@ public sealed class IssuerLegalIdentityMentionTests
     }
 
     [Fact]
+    public void Should_PutTheLegalIdentity_When_TheIssuerIsAnIndividualEntrepreneur()
+    {
+        var scope = Scopes.FranchiseDraft();
+
+        _rule.Handle(Assert.Single(scope.Quote.TakeEvents()), scope);
+
+        Assert.Equal([new LegalMention(MentionCode.IssuerLegalIdentity, Texts.IssuerLegalIdentity(scope.Issuer))], scope.Quote.Mentions);
+    }
+
+    [Fact]
     public void Should_LeaveTheMentionsUnchanged_When_TheSameEventIsHandledAgain()
     {
         var drafted = Assert.Single(_scope.Quote.TakeEvents());

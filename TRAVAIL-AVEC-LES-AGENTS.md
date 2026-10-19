@@ -107,7 +107,11 @@ chaque pull request.
   question des séries : elle tombait d'elle-même, puisque les avoirs sont hors roadmap, comme il l'a
   rappelé. Il a retenu les propositions de l'agent : une facture qui recopie le devis tel qu'émis, une
   échéance à 30 jours réglable jusqu'au plafond légal de 60, et un stockage des PDF commun à tous les
-  documents ([ADR-0010](docs/adr/ADR-0010-facture-emise-depuis-un-devis-finalise.md)). Pour la démo, Samir a
+  documents ([ADR-0010](docs/adr/ADR-0010-facture-emise-depuis-un-devis-finalise.md)). Pour l'entrepreneur
+  individuel en franchise, l'agent a vérifié les règles sur les sites officiels : la mention de franchise
+  renvoie au CIBS depuis le 1er septembre 2026, l'ancienne référence au CGI n'étant plus que tolérée. Samir a
+  choisi la référence au CIBS, un même émetteur doté d'un type et d'un régime, le refus en `422` d'une ligne
+  avec un taux de TVA, et un template à part ([ADR-0011](docs/adr/ADR-0011-ei-en-franchise-de-tva.md)). Pour la démo, Samir a
   demandé un front hors périmètre. Il a retenu une page sans framework, servie par l'API, et déclarée zone de
   démo : hors TDD, sauf le test qui vérifie que l'API la sert. L'agent l'a pilotée dans Edge et a regardé les
   captures : trois défauts sont apparus, invisibles dans les codes de retour, et ont été corrigés.
@@ -232,3 +236,7 @@ chaque pull request.
   rester rouge. La copie de sauvegarde avait gardé une date antérieure à la dernière compilation, si bien
   que la compilation incrémentale n'avait pas repris le fichier. Une reconstruction complète a corrigé
   le problème. Depuis, les preuves sont lancées avec `--no-incremental`.
+- **Un invariant qui ignorait la franchise.** Le scénario de la facture d'un EI a échoué : la facture ne
+  se relisait pas, car la vérification des totaux à la reconstruction exigeait un total HT égal à la somme
+  de la ventilation de TVA, vide en franchise. Deux tests unitaires ont reproduit le défaut avant sa
+  correction, faite à un seul endroit pour le devis et la facture.

@@ -77,21 +77,33 @@ function date(iso) {
 
 // ---- Steps ----
 
+// A company has a legal form, a capital and a VAT number; an individual entrepreneur in franchise has none.
+$("issuer-form").elements.kind.addEventListener("change", (event) => {
+  const entrepreneur = event.target.value === "IndividualEntrepreneur";
+  for (const name of ["legalForm", "shareCapital", "vatNumber"]) {
+    $("issuer-form").elements[name].disabled = entrepreneur;
+  }
+  $("issuer-form").elements.name.value = entrepreneur ? "Jean Dupont" : "Batifolio";
+  $("issuer-form").elements.siren.value = entrepreneur ? "853123456" : "912345678";
+});
+
 $("issuer-form").addEventListener("submit", (event) => {
   event.preventDefault();
   const form = fields(event.target);
+  const company = form.kind === "Company";
   run(async () => {
     const { location } = await api("POST", "/issuers", {
+      kind: form.kind,
       name: form.name,
-      legalForm: form.legalForm,
-      shareCapital: decimal(form.shareCapital),
+      legalForm: company ? form.legalForm : undefined,
+      shareCapital: company ? decimal(form.shareCapital) : undefined,
       siren: form.siren,
-      vatNumber: form.vatNumber,
+      vatNumber: company ? form.vatNumber : undefined,
       address: { street: form.street, postalCode: form.postalCode, city: form.city },
     });
-    state = { issuerId: idFrom(location), issuerName: form.name };
+    state = { issuerId: idFrom(location), issuerName: form.name, inFranchise: !company };
     save();
-  }, "Émetteur configuré.");
+  }, company ? "Émetteur configuré." : "Entrepreneur individuel configuré, en franchise de TVA.");
 });
 
 $("customer-form").addEventListener("submit", (event) => {
@@ -127,7 +139,7 @@ $("line-form").addEventListener("submit", (event) => {
       quantity: decimal(form.quantity),
       unit: form.unit,
       unitPriceExcludingVat: decimal(form.unitPriceExcludingVat),
-      vatRate: decimal(form.vatRate),
+      vatRate: state.inFranchise ? 0 : decimal(form.vatRate),
       discountRate: decimal(form.discountRate) || undefined,
     });
     state.quote = data;
@@ -190,7 +202,12 @@ function lock(stepId, locked) {
   $(stepId).classList.toggle("locked", locked);
 }
 
+// In VAT franchise there is no VAT to show: a net amount to pay, as on the PDF (ADR-0011).
 function totals(element, document) {
+  if (state.inFranchise) {
+    element.replaceChildren(row("Net à payer", document.totals.includingVat, "grand"));
+    return;
+  }
   element.replaceChildren(
     row("Total HT", document.totals.excludingVat),
     ...document.vatBreakdown.map((rate) => row(`TVA ${number.format(rate.rate)} % sur ${money.format(rate.baseExcludingVat)}`, rate.vat)),
@@ -230,7 +247,14 @@ function render() {
   lock("invoice-step", state.quote?.status !== "Finalized");
 
   $("issuer-summary").hidden = !state.issuerId;
-  $("issuer-summary").textContent = state.issuerId ? `${state.issuerName} — ${state.issuerId}` : "";
+  $("issuer-summary").textContent = state.issuerId
+    ? `${state.issuerName}${state.inFranchise ? " EI, en franchise de TVA" : ""} — ${state.issuerId}`
+    : "";
+
+  // In franchise, a line takes no VAT rate: the API would refuse one (422).
+  const vatRate = $("line-form").elements.vatRate;
+  vatRate.disabled = Boolean(state.inFranchise);
+  if (state.inFranchise) vatRate.value = "0";
   $("customer-summary").hidden = !state.customerId;
   $("customer-summary").textContent = state.customerId ? `${state.customerName} — ${state.customerId}` : "";
 
@@ -256,7 +280,7 @@ function render() {
       tr.append(
         cell(line.designation), cell(number.format(line.quantity), "num"), cell(line.unit), cell(money.format(line.unitPriceExcludingVat), "num"),
         cell(line.discountRate ? `${number.format(line.discountRate)} %` : "", "num"), cell(money.format(line.totalExcludingVat), "num"),
-        cell(`${number.format(line.vatRate)} %`, "num"), remove);
+        cell(state.inFranchise ? "—" : `${number.format(line.vatRate)} %`, "num"), remove);
       return tr;
     }));
     totals($("quote-totals"), quote);

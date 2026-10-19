@@ -86,7 +86,18 @@ public sealed class IssuerValidator : IDocumentPartValidator
             yield return $"the issuer's SIREN '{issuer.Siren}' is not nine digits";
         }
 
-        if (string.IsNullOrWhiteSpace(issuer.VatNumber))
+        if (issuer.Kind is not ("company" or "individual-entrepreneur"))
+        {
+            yield return $"the issuer kind '{issuer.Kind}' is unknown";
+        }
+
+        if (issuer.VatRegime is not ("normal" or "franchise"))
+        {
+            yield return $"the VAT regime '{issuer.VatRegime}' is unknown";
+        }
+
+        // An individual entrepreneur in franchise bills no VAT, and has no VAT number to show (ADR-0011).
+        if (issuer.Kind == "company" && string.IsNullOrWhiteSpace(issuer.VatNumber))
         {
             yield return "the issuer has no VAT number";
         }
@@ -162,7 +173,15 @@ public sealed class TotalsValidator : IDocumentPartValidator
             yield return "the lines do not add up to the total excluding VAT";
         }
 
-        if (Sum(document.VatBreakdown.Select(rate => rate.BaseExclVat)) != excludingVat || Sum(document.VatBreakdown.Select(rate => rate.Vat)) != vat)
+        // In franchise there is no VAT at all (ADR-0011); otherwise the breakdown adds up to the totals.
+        if (document.Issuer.VatRegime == "franchise")
+        {
+            if (document.VatBreakdown.Count > 0 || vat != 0m)
+            {
+                yield return "a document in VAT franchise has VAT";
+            }
+        }
+        else if (Sum(document.VatBreakdown.Select(rate => rate.BaseExclVat)) != excludingVat || Sum(document.VatBreakdown.Select(rate => rate.Vat)) != vat)
         {
             yield return "the VAT breakdown does not add up to the totals";
         }
@@ -201,6 +220,11 @@ public sealed class MentionsValidator : IDocumentPartValidator
         required.AddRange(document.Document.Kind == "invoice"
             ? [MentionCode.PaymentDueDate, MentionCode.EarlyPaymentDiscount, MentionCode.LatePaymentPenalties, MentionCode.RecoveryIndemnity]
             : [MentionCode.QuoteValidity]);
+        if (document.Issuer.VatRegime == "franchise")
+        {
+            required.Add(MentionCode.VatFranchise);
+        }
+
         if (document.Lines.Any(line => Amounts.TryRead(line.VatRate, out var rate) && rate == 10m))
         {
             required.Add(MentionCode.ReducedVatRate);

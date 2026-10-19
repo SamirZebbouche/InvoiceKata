@@ -50,19 +50,30 @@ public sealed class GoldenFilesTests : IDisposable
         Assert.Equal([new LegalMention(MentionCode.ReducedVatRate, "Taux de TVA réduit de 10 %.")], quote.Mentions);
     }
 
-    // Writing must produce the version 1 format too, byte for byte apart from line endings: readable, indented JSON.
+    // The version 2 issuer: an individual entrepreneur in VAT franchise, with no company field (ADR-0011).
     [Fact]
-    public async Task Should_WriteAnIssuerInTheVersion1Format()
+    public async Task Should_ReadAVersion2IndividualEntrepreneur()
+    {
+        Install("issuer.v2.json", $"issuers/{IssuerId}/issuer.json");
+
+        var issuer = await new FileIssuerRepository(new JsonFileStore(_directory.Path)).GetAsync(new IssuerId(IssuerId), CancellationToken.None);
+
+        Assert.Equal((IssuerKind.IndividualEntrepreneur, VatRegime.Franchise, "Jean Dupont", (VatNumber?)null), (issuer.Kind, issuer.VatRegime, issuer.Name, issuer.VatNumber));
+    }
+
+    // Writing produces the version 2 format, byte for byte apart from line endings: readable, indented JSON.
+    [Fact]
+    public async Task Should_WriteAnIssuerInTheVersion2Format()
     {
         var store = new JsonFileStore(_directory.Path);
         var issuer = Issuer.FromState(new IssuerState(
-            1, IssuerId, "Batifolio", LegalForm.Sas, 20000m, "912345678", "FR12912345678",
-            new Address { Street = "12 rue des Artisans", PostalCode = "47000", City = "Agen" }));
+            2, IssuerId, IssuerKind.IndividualEntrepreneur, VatRegime.Franchise, "Jean Dupont", null, null, "853123456", null,
+            new Address { Street = "8 chemin des Vignes", PostalCode = "47000", City = "Agen" }));
 
         await new FileIssuerRepository(store).AddAsync(issuer, CancellationToken.None);
 
         var written = await File.ReadAllTextAsync(Path.Combine(_directory.Path, "issuers", IssuerId.ToString(), "issuer.json"));
-        var golden = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "Files", "Golden", "issuer.v1.json"));
+        var golden = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "Files", "Golden", "issuer.v2.json"));
         Assert.Equal(Normalized(golden), Normalized(written));
     }
 
@@ -80,11 +91,11 @@ public sealed class GoldenFilesTests : IDisposable
         Assert.Contains(new LegalMention(MentionCode.QuoteValidity, "Devis valable 30 jours, jusqu'au 17/11/2026."), quote.Mentions);
     }
 
-    // A finalized quote is written in the version 2 format, its amounts included, byte for byte apart from line endings.
+    // A quote is written in the version 3 format, its finalization and VAT regime included, byte for byte apart from line endings.
     [Fact]
-    public async Task Should_WriteAFinalizedQuoteInTheVersion2Format()
+    public async Task Should_WriteAFinalizedQuoteInTheVersion3Format()
     {
-        var golden = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "Files", "Golden", "quote.v2.json"));
+        var golden = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "Files", "Golden", "quote.v3.json"));
         var quote = Quote.FromState(FinalizedQuoteState());
 
         await new FileQuoteRepository(new JsonFileStore(_directory.Path)).AddAsync(quote, CancellationToken.None);

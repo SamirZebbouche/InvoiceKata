@@ -22,7 +22,13 @@
     <section class="step" id="issuer-step">
       <h2><span class="badge">1</span> L'émetteur</h2>
       <form id="issuer-form" class="grid">
-        <label>Dénomination <input name="name" value="Batifolio" required></label>
+        <label>Type
+          <select name="kind">
+            <option value="Company">Société (TVA au régime normal)</option>
+            <option value="IndividualEntrepreneur">Entrepreneur individuel (franchise de TVA)</option>
+          </select>
+        </label>
+        <label>Nom ou dénomination <input name="name" value="Batifolio" required></label>
         <label>Forme juridique
           <select name="legalForm">
             <option>SAS</option><option>SASU</option><option>SA</option><option>SARL</option><option>EURL</option><option>SNC</option>
@@ -76,7 +82,7 @@
           <label>Unité <input name="unit" value="m²" required></label>
           <label>P.U. HT (€) <input name="unitPriceExcludingVat" type="number" step="0.01" min="0" value="33.33" required></label>
           <label>TVA (%)
-            <select name="vatRate"><option>20</option><option selected>10</option><option>5.5</option></select>
+            <select name="vatRate"><option>20</option><option selected>10</option><option>5.5</option><option>0</option></select>
           </label>
           <label>Remise (%) <input name="discountRate" type="number" step="0.01" min="0" max="100" value="10"></label>
           <button type="submit">Ajouter la ligne</button>

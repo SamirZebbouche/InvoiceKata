@@ -14,11 +14,12 @@ public sealed partial class Quote
     private readonly List<IQuoteEvent> _events = [];
     private IssuedAmounts? _issued;
 
-    private Quote(QuoteId id, IssuerId issuerId, CustomerId customerId)
+    private Quote(QuoteId id, IssuerId issuerId, CustomerId customerId, VatRegime vatRegime)
     {
         Id = id;
         IssuerId = issuerId;
         CustomerId = customerId;
+        VatRegime = vatRegime;
     }
 
     public QuoteId Id { get; }
@@ -28,6 +29,9 @@ public sealed partial class Quote
     public CustomerId CustomerId { get; }
 
     public QuoteStatus Status { get; private set; } = QuoteStatus.Draft;
+
+    // The issuer's, fixed when the quote is drafted (ADR-0011).
+    public VatRegime VatRegime { get; }
 
     // Given at the finalization, never at the creation.
     public QuoteNumber? Number { get; private set; }
@@ -44,16 +48,8 @@ public sealed partial class Quote
     // A draft computes its amounts; a finalized quote keeps them as issued, even if a rule changes later (ADR-0009).
     public Money TotalExcludingVat => _issued?.TotalExcludingVat ?? _lines.Aggregate(Money.Zero, (total, line) => total + line.TotalExcludingVat);
 
-    // VAT is computed once per rate, on the total excluding VAT of that rate, never line by line.
-    public IReadOnlyList<VatBreakdownLine> VatBreakdown => _issued?.VatBreakdown ??
-        [.. _lines
-            .GroupBy(line => line.VatRate)
-            .OrderBy(group => group.Key.Percent)
-            .Select(group =>
-            {
-                var baseExcludingVat = group.Aggregate(Money.Zero, (total, line) => total + line.TotalExcludingVat);
-                return new VatBreakdownLine(group.Key, baseExcludingVat, group.Key.VatOn(baseExcludingVat));
-            })];
+    // Computed by the regime's strategy: per rate at the normal regime, none in franchise.
+    public IReadOnlyList<VatBreakdownLine> VatBreakdown => _issued?.VatBreakdown ?? VatRegimeStrategy.Of(VatRegime).BreakdownOf(_lines);
 
     // Additions only, which no rule change can alter: the same for a draft and for a finalized quote.
     public Money TotalVat => VatBreakdown.Aggregate(Money.Zero, (total, rate) => total + rate.Vat);
@@ -74,15 +70,17 @@ public sealed partial class Quote
             throw new UnsupportedBillingContextException(context);
         }
 
-        var quote = new Quote(QuoteId.New(), issuer.Id, customer.Id);
+        var quote = new Quote(QuoteId.New(), issuer.Id, customer.Id, issuer.VatRegime);
         quote._events.Add(new QuoteDrafted(quote.Id));
         return quote;
     }
 
     /// <exception cref="QuoteAlreadyFinalizedException">The quote is finalized.</exception>
+    /// <exception cref="VatRateNotApplicableException">The quote is in VAT franchise, and the line carries a VAT rate.</exception>
     public QuoteLineId AddLine(NewQuoteLine line)
     {
         EnsureDraft();
+        VatRegimeStrategy.Of(VatRegime).Admit(Id, line);
         var added = new QuoteLine(QuoteLineId.New(), line);
         _lines.Add(added);
         _events.Add(new QuoteLineAdded(Id, added.Id));

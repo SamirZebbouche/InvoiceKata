@@ -89,6 +89,7 @@ public sealed class FinalDocumentValidatorTests
         { "no number", "the document has no number", document => document with { Document = document.Document with { Number = "" } } },
         { "no quote reference", "an invoice refers to no quote", document => document with { Document = document.Document with { Quote = null } } },
         { "unreadable quote reference", "the invoice refers to 'D-1' dated '', not to a quote", document => document with { Document = document.Document with { Quote = new QuoteReference("D-1", "") } } },
+        { "undated quote reference", "the invoice refers to 'D-2026-0001' dated '', not to a quote", document => document with { Document = document.Document with { Quote = new QuoteReference("D-2026-0001", "") } } },
         { "acceptance box", "an invoice has no acceptance box", document => document with { Document = document.Document with { AcceptanceBox = true } } },
         { "no due date mention", "the mention PaymentDueDate is missing", document => document with { Mentions = [.. document.Mentions.Where(mention => mention.Code != "PaymentDueDate")] } },
         { "no recovery indemnity", "the mention RecoveryIndemnity is missing", document => document with { Mentions = [.. document.Mentions.Where(mention => mention.Code != "RecoveryIndemnity")] } },
@@ -102,6 +103,55 @@ public sealed class FinalDocumentValidatorTests
 
         var invalid = Assert.IsType<InvalidDocumentException>(refusal);
         Assert.True(invalid.Violations.Contains(violation), $"An invoice with {defect} was not refused for: {violation}. Violations: {string.Join(" | ", invalid.Violations)}");
+    }
+
+    [Fact]
+    public void Should_AcceptTheFranchiseQuote_When_EveryPartIsComplete()
+    {
+        var refusal = Record.Exception(() => Validator.Validate(ValidFranchiseQuote()));
+
+        Assert.Null(refusal);
+    }
+
+    public static TheoryData<string, string, Func<ResolvedDocument, ResolvedDocument>> FranchiseDefects => new()
+    {
+        { "no franchise mention", "the mention VatFranchise is missing", document => document with { Mentions = [.. document.Mentions.Where(mention => mention.Code != "VatFranchise")] } },
+        { "a VAT breakdown in franchise", "a document in VAT franchise has VAT", document => document with { VatBreakdown = [new DocumentVatRate("20", "100.00", "20.00")] } },
+        { "VAT in franchise", "a document in VAT franchise has VAT", document => document with { Totals = document.Totals with { Vat = "20.00", InclVat = "120.00" } } },
+        { "an unknown kind of issuer", "the issuer kind 'trust' is unknown", document => document with { Issuer = document.Issuer with { Kind = "trust" } } },
+        { "an unknown VAT regime", "the VAT regime 'reduced' is unknown", document => document with { Issuer = document.Issuer with { VatRegime = "reduced" } } },
+    };
+
+    [Theory]
+    [MemberData(nameof(FranchiseDefects))]
+    public void Should_RefuseTheFranchiseQuoteAndSayWhy_When_APartIsDefective(string defect, string violation, Func<ResolvedDocument, ResolvedDocument> corrupt)
+    {
+        var refusal = Record.Exception(() => Validator.Validate(corrupt(ValidFranchiseQuote())));
+
+        var invalid = Assert.IsType<InvalidDocumentException>(refusal);
+        Assert.True(invalid.Violations.Contains(violation), $"A quote with {defect} was not refused for: {violation}. Violations: {string.Join(" | ", invalid.Violations)}");
+    }
+
+    // A company still needs its VAT number; an individual entrepreneur in franchise has none.
+    [Fact]
+    public void Should_RefuseACompanyWithoutVatNumber_When_ValidatingTheIssuer()
+    {
+        var document = ValidDocument();
+
+        var refusal = Assert.Throws<InvalidDocumentException>(() => Validator.Validate(document with { Issuer = document.Issuer with { VatNumber = null } }));
+
+        Assert.Contains("the issuer has no VAT number", refusal.Violations);
+    }
+
+    private static ResolvedDocument ValidFranchiseQuote()
+    {
+        var scope = Scopes.FranchiseDraft();
+        var texts = new FrenchMentionTexts();
+        scope.Quote.AddLine(Scopes.Line(vatRate: 0m));
+        scope.Quote.PutMention(new LegalMention(MentionCode.IssuerLegalIdentity, texts.IssuerLegalIdentity(scope.Issuer)));
+        scope.Quote.PutMention(new LegalMention(MentionCode.VatFranchise, texts.VatFranchise()));
+        scope.Quote.Finalize(new QuoteNumber(2026, 1), new DateOnly(2026, 10, 18), new DateOnly(2026, 11, 17), "Devis valable 30 jours, jusqu'au 17/11/2026.");
+        return ResolvedDocument.OfQuote(scope);
     }
 
     private static ResolvedDocument ValidInvoice()

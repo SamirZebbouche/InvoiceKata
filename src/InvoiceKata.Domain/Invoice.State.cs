@@ -28,11 +28,7 @@ public sealed partial class Invoice : IPersistable<Invoice, InvoiceState>
         StateGuard.Require(state.DueOn > state.IssuedOn, "the due date does not come after the issue date");
         StateGuard.Require(state.Lines.Count > 0, "an invoice has no line");
         StateGuard.Require(state.Lines.Select(line => line.Id).Distinct().Count() == state.Lines.Count, "two lines share an identifier");
-        StateGuard.Require(
-            state.TotalExcludingVat == state.VatBreakdown.Sum(rate => rate.BaseExcludingVat)
-            && state.TotalVat == state.VatBreakdown.Sum(rate => rate.Vat)
-            && state.TotalIncludingVat == state.TotalExcludingVat + state.TotalVat,
-            "the issued totals do not add up");
+        StateGuard.RequireTotalsAddUp(state.TotalExcludingVat, state.VatBreakdown, state.TotalVat, state.TotalIncludingVat);
         StateGuard.Require(state.Mentions.All(mention => Enum.IsDefined(mention.Code)), "a mention code is unknown");
         StateGuard.Require(state.Mentions.Select(mention => mention.Code).Distinct().Count() == state.Mentions.Count, "two mentions share a code");
         StateGuard.Require(PaymentMentions.All(code => state.Mentions.Any(mention => mention.Code == code)), "an invoice lacks a payment mention");

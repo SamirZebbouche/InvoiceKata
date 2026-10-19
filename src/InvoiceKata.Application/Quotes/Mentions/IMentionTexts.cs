@@ -18,4 +18,6 @@ public interface IMentionTexts
     string LatePaymentPenalties();
 
     string RecoveryIndemnity();
+
+    string VatFranchise();
 }

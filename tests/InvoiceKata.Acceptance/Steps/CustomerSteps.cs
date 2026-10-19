@@ -21,6 +21,13 @@ public sealed class CustomerSteps(AcceptanceContext context)
         context.IssuersByName[name] = await context.ConfigureIssuer.HandleAsync(command, CancellationToken.None);
     }
 
+    // The second kind of issuer (ADR-0011): in VAT franchise, without legal form, capital nor VAT number.
+    [Given("l'entrepreneur individuel {string} configuré")]
+    public async Task GivenAnIndividualEntrepreneur(string name) =>
+        context.IssuersByName[name] = await context.ConfigureIndividualEntrepreneur.HandleAsync(
+            new ConfigureIndividualEntrepreneurCommand(name, new Siren("853123456"), new Address { Street = "8 chemin des Vignes", PostalCode = "47000", City = "Agen" }),
+            CancellationToken.None);
+
     [When("{string} enregistre le client professionnel suivant :")]
     public async Task WhenTheIssuerRegistersAProfessionalCustomer(string issuer, DataTable table)
     {

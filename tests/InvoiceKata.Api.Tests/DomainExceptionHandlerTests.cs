@@ -3,6 +3,8 @@ using System.Runtime.CompilerServices;
 using InvoiceKata.Application.Issuers;
 using InvoiceKata.Domain;
 
+using Microsoft.AspNetCore.Http;
+
 namespace InvoiceKata.Api.Tests;
 
 public sealed class DomainExceptionHandlerTests
@@ -31,5 +33,17 @@ public sealed class DomainExceptionHandlerTests
         var status = DomainExceptionHandler.StatusFor(new ArgumentException("A bug, not a refusal."));
 
         Assert.Null(status);
+    }
+
+    // A bug is not answered here: the handler lets it through, untouched, for the 500 of the framework.
+    [Fact]
+    public async Task Should_LetTheExceptionThrough_When_ItIsNotAnExceptionOfTheProduct()
+    {
+        var context = new DefaultHttpContext();
+
+        var handled = await new DomainExceptionHandler(problemDetails: null!)
+            .TryHandleAsync(context, new ArgumentException("A bug, not a refusal."), CancellationToken.None);
+
+        Assert.Equal((false, StatusCodes.Status200OK), (handled, context.Response.StatusCode));
     }
 }

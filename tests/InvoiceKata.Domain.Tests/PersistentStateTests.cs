@@ -88,14 +88,14 @@ public sealed class PersistentStateTests
     // Every structural invariant re-checked on restore has its own case: a guarantee nobody tests guarantees nothing.
     public static TheoryData<string, string, Func<object>> CorruptStates => new()
     {
-        { "issuer of an unknown version", "version 2 is not supported", () => Issuer.FromState(Quotes.Issuer().ToState() with { Version = 2 }) },
+        { "issuer of an unknown version", "version 3 is not supported", () => Issuer.FromState(Quotes.Issuer().ToState() with { Version = 3 }) },
         { "issuer without identifier", "the issuer has no identifier", () => Issuer.FromState(Quotes.Issuer().ToState() with { Id = Guid.Empty }) },
         { "issuer of an unknown legal form", "legal form 99 is unknown", () => Issuer.FromState(Quotes.Issuer().ToState() with { LegalForm = (LegalForm)99 }) },
         { "customer of an unknown version", "version 2 is not supported", () => Customer.FromState(CustomerState() with { Version = 2 }) },
         { "customer without identifier", "the customer or its issuer has no identifier", () => Customer.FromState(CustomerState() with { Id = Guid.Empty }) },
         { "customer without issuer", "the customer or its issuer has no identifier", () => Customer.FromState(CustomerState() with { IssuerId = Guid.Empty }) },
         { "customer of an unknown kind", "customer kind 99 is unknown", () => Customer.FromState(CustomerState() with { Kind = (CustomerKind)99 }) },
-        { "quote of an unknown version", "version 3 is not supported", () => Quote.FromState(Quotes.Draft().ToState() with { Version = 3 }) },
+        { "quote of an unknown version", "version 4 is not supported", () => Quote.FromState(Quotes.Draft().ToState() with { Version = 4 }) },
         { "quote without issuer", "the quote, its issuer or its customer has no identifier", () => Quote.FromState(Quotes.Draft().ToState() with { IssuerId = Guid.Empty }) },
         { "quote without customer", "the quote, its issuer or its customer has no identifier", () => Quote.FromState(Quotes.Draft().ToState() with { CustomerId = Guid.Empty }) },
         { "quote of an unknown status", "status 99 is unknown", () => Quote.FromState(Quotes.Draft().ToState() with { Status = (QuoteStatus)99 }) },

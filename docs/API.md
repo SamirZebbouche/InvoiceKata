@@ -17,7 +17,7 @@ Cette documentation vit avec le code : chaque nouvelle route y entre avec son di
   | `400` | Donnée invalide |
   | `404` | Ressource inconnue, ou appartenant à un autre émetteur |
   | `409` | Action interdite par l'état du document, par exemple modifier un devis finalisé |
-  | `422` | Contexte de facturation non pris en charge ([ADR-0002](adr/ADR-0002-variations-selon-emetteur-et-client.md)) |
+  | `422` | Contexte de facturation non pris en charge ([ADR-0002](adr/ADR-0002-variations-selon-emetteur-et-client.md)), ou ligne avec un taux de TVA sur un devis en franchise ([ADR-0011](adr/ADR-0011-ei-en-franchise-de-tva.md)) |
 
 - **Vocabulaire** : `quote` (une offre de prix ferme, qui engage une fois acceptée), et non `estimate`,
   qui désigne une estimation sans engagement.
@@ -28,12 +28,12 @@ Cette documentation vit avec le code : chaque nouvelle route y entre avec son di
 
 | Méthode et route | Rôle | Réponse |
 |---|---|---|
-| `POST /issuers` | Configurer un émetteur de type société : dénomination, forme juridique (`SA`, `SAS`, `SASU`, `SARL`, `EURL`, `SNC`), capital, SIREN, n° de TVA, adresse | `201`, avec `Location: /issuers/{issuerId}` ; `400` si la forme juridique est inconnue |
-| `GET /issuers/{issuerId}` | Lire un émetteur | `200` |
+| `POST /issuers` | Configurer un émetteur : `kind` (`Company` par défaut, ou `IndividualEntrepreneur`), nom, SIREN, adresse, et pour une société la forme juridique (`SA`, `SAS`, `SASU`, `SARL`, `EURL`, `SNC`), le capital et le n° de TVA. Une société est au régime normal de TVA, un entrepreneur individuel en franchise | `201`, avec `Location: /issuers/{issuerId}` ; `400` si le type ou la forme juridique est inconnu, ou si une société n'a pas sa forme juridique, son capital ou son n° de TVA |
+| `GET /issuers/{issuerId}` | Lire un émetteur, avec son type (`kind`) et son régime de TVA (`vatRegime`) | `200` |
 | `POST /issuers/{issuerId}/customers` | Enregistrer un client : `kind` (`Professional` par défaut, ou `Individual`), nom, adresse, et pour un professionnel le SIREN et le n° de TVA | `201`, avec `Location: /issuers/{issuerId}/customers/{id}` ; `400` si le type est inconnu, ou si un professionnel n'a pas de SIREN ou de n° de TVA |
 | `GET /issuers/{issuerId}/customers/{id}` | Lire un client | `200` |
-| `POST /issuers/{issuerId}/quotes` `{ customerId }` | Créer un devis brouillon pour ce client | `201`, avec `Location: /issuers/{issuerId}/quotes/{id}` ; `422` si le contexte de facturation n'est pas pris en charge (seul le contexte société × professionnel l'est) |
-| `POST /issuers/{issuerId}/quotes/{id}/lines` | Ajouter une ligne : désignation, quantité, unité, prix unitaire HT, taux de TVA, et une remise en % facultative | `201`, avec `Location: …/lines/{lineId}` et le devis recalculé dans le corps |
+| `POST /issuers/{issuerId}/quotes` `{ customerId }` | Créer un devis brouillon pour ce client | `201`, avec `Location: /issuers/{issuerId}/quotes/{id}` ; `422` si le contexte de facturation n'est pas pris en charge (seuls société × professionnel et entrepreneur individuel × professionnel le sont) |
+| `POST /issuers/{issuerId}/quotes/{id}/lines` | Ajouter une ligne : désignation, quantité, unité, prix unitaire HT, taux de TVA, et une remise en % facultative | `201`, avec `Location: …/lines/{lineId}` et le devis recalculé dans le corps ; `422` si le devis est en franchise et que le taux n'est pas 0 |
 | `DELETE /issuers/{issuerId}/quotes/{id}/lines/{lineId}` | Retirer une ligne | `200`, avec le devis recalculé ; `404` si la ligne n'est pas sur le devis |
 | `GET /issuers/{issuerId}/quotes/{id}` | Lire le devis : statut, numéro et dates (vides pour un brouillon), lignes, totaux (HT, TVA, TTC), ventilation de la TVA par taux, mentions légales (`code` et `text`) | `200` |
 | `GET /issuers/{issuerId}/quotes/{id}/pdf` | Télécharger le PDF du devis finalisé, nommé d'après son numéro (`D-2026-0001.pdf`) | `200` `application/pdf` ; `409` si le devis est encore un brouillon |
@@ -42,6 +42,12 @@ Cette documentation vit avec le code : chaque nouvelle route y entre avec son di
 Un devis finalisé refuse toute modification : ajouter ou retirer une ligne répond `409`. Ses montants sont
 enregistrés tels qu'émis, et ne sont plus recalculés ([ADR-0009](adr/ADR-0009-documents-legaux-jamais-reecrits.md)).
 La numérotation est décrite par le [CDR-0007](cdr/CDR-0007-numerotation-des-devis.md).
+
+Un devis garde le régime de TVA de son émetteur, fixé à sa création. En franchise, ses lignes ont un taux de 0,
+il n'a ni TVA ni ventilation, son total TTC est son total HT, et il porte la mention « TVA non applicable,
+art. L. 223 et s. du code des impositions sur les biens et services (CIBS) ». Son PDF, comme celui de sa
+facture, est rendu avec le template de l'entrepreneur individuel
+([ADR-0011](adr/ADR-0011-ei-en-franchise-de-tva.md)).
 
 ### Factures
 
@@ -52,7 +58,7 @@ La numérotation est décrite par le [CDR-0007](cdr/CDR-0007-numerotation-des-de
 | `GET /issuers/{issuerId}/invoices/{id}/pdf` | Télécharger le PDF de la facture, nommé d'après son numéro (`F-2026-0001.pdf`) | `200` `application/pdf` |
 
 Une facture ne se modifie jamais : aucune route ne la change, et le port ne sait que l'ajouter. Son PDF est
-rendu en réaction à `InvoiceIssued`, juste après l'enregistrement, avec le même template que le devis
+rendu en réaction à `InvoiceIssued`, juste après l'enregistrement, avec le template du devis
 ([ADR-0010](adr/ADR-0010-facture-emise-depuis-un-devis-finalise.md)).
 
 Les montants légaux (total de ligne, TVA par taux, totaux) sont arrondis au centime, à mi-chemin vers le haut (0,125 donne 0,13) ; les valeurs saisies, comme le prix unitaire et le prix net après remise (33,33 € − 10 % = 29,997 €), restent en pleine précision. La TVA est calculée une fois par taux, sur le total HT de ce taux, et non ligne par ligne ([ADR-0008](adr/ADR-0008-arrondis.md)).
