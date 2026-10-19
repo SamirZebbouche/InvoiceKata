@@ -16,7 +16,7 @@ public sealed record NewQuoteLine
     public DiscountRate Discount { get; init; } = DiscountRate.None;
 }
 
-public sealed class QuoteLine
+public sealed partial class QuoteLine
 {
     internal QuoteLine(QuoteLineId id, NewQuoteLine line)
     {

@@ -1,5 +1,6 @@
 using InvoiceKata.Adapters.Persistence.InMemory;
 using InvoiceKata.Application.Customers;
+using InvoiceKata.Application.Invoices;
 using InvoiceKata.Application.Issuers;
 using InvoiceKata.Application.Quotes;
 using InvoiceKata.Application.Rendering;
@@ -25,4 +26,9 @@ public sealed class InMemoryQuoteRepositoryTests : QuoteRepositoryContract
 public sealed class InMemoryPdfStoreTests : PdfStoreContract
 {
     protected override IPdfStore CreateStore() => new InMemoryPdfStore();
+}
+
+public sealed class InMemoryInvoiceRepositoryTests : InvoiceRepositoryContract
+{
+    protected override IInvoiceRepository CreateRepository() => new InMemoryInvoiceRepository();
 }

@@ -11,6 +11,7 @@ public sealed class GoldenFilesTests : IDisposable
     private static readonly Guid CustomerId = Guid.Parse("a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d");
     private static readonly Guid QuoteId = Guid.Parse("0c1d2e3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f");
     private static readonly Guid LineId = Guid.Parse("f1e2d3c4-b5a6-4978-8a6b-5c4d3e2f1a0b");
+    private static readonly Guid InvoiceId = Guid.Parse("9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d");
 
     private readonly TemporaryDirectory _directory = new();
 
@@ -89,6 +90,43 @@ public sealed class GoldenFilesTests : IDisposable
         await new FileQuoteRepository(new JsonFileStore(_directory.Path)).AddAsync(quote, CancellationToken.None);
 
         var written = await File.ReadAllTextAsync(Path.Combine(_directory.Path, "issuers", IssuerId.ToString(), "quotes", $"{QuoteId}.json"));
+        Assert.Equal(Normalized(golden), Normalized(written));
+    }
+
+    [Fact]
+    public async Task Should_ReadAVersion1InvoiceAsIssued()
+    {
+        Install("invoice.v1.json", $"issuers/{IssuerId}/invoices/{InvoiceId}.json");
+
+        var invoice = await new FileInvoiceRepository(new JsonFileStore(_directory.Path))
+            .GetAsync(new IssuerId(IssuerId), new InvoiceId(InvoiceId), CancellationToken.None);
+
+        Assert.Equal((new InvoiceNumber(2026, 107), new QuoteNumber(2026, 42), new DateOnly(2026, 12, 30)), (invoice.Number, invoice.QuoteNumber, invoice.DueOn));
+        Assert.Equal((new Money(561.54m), new Money(56.15m), new Money(617.69m)), (invoice.TotalExcludingVat, invoice.TotalVat, invoice.TotalIncludingVat));
+        Assert.Contains(new LegalMention(MentionCode.RecoveryIndemnity, "Indemnité forfaitaire pour frais de recouvrement : 40 €."), invoice.Mentions);
+    }
+
+    // An invoice is written in the version 1 format, its amounts included, byte for byte apart from line endings.
+    [Fact]
+    public async Task Should_WriteAnInvoiceInTheVersion1Format()
+    {
+        var golden = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "Files", "Golden", "invoice.v1.json"));
+        var invoice = Invoice.FromState(new InvoiceState(
+            1, InvoiceId, IssuerId, CustomerId, QuoteId, "D-2026-0042", new DateOnly(2026, 10, 18),
+            "F-2026-0107", new DateOnly(2026, 11, 30), new DateOnly(2026, 12, 30),
+            [new QuoteLineState(LineId, "Faïence", 18.72m, "m²", 33.33m, 10m, 10m)],
+            561.54m, [new VatBreakdownState(10m, 561.54m, 56.15m)], 56.15m, 617.69m,
+            [
+                new LegalMention(MentionCode.ReducedVatRate, "Taux de TVA réduit de 10 %."),
+                new LegalMention(MentionCode.PaymentDueDate, "Échéance : 30/12/2026."),
+                new LegalMention(MentionCode.EarlyPaymentDiscount, "Escompte pour paiement anticipé : néant."),
+                new LegalMention(MentionCode.LatePaymentPenalties, "Pénalités de retard : trois fois le taux d'intérêt légal."),
+                new LegalMention(MentionCode.RecoveryIndemnity, "Indemnité forfaitaire pour frais de recouvrement : 40 €."),
+            ]));
+
+        await new FileInvoiceRepository(new JsonFileStore(_directory.Path)).AddAsync(invoice, CancellationToken.None);
+
+        var written = await File.ReadAllTextAsync(Path.Combine(_directory.Path, "issuers", IssuerId.ToString(), "invoices", $"{InvoiceId}.json"));
         Assert.Equal(Normalized(golden), Normalized(written));
     }
 

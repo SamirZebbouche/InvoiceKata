@@ -1,5 +1,6 @@
 using InvoiceKata.Adapters.Persistence.Files;
 using InvoiceKata.Application.Customers;
+using InvoiceKata.Application.Invoices;
 using InvoiceKata.Application.Issuers;
 using InvoiceKata.Application.Quotes;
 using InvoiceKata.Application.Rendering;
@@ -74,6 +75,15 @@ public sealed class FilePdfStoreTests : PdfStoreContract, IDisposable
         var folder = System.IO.Path.Combine(_directory.Path, "issuers", issuerId.Value.ToString(), "quotes");
         Assert.Equal([$"{quoteId.Value}.pdf"], Directory.EnumerateFiles(folder).Select(System.IO.Path.GetFileName));
     }
+
+    public void Dispose() => _directory.Dispose();
+}
+
+public sealed class FileInvoiceRepositoryTests : InvoiceRepositoryContract, IDisposable
+{
+    private readonly TemporaryDirectory _directory = new();
+
+    protected override IInvoiceRepository CreateRepository() => new FileInvoiceRepository(new JsonFileStore(_directory.Path));
 
     public void Dispose() => _directory.Dispose();
 }

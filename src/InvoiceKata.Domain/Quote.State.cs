@@ -35,18 +35,7 @@ public sealed partial class Quote : IPersistable<Quote, QuoteState>
             "a quote is finalized if and only if it has a finalization");
 
         var quote = new Quote(new QuoteId(state.Id), new IssuerId(state.IssuerId), new CustomerId(state.CustomerId));
-        foreach (var line in state.Lines)
-        {
-            quote._lines.Add(new QuoteLine(new QuoteLineId(line.Id), new NewQuoteLine
-            {
-                Designation = line.Designation,
-                Quantity = new Quantity(line.Quantity),
-                Unit = line.Unit,
-                UnitPriceExcludingVat = new Money(line.UnitPriceExcludingVat),
-                VatRate = new VatRate(line.VatRate),
-                Discount = new DiscountRate(line.DiscountRate),
-            }));
-        }
+        quote._lines.AddRange(state.Lines.Select(QuoteLine.FromState));
 
         foreach (var mention in state.Mentions)
         {
@@ -67,9 +56,7 @@ public sealed partial class Quote : IPersistable<Quote, QuoteState>
         IssuerId.Value,
         CustomerId.Value,
         Status,
-        [.. _lines.Select(line => new QuoteLineState(
-            line.Id.Value, line.Designation, line.Quantity.Value, line.Unit,
-            line.UnitPriceExcludingVat.Amount, line.VatRate.Percent, line.Discount.Percent))],
+        [.. _lines.Select(line => line.ToState())],
         Mentions,
         Number is { } number
             ? new QuoteFinalizationState(
@@ -111,4 +98,19 @@ public sealed partial class Quote : IPersistable<Quote, QuoteState>
             new Money(finalization.TotalExcludingVat),
             [.. finalization.VatBreakdown.Select(rate => new VatBreakdownLine(new VatRate(rate.Rate), new Money(rate.BaseExcludingVat), new Money(rate.Vat)))]);
     }
+}
+
+public sealed partial class QuoteLine
+{
+    internal static QuoteLine FromState(QuoteLineState line) => new(new QuoteLineId(line.Id), new NewQuoteLine
+    {
+        Designation = line.Designation,
+        Quantity = new Quantity(line.Quantity),
+        Unit = line.Unit,
+        UnitPriceExcludingVat = new Money(line.UnitPriceExcludingVat),
+        VatRate = new VatRate(line.VatRate),
+        Discount = new DiscountRate(line.DiscountRate),
+    });
+
+    internal QuoteLineState ToState() => new(Id.Value, Designation, Quantity.Value, Unit, UnitPriceExcludingVat.Amount, VatRate.Percent, Discount.Percent);
 }
