@@ -53,7 +53,8 @@ Les données sont des fichiers JSON, un dossier par émetteur, sous `src/Invoice
 
 Le PDF d'un devis finalisé est rendu par [Typst](https://typst.app) 0.15.1, qui doit être installé et
 accessible sous le nom `typst` (réglage `Rendering:Typst`). Il est rangé à côté du devis, et se télécharge par
-`GET /issuers/{issuerId}/quotes/{id}/pdf`.
+`GET /issuers/{issuerId}/quotes/{id}/pdf`. La facture d'un devis finalisé s'émet par `POST /issuers/{issuerId}/invoices`,
+et son PDF se télécharge de la même façon (`GET …/invoices/{id}/pdf`).
 
 ## Périmètre retenu
 
@@ -81,6 +82,7 @@ Les décisions d'**architecture** sont des ADR, ci-dessous. Les décisions de **
 | [0007](docs/adr/ADR-0007-saas-multi-emetteur.md) | Un SaaS multi-émetteur, l'émetteur dans la route |
 | [0008](docs/adr/ADR-0008-arrondis.md) | Les arrondis : précision dans le domaine, centimes pour les montants légaux |
 | [0009](docs/adr/ADR-0009-documents-legaux-jamais-reecrits.md) | Les documents légaux ne sont jamais réécrits, les migrations se font à la lecture |
+| [0010](docs/adr/ADR-0010-facture-emise-depuis-un-devis-finalise.md) | La facture, émise à partir d'un devis finalisé |
 
 ## Roadmap
 

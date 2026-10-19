@@ -1,4 +1,5 @@
 using InvoiceKata.Application.Customers;
+using InvoiceKata.Application.Invoices;
 using InvoiceKata.Application.Issuers;
 using InvoiceKata.Application.Quotes;
 using InvoiceKata.Application.Rendering;
@@ -28,6 +29,29 @@ internal sealed class StoredQuotes : IQuoteRepository
                 .Select(state => QuoteNumber.Parse(state.Finalization!.Number))]);
 }
 
+internal sealed class StoredInvoices : IInvoiceRepository
+{
+    private readonly Dictionary<Guid, InvoiceState> _states = [];
+
+    public IReadOnlyCollection<InvoiceState> All => _states.Values;
+
+    public Task AddAsync(Invoice invoice, CancellationToken cancellationToken)
+    {
+        _states.Add(invoice.Id.Value, invoice.ToState());
+        return Task.CompletedTask;
+    }
+
+    public Task<Invoice> GetAsync(IssuerId issuerId, InvoiceId invoiceId, CancellationToken cancellationToken) =>
+        Task.FromResult(Invoice.FromState(_states[invoiceId.Value]));
+
+    public Task<Invoice?> FindByQuoteAsync(IssuerId issuerId, QuoteId quoteId, CancellationToken cancellationToken) =>
+        Task.FromResult(_states.Values.Where(state => state.QuoteId == quoteId.Value).Select(Invoice.FromState).SingleOrDefault());
+
+    public Task<IReadOnlyList<InvoiceNumber>> TakenNumbersAsync(IssuerId issuerId, CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<InvoiceNumber>>(
+            [.. _states.Values.Where(state => state.IssuerId == issuerId.Value).Select(state => InvoiceNumber.Parse(state.Number))]);
+}
+
 internal sealed class StoredIssuers(params Issuer[] issuers) : IIssuerRepository
 {
     public Task AddAsync(Issuer issuer, CancellationToken cancellationToken) => throw new NotSupportedException();
@@ -45,16 +69,16 @@ internal sealed class StoredCustomers(params Customer[] customers) : ICustomerRe
 
 internal sealed class StoredPdfs : IPdfStore
 {
-    private readonly Dictionary<Guid, byte[]> _pdfs = [];
+    private readonly Dictionary<DocumentReference, byte[]> _pdfs = [];
 
-    public Task SaveIfAbsentAsync(IssuerId issuerId, QuoteId quoteId, byte[] pdf, CancellationToken cancellationToken)
+    public Task SaveIfAbsentAsync(IssuerId issuerId, DocumentReference document, byte[] pdf, CancellationToken cancellationToken)
     {
-        _pdfs.TryAdd(quoteId.Value, pdf);
+        _pdfs.TryAdd(document, pdf);
         return Task.CompletedTask;
     }
 
-    public Task<byte[]?> FindAsync(IssuerId issuerId, QuoteId quoteId, CancellationToken cancellationToken) =>
-        Task.FromResult(_pdfs.GetValueOrDefault(quoteId.Value));
+    public Task<byte[]?> FindAsync(IssuerId issuerId, DocumentReference document, CancellationToken cancellationToken) =>
+        Task.FromResult(_pdfs.GetValueOrDefault(document));
 }
 
 // Renders a document as the bytes of its number, and remembers what it was asked to render.

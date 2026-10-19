@@ -6,6 +6,10 @@ public enum MentionCode
     IssuerLegalIdentity,
     ReducedVatRate,
     QuoteValidity,
+    PaymentDueDate,
+    EarlyPaymentDiscount,
+    LatePaymentPenalties,
+    RecoveryIndemnity,
 }
 
 public sealed record LegalMention(MentionCode Code, string Text);

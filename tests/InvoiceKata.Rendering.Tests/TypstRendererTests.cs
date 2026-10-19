@@ -28,6 +28,23 @@ public sealed class TypstRendererTests
         Assert.All(expected, fragment => Assert.Contains(Flat(fragment), text, StringComparison.Ordinal));
     }
 
+    // The same template lays out the invoice: its title, its quote reference, its payment mentions, and no acceptance box.
+    [Fact]
+    public async Task Should_RenderTheInvoiceWithItsQuoteReferenceAndPaymentMentions_When_GivenAnInvoice()
+    {
+        var pdf = await RenderAsync("facture", Invoice());
+
+        var text = Text(pdf);
+        string[] expected =
+        [
+            "FACTURE", "F-2026-0001", "30/11/2026", "D'après le devis n° D-2026-0001 du 18/10/2026", "1920,00 €", "Échéance : 30/12/2026.",
+            "Escompte pour paiement anticipé : néant.", "Pénalités de retard : trois fois le taux d'intérêt légal.",
+            "Indemnité forfaitaire pour frais de recouvrement : 40 €.", "Facture F-2026-0001 — page 1 / 1",
+        ];
+        Assert.All(expected, fragment => Assert.Contains(Flat(fragment), text, StringComparison.Ordinal));
+        Assert.DoesNotContain(Flat("Bon pour accord"), text, StringComparison.Ordinal);
+    }
+
     // The number and an n/N pagination on every page (ADR-0005, decision 5).
     [Fact]
     public async Task Should_PutTheNumberAndThePaginationOnEveryPage_When_TheQuoteRunsOverSeveralPages()
@@ -115,6 +132,17 @@ public sealed class TypstRendererTests
         }
     }
 
+    // A document the template cannot lay out makes Typst fail: the renderer says so rather than return no PDF.
+    [Fact]
+    public async Task Should_FailAndSayWhy_When_TypstCannotCompileTheDocument()
+    {
+        var document = Quote(lines: 1);
+
+        var refusal = await Record.ExceptionAsync(() => _renderer.RenderAsync(document with { Document = document.Document with { Kind = "letter" } }, CancellationToken.None));
+
+        Assert.Contains("Typst failed to render the document", Assert.IsType<InvalidOperationException>(refusal).Message, StringComparison.Ordinal);
+    }
+
     [Fact]
     public async Task Should_FailAndSayWhy_When_TypstCannotBeRun()
     {
@@ -133,6 +161,12 @@ public sealed class TypstRendererTests
     }
 
     private static ResolvedDocument Quote(int lines)
+    {
+        var (quote, issuer, customer) = Finalized(lines);
+        return ResolvedDocument.OfQuote(new QuoteScope(quote, issuer, customer));
+    }
+
+    private static (InvoiceKata.Domain.Quote Quote, Issuer Issuer, Customer Customer) Finalized(int lines)
     {
         var issuer = Issuer.ConfigureCompany(
             "Batifolio", LegalForm.Sas, 20000m, new Siren("912345678"), new VatNumber("FR12912345678"),
@@ -155,7 +189,15 @@ public sealed class TypstRendererTests
 
         quote.PutMention(new LegalMention(MentionCode.IssuerLegalIdentity, Texts.IssuerLegalIdentity(issuer)));
         quote.Finalize(new QuoteNumber(2026, 1), new DateOnly(2026, 10, 18), new DateOnly(2026, 11, 17), Texts.QuoteValidity(30, new DateOnly(2026, 11, 17)));
-        return ResolvedDocument.OfQuote(new QuoteScope(quote, issuer, customer));
+        return (quote, issuer, customer);
+    }
+
+    private static ResolvedDocument Invoice()
+    {
+        var (quote, issuer, customer) = Finalized(lines: 1);
+        var invoice = InvoiceKata.Domain.Invoice.IssueFor(quote, new InvoiceNumber(2026, 1), new DateOnly(2026, 11, 30), new DateOnly(2026, 12, 30), new PaymentMentionTexts(
+            Texts.InvoiceDueDate(new DateOnly(2026, 12, 30)), Texts.NoEarlyPaymentDiscount(), Texts.LatePaymentPenalties(), Texts.RecoveryIndemnity()));
+        return ResolvedDocument.OfInvoice(invoice, issuer, customer);
     }
 
     private static string Text(byte[] pdf)

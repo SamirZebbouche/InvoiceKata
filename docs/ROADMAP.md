@@ -107,15 +107,20 @@ Ajoutée en chemin : un scénario d'acceptation ne dispense pas d'un test unitai
 ### PR 3.1 — Émettre la facture à partir du devis
 
 - **Scénarios** :
-  - émettre la facture d'un devis finalisé ;
+  - émettre la facture d'un devis finalisé, avec ses mentions de paiement : échéance, escompte, pénalités,
+    indemnité de 40 € ;
+  - le délai de paiement se choisit à l'émission ;
   - les numéros se suivent sans trou ;
   - un devis donne au plus une facture ;
-  - une facture émise ne se modifie pas ;
-  - les mentions de paiement figurent sur la facture : échéance, pénalités, indemnité de 40 €, escompte.
-- **Ce qui apparaît** :
-  - `Invoice` ;
-  - la numérotation par série, portée par le port ;
-  - l'événement `InvoiceIssued` et le PDF de la facture, avec le même template.
+  - un devis brouillon ne se facture pas ;
+  - le PDF de la facture porte son numéro, son devis, ses totaux et ses mentions de paiement.
+- **Ce qui apparaît** ([ADR-0010](adr/ADR-0010-facture-emise-depuis-un-devis-finalise.md)) :
+  - `Invoice`, qui recopie le devis tel qu'émis et n'a aucune méthode qui la modifie ;
+  - `InvoiceNumber` et `InvoiceNumbering`, et le port qui refuse un numéro en double ou une seconde facture
+    pour un même devis ;
+  - l'événement `InvoiceIssued` et le PDF de la facture, avec le même template ;
+  - le stockage des PDF, généralisé à tout type de document ;
+  - les routes `POST /invoices`, `GET /invoices/{id}` et `GET /invoices/{id}/pdf`.
 
 ## Lot 4 — Un second contexte : un EI en franchise de TVA
 
@@ -149,5 +154,5 @@ PostgreSQL, l'authentification et le multi-utilisateur.
 | Quand | Question |
 |---|---|
 | PR 2.1 | Le format du numéro de devis, et la durée de validité par défaut. **Tranché** : `D-2026-0001` et 30 jours ([CDR-0007](cdr/CDR-0007-numerotation-des-devis.md)) |
-| PR 3.1 | Faut-il l'acceptation du client (« bon pour accord ») avant de pouvoir facturer, ou un devis finalisé suffit-il ? |
-| PR 3.1 | Le format du numéro de facture et ses séries |
+| PR 3.1 | Faut-il l'acceptation du client (« bon pour accord ») avant de pouvoir facturer, ou un devis finalisé suffit-il ? **Tranché** : un devis finalisé suffit ([ADR-0010](adr/ADR-0010-facture-emise-depuis-un-devis-finalise.md)) |
+| PR 3.1 | Le format du numéro de facture. **Tranché** : `F-2026-0001`, une seule série puisque les avoirs sont hors roadmap ([ADR-0010](adr/ADR-0010-facture-emise-depuis-un-devis-finalise.md)) |

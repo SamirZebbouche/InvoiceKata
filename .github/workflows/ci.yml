@@ -37,7 +37,7 @@ jobs:
             -reports:"TestResults/**/coverage.cobertura.xml" \
             -targetdir:site/coverage \
             -reporttypes:"Html;MarkdownSummaryGithub" \
-            -assemblyfilters:"+InvoiceKata.Domain;+InvoiceKata.Application;+InvoiceKata.Adapters.Persistence;+InvoiceKata.Adapters.Rendering;+InvoiceKata.Api"
+            -assemblyfilters:"+InvoiceKata.Domain;+InvoiceKata.Application;+InvoiceKata.Adapters.Persistence;+InvoiceKata.Adapters.Rendering;+InvoiceKata.Api"             -classfilters:"-System.*"
           cat site/coverage/SummaryGithub.md >> "$GITHUB_STEP_SUMMARY"
           cp tests/InvoiceKata.Acceptance/bin/Debug/net10.0/reports/scenarios.html site/scenarios.html
           mkdir -p site/pdf

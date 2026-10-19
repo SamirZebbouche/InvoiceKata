@@ -1,6 +1,7 @@
 using InvoiceKata.Adapters.Persistence.InMemory;
 using InvoiceKata.Adapters.Rendering;
 using InvoiceKata.Application.Customers;
+using InvoiceKata.Application.Invoices;
 using InvoiceKata.Application.Issuers;
 using InvoiceKata.Application.Quotes;
 using InvoiceKata.Application.Quotes.Mentions;
@@ -16,6 +17,7 @@ public sealed class AcceptanceContext
     private readonly InMemoryIssuerRepository _issuers = new();
     private readonly InMemoryCustomerRepository _customers = new();
     private readonly InMemoryQuoteRepository _quotes = new();
+    private readonly InMemoryInvoiceRepository _invoices = new();
     private readonly QuoteEventDispatcher _events;
     private readonly QuoteScopes _scopes;
     private readonly FrenchMentionTexts _texts = new();
@@ -25,13 +27,15 @@ public sealed class AcceptanceContext
         QuoteEventHandlers = [new IssuerLegalIdentityMention(_texts), new ReducedVatRateMention(_texts)];
         _events = new QuoteEventDispatcher(QuoteEventHandlers);
         _scopes = new QuoteScopes(_issuers, _customers);
-        // The real Typst rendering: the scenarios read the PDF the reader would get.
-        RenderQuotePdf = new RenderQuotePdf(
-            _quotes, _scopes,
-            new FinalDocumentValidator([new HeaderValidator(), new IssuerValidator(), new CustomerValidator(), new LinesValidator(), new TotalsValidator(), new MentionsValidator()]),
-            scenario.CombinedTags.Contains("pdf") ? new TypstRenderer("typst") : new FakeRenderer(),
-            new InMemoryPdfStore());
+        // The real Typst rendering for the @pdf scenarios: they read the PDF the reader would get.
+        var validator = new FinalDocumentValidator(
+            [new HeaderValidator(), new IssuerValidator(), new CustomerValidator(), new LinesValidator(), new TotalsValidator(), new MentionsValidator()]);
+        IDocumentRenderer renderer = scenario.CombinedTags.Contains("pdf") ? new TypstRenderer("typst") : new FakeRenderer();
+        var pdfs = new InMemoryPdfStore();
+        RenderQuotePdf = new RenderQuotePdf(_quotes, _scopes, validator, renderer, pdfs);
         QuoteReactions = new QuoteReactions([RenderQuotePdf], Microsoft.Extensions.Logging.Abstractions.NullLogger<QuoteReactions>.Instance);
+        RenderInvoicePdf = new RenderInvoicePdf(_invoices, _issuers, _customers, validator, renderer, pdfs);
+        InvoiceReactions = new InvoiceReactions([RenderInvoicePdf], Microsoft.Extensions.Logging.Abstractions.NullLogger<InvoiceReactions>.Instance);
     }
 
     public ConfigureIssuer ConfigureIssuer => new(_issuers);
@@ -57,6 +61,14 @@ public sealed class AcceptanceContext
     public RemoveQuoteLine RemoveQuoteLine => new(_quotes, _scopes, _events);
 
     public FinalizeQuote FinalizeQuote => new(_quotes, _texts, Clock, QuoteReactions);
+
+    public IssueInvoice IssueInvoice => new(_quotes, _invoices, _texts, Clock, InvoiceReactions);
+
+    public GetInvoice GetInvoice => new(_invoices);
+
+    public InvoiceReactions InvoiceReactions { get; }
+
+    public RenderInvoicePdf RenderInvoicePdf { get; }
 
     public RenderQuotePdf RenderQuotePdf { get; }
 

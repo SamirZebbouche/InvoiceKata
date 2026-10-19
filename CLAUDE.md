@@ -88,12 +88,13 @@ explanation makes no claim to verify.
 
 ### In this project
 Proofs here, in the fast feedback loop: `dotnet test` and `dotnet format --verify-no-changes` after every
-change (about 10 seconds). Mutation testing stays out of that loop: `dotnet stryker --since:origin/main`
-(the C# files the branch changed, configured in `stryker-config.json`, blocking below its `break` threshold)
-runs in the background at the end of each pull request, while the docs and the pull request are written, and
-its result comes before the pull request opens. The CI runs the tests and the format in `build-and-test`, the
-fast signal, and mutation in a `mutation` job beside it: the changed files on a pull request, everything on
-`main` (about 10 minutes). A surviving mutant is a test gap to report, not to hide.
+change (about 10 seconds). At the end of each pull request, locally, a coverage report
+(`dotnet test --collect:"XPlat Code Coverage"`, summarized by ReportGenerator) shows what the tests leave
+uncovered: **branch coverage is the indicator**, read without generated code (`-classfilters:"-System.*"`), and
+every untaken branch in the files the pull request changed is either tested or explained. Mutation testing runs in the CI only, in a `mutation` job beside `build-and-test`, the fast signal:
+`dotnet stryker` (configured in `stryker-config.json`, blocking below its `break` threshold) mutates the files a
+pull request changed, and everything on `main` (about 10 minutes). A surviving mutant the CI reports is a test
+gap to report, not to hide.
 
 <!-- ai-core:git-action-gate@v3 -->
 ## Git and remote action gate

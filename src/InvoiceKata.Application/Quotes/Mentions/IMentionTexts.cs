@@ -10,4 +10,12 @@ public interface IMentionTexts
     string ReducedVatRate();
 
     string QuoteValidity(int validityDays, DateOnly validUntil);
+
+    string InvoiceDueDate(DateOnly dueOn);
+
+    string NoEarlyPaymentDiscount();
+
+    string LatePaymentPenalties();
+
+    string RecoveryIndemnity();
 }

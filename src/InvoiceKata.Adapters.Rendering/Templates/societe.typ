@@ -1,4 +1,4 @@
-// Template for an issuer of type "société" (SAS, SARL…): quotes and, later, invoices share it (ADR-0005).
+// Template for an issuer of type "société" (SAS, SARL…): quotes and invoices share it (ADR-0005).
 // It only lays out a resolved document: no sum, no rule, no condition on the legal profile, only on the
 // presence of an optional value. Display rounding is its only arithmetic: amounts arrive as strings, read as
 // decimals. Its labels are the text the reader sees: they live here, in French, as the template's language.
@@ -8,7 +8,7 @@
 #let issuer = data.issuer
 #let customer = data.customer
 
-#let titles = (quote: "Devis")
+#let titles = (quote: "Devis", invoice: "Facture")
 #let title = titles.at(doc.kind)
 
 #let accent = rgb("#1f4e79")
@@ -89,6 +89,7 @@
     #text(size: 20pt, weight: "bold", upper(title)) \
     *N°* #doc.number \
     *Date :* #date(doc.issued_on)
+    #if "quote" in doc [ \ #text(style: "italic")[D'après le devis n° #doc.quote.number du #date(doc.quote.issued_on)] ]
   ],
   block(stroke: 0.5pt + luma(150), inset: 8pt, width: 100%)[
     *#customer.name* \

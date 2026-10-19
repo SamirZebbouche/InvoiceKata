@@ -20,6 +20,15 @@ public sealed class FrenchMentionTexts : IMentionTexts
     public string QuoteValidity(int validityDays, DateOnly validUntil) =>
         $"Devis valable {validityDays} {(validityDays == 1 ? "jour" : "jours")}, jusqu'au {validUntil.ToString("dd/MM/yyyy", French)}.";
 
+    public string InvoiceDueDate(DateOnly dueOn) => $"Échéance : {dueOn.ToString("dd/MM/yyyy", French)}.";
+
+    public string NoEarlyPaymentDiscount() => "Escompte pour paiement anticipé : néant.";
+
+    // Three times the legal interest rate: the minimum the law sets.
+    public string LatePaymentPenalties() => "Pénalités de retard : trois fois le taux d'intérêt légal.";
+
+    public string RecoveryIndemnity() => "Indemnité forfaitaire pour frais de recouvrement : 40 €.";
+
     // "20 000", but "7 622,45": a capital converted from francs keeps its cents, never rounded.
     private static string Written(decimal shareCapital) =>
         shareCapital.ToString(decimal.IsInteger(shareCapital) ? "#,0" : "#,0.00", French);
