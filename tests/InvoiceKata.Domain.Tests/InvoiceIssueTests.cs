@@ -59,6 +59,17 @@ public sealed class InvoiceIssueTests
         Assert.Equal([new InvoiceIssued(invoice.Id, invoice.IssuerId, Number)], invoice.TakeEvents());
     }
 
+    [Fact]
+    public void Should_HandTheEventsOverOnce_When_TakenTwice()
+    {
+        var invoice = Invoice.IssueFor(FinalizedQuote(), Number, IssuedOn, DueOn, Payment);
+        invoice.TakeEvents();
+
+        var again = invoice.TakeEvents();
+
+        Assert.Empty(again);
+    }
+
     // An amount computed by a rule that changed since the quote was issued stays as issued (ADR-0009).
     [Fact]
     public void Should_CopyTheQuoteAmountsAsIssued_When_TheyDifferFromARecomputation()

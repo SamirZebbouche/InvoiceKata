@@ -57,6 +57,7 @@ public sealed class IndividualEntrepreneurTests
         { "individual entrepreneur with a VAT number", "an individual entrepreneur has no legal form, share capital nor VAT number", () => Issuer.FromState(Entrepreneur() with { VatNumber = "FR12853123456" }) },
         { "individual entrepreneur at the normal regime", "an individual entrepreneur is in VAT franchise", () => Issuer.FromState(Entrepreneur() with { VatRegime = VatRegime.Normal }) },
         { "version 1 issuer that is not a company", "a version 1 issuer is a company at the normal VAT regime", () => Issuer.FromState(Entrepreneur() with { Version = 1 }) },
+        { "version 1 individual entrepreneur at the normal regime", "a version 1 issuer is a company at the normal VAT regime", () => Issuer.FromState(Entrepreneur() with { Version = 1, VatRegime = VatRegime.Normal }) },
     };
 
     [Theory]

@@ -89,6 +89,7 @@ public sealed class FinalDocumentValidatorTests
         { "no number", "the document has no number", document => document with { Document = document.Document with { Number = "" } } },
         { "no quote reference", "an invoice refers to no quote", document => document with { Document = document.Document with { Quote = null } } },
         { "unreadable quote reference", "the invoice refers to 'D-1' dated '', not to a quote", document => document with { Document = document.Document with { Quote = new QuoteReference("D-1", "") } } },
+        { "undated quote reference", "the invoice refers to 'D-2026-0001' dated '', not to a quote", document => document with { Document = document.Document with { Quote = new QuoteReference("D-2026-0001", "") } } },
         { "acceptance box", "an invoice has no acceptance box", document => document with { Document = document.Document with { AcceptanceBox = true } } },
         { "no due date mention", "the mention PaymentDueDate is missing", document => document with { Mentions = [.. document.Mentions.Where(mention => mention.Code != "PaymentDueDate")] } },
         { "no recovery indemnity", "the mention RecoveryIndemnity is missing", document => document with { Mentions = [.. document.Mentions.Where(mention => mention.Code != "RecoveryIndemnity")] } },

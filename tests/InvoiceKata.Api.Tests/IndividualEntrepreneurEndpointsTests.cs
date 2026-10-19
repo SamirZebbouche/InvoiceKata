@@ -40,19 +40,45 @@ public sealed class IndividualEntrepreneurEndpointsTests(ApiFactory factory) : I
         Assert.Equal(("Company", "Normal", "SAS"), (issuer!.Kind, issuer.VatRegime, issuer.LegalForm));
     }
 
-    [Fact]
-    public async Task Should_ReturnBadRequest_When_ACompanyLacksItsLegalFormCapitalOrVatNumber()
+    [Theory]
+    [InlineData("legalForm")]
+    [InlineData("shareCapital")]
+    [InlineData("vatNumber")]
+    public async Task Should_ReturnBadRequest_When_ACompanyLacksItsLegalFormCapitalOrVatNumber(string missing)
     {
-        var response = await factory.CreateClient().PostAsJsonAsync("/issuers", new
+        var company = new Dictionary<string, object>
         {
-            kind = "Company",
-            name = "Batifolio",
-            siren = "912345678",
-            address = new { street = "12 rue des Artisans", postalCode = "47000", city = "Agen" },
-        });
+            ["kind"] = "Company",
+            ["name"] = "Batifolio",
+            ["legalForm"] = "SAS",
+            ["shareCapital"] = 20000m,
+            ["siren"] = "912345678",
+            ["vatNumber"] = "FR12912345678",
+            ["address"] = new { street = "12 rue des Artisans", postalCode = "47000", city = "Agen" },
+        };
+        company.Remove(missing);
+
+        var response = await factory.CreateClient().PostAsJsonAsync("/issuers", company);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Contains("Incomplete company", await response.Content.ReadAsStringAsync(), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Should_ConfigureTheIssuer_When_ItsKindIsWrittenInAnotherCase()
+    {
+        var client = factory.CreateClient();
+
+        var configured = await client.PostAsJsonAsync("/issuers", new
+        {
+            kind = "individualentrepreneur",
+            name = "Jean Dupont",
+            siren = "853123456",
+            address = new { street = "8 chemin des Vignes", postalCode = "47000", city = "Agen" },
+        });
+        var issuer = await client.GetFromJsonAsync<IssuerBody>(configured.Headers.Location);
+
+        Assert.Equal("IndividualEntrepreneur", issuer!.Kind);
     }
 
     [Fact]
