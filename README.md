@@ -53,7 +53,8 @@ Les données sont des fichiers JSON, un dossier par émetteur, sous `src/Invoice
 
 Le PDF d'un devis finalisé est rendu par [Typst](https://typst.app) 0.15.1, qui doit être installé et
 accessible sous le nom `typst` (réglage `Rendering:Typst`). Il est rangé à côté du devis, et se télécharge par
-`GET /issuers/{issuerId}/quotes/{id}/pdf`.
+`GET /issuers/{issuerId}/quotes/{id}/pdf`. La facture d'un devis finalisé s'émet par `POST /issuers/{issuerId}/invoices`,
+et son PDF se télécharge de la même façon (`GET …/invoices/{id}/pdf`).
 
 ## Périmètre retenu
 

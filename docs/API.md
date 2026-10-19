@@ -43,6 +43,18 @@ Un devis finalisé refuse toute modification : ajouter ou retirer une ligne rép
 enregistrés tels qu'émis, et ne sont plus recalculés ([ADR-0009](adr/ADR-0009-documents-legaux-jamais-reecrits.md)).
 La numérotation est décrite par le [CDR-0007](cdr/CDR-0007-numerotation-des-devis.md).
 
+### Factures
+
+| Méthode et route | Rôle | Réponse |
+|---|---|---|
+| `POST /issuers/{issuerId}/invoices` `{ quoteId, paymentDays }` | Émettre la facture d'un devis finalisé : elle reprend le devis tel qu'émis, reçoit son numéro (`F-2026-0001`, une suite continue par émetteur et par année), sa date (à l'heure de Paris), son échéance et les mentions de paiement. `paymentDays` est facultatif : 30 jours par défaut, de 1 à 60 (le plafond légal entre professionnels) | `201`, avec `Location: /issuers/{issuerId}/invoices/{id}` et la facture dans le corps ; `400` si le délai sort de 1 à 60 jours ; `404` si le devis est inconnu ; `409` si le devis est encore un brouillon, s'il a déjà sa facture, ou si une émission simultanée a pris le même numéro |
+| `GET /issuers/{issuerId}/invoices/{id}` | Lire la facture : numéro, dates, devis d'origine, lignes, totaux, ventilation de la TVA, mentions | `200` |
+| `GET /issuers/{issuerId}/invoices/{id}/pdf` | Télécharger le PDF de la facture, nommé d'après son numéro (`F-2026-0001.pdf`) | `200` `application/pdf` |
+
+Une facture ne se modifie jamais : aucune route ne la change, et le port ne sait que l'ajouter. Son PDF est
+rendu en réaction à `InvoiceIssued`, juste après l'enregistrement, avec le même template que le devis
+([ADR-0010](adr/ADR-0010-facture-emise-depuis-un-devis-finalise.md)).
+
 Les montants légaux (total de ligne, TVA par taux, totaux) sont arrondis au centime, à mi-chemin vers le haut (0,125 donne 0,13) ; les valeurs saisies, comme le prix unitaire et le prix net après remise (33,33 € − 10 % = 29,997 €), restent en pleine précision. La TVA est calculée une fois par taux, sur le total HT de ce taux, et non ligne par ligne ([ADR-0008](adr/ADR-0008-arrondis.md)).
 
 ```mermaid
@@ -142,14 +154,6 @@ sequenceDiagram
     U->>API: GET /issuers/{issuerId}/quotes/{id}/pdf
     API-->>U: 200 application/pdf
 ```
-
-### Routes à venir, pour situer l'ensemble
-
-Toutes sous `/issuers/{issuerId}` :
-
-| Fonctionnalité | Routes |
-|---|---|
-| Facture | `POST /invoices` `{ quoteId }`, `GET /invoices/{id}`, `GET /invoices/{id}/pdf` |
 
 ## Options écartées
 

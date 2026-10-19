@@ -39,7 +39,8 @@ chaque pull request.
   de feedback rapide ». La boucle rapide se limite aux tests et au format (10 secondes). Stryker en sort : il
   tourne en arrière-plan en fin de PR, sur les seuls fichiers modifiés, et dans un job de CI à part, complet
   sur `main`. Un faux moteur de rendu dans les tests qui ne parlent pas du PDF a aussi ramené le passage
-  complet de 25 à 10 minutes.
+  complet de 25 à 10 minutes. Samir est allé plus loin : en fin de PR, un rapport de couverture remplace
+  Stryker en local, et la mutation ne tourne plus qu'en CI.
 - **Les décisions de conception.** L'agent propose des options et réfute celles qui ne tiennent pas ;
   Samir tranche.
 - **La démarche.** Samir décrit d'abord un cadre large, que l'on conçoit ensemble par ADR. On construit
@@ -101,7 +102,12 @@ chaque pull request.
   quatre propositions de l'agent : un contrat en JSON plutôt qu'en YAML, un rendu en réaction à la
   finalisation juste après l'enregistrement, un `500` explicite pour un document que le validateur final
   refuse, et un projet à part pour l'adaptateur Typst (amendement de
-  l'[ADR-0005](docs/adr/ADR-0005-rendu-pdf-par-typst.md)).
+  l'[ADR-0005](docs/adr/ADR-0005-rendu-pdf-par-typst.md)). Pour la facture, Samir a tranché qu'un devis
+  finalisé suffit, sans « bon pour accord », et a choisi le format `F-2026-0001`. Il trouvait floue la
+  question des séries : elle tombait d'elle-même, puisque les avoirs sont hors roadmap, comme il l'a
+  rappelé. Il a retenu les propositions de l'agent : une facture qui recopie le devis tel qu'émis, une
+  échéance à 30 jours réglable jusqu'au plafond légal de 60, et un stockage des PDF commun à tous les
+  documents ([ADR-0010](docs/adr/ADR-0010-facture-emise-depuis-un-devis-finalise.md)).
 - **La roadmap.** L'agent a proposé un découpage en lots, et Samir l'a validé. Samir a ensuite validé la
   structure de la solution (projets et sens des dépendances), et l'agent a rédigé le détail PR par PR
   dans [docs/ROADMAP.md](docs/ROADMAP.md), avec les questions à trancher en chemin. L'agent a signalé un

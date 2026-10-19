@@ -82,6 +82,24 @@ public sealed partial class QuoteSteps
     [Then("l'émission est refusée, car le devis n'est pas finalisé")]
     public void ThenTheIssueIsRefusedAsTheQuoteIsADraft() => Assert.IsType<QuoteNotFinalizedException>(context.LastFailure);
 
+    [Then("le PDF de la facture contient :")]
+    public async Task ThenTheInvoicePdfContains(DataTable table)
+    {
+        var text = PdfText(await context.RenderInvoicePdf.PdfOfAsync(_issuerId, _invoiceId, CancellationToken.None));
+
+        Assert.All(table.Rows.Select(row => row["texte"]), fragment => Assert.Contains(Flat(fragment), text, StringComparison.Ordinal));
+    }
+
+    [Then("le PDF de la facture ne contient pas {string}")]
+    public async Task ThenTheInvoicePdfDoesNotContain(string fragment) =>
+        Assert.DoesNotContain(Flat(fragment), PdfText(await context.RenderInvoicePdf.PdfOfAsync(_issuerId, _invoiceId, CancellationToken.None)), StringComparison.Ordinal);
+
+    private static string PdfText(byte[] pdf)
+    {
+        using var document = UglyToad.PdfPig.PdfDocument.Open(pdf);
+        return Flat(string.Concat(document.GetPages().Select(page => page.Text)));
+    }
+
     private Task<Invoice> InvoiceAsync() => context.GetInvoice.HandleAsync(_issuerId, _invoiceId, CancellationToken.None);
 
     private static DateOnly Day(string text) => DateOnly.ParseExact(text, "dd/MM/yyyy", CultureInfo.InvariantCulture);

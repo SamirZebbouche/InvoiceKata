@@ -27,13 +27,15 @@ public sealed class AcceptanceContext
         QuoteEventHandlers = [new IssuerLegalIdentityMention(_texts), new ReducedVatRateMention(_texts)];
         _events = new QuoteEventDispatcher(QuoteEventHandlers);
         _scopes = new QuoteScopes(_issuers, _customers);
-        // The real Typst rendering: the scenarios read the PDF the reader would get.
-        RenderQuotePdf = new RenderQuotePdf(
-            _quotes, _scopes,
-            new FinalDocumentValidator([new HeaderValidator(), new IssuerValidator(), new CustomerValidator(), new LinesValidator(), new TotalsValidator(), new MentionsValidator()]),
-            scenario.CombinedTags.Contains("pdf") ? new TypstRenderer("typst") : new FakeRenderer(),
-            new InMemoryPdfStore());
+        // The real Typst rendering for the @pdf scenarios: they read the PDF the reader would get.
+        var validator = new FinalDocumentValidator(
+            [new HeaderValidator(), new IssuerValidator(), new CustomerValidator(), new LinesValidator(), new TotalsValidator(), new MentionsValidator()]);
+        IDocumentRenderer renderer = scenario.CombinedTags.Contains("pdf") ? new TypstRenderer("typst") : new FakeRenderer();
+        var pdfs = new InMemoryPdfStore();
+        RenderQuotePdf = new RenderQuotePdf(_quotes, _scopes, validator, renderer, pdfs);
         QuoteReactions = new QuoteReactions([RenderQuotePdf], Microsoft.Extensions.Logging.Abstractions.NullLogger<QuoteReactions>.Instance);
+        RenderInvoicePdf = new RenderInvoicePdf(_invoices, _issuers, _customers, validator, renderer, pdfs);
+        InvoiceReactions = new InvoiceReactions([RenderInvoicePdf], Microsoft.Extensions.Logging.Abstractions.NullLogger<InvoiceReactions>.Instance);
     }
 
     public ConfigureIssuer ConfigureIssuer => new(_issuers);
@@ -64,7 +66,9 @@ public sealed class AcceptanceContext
 
     public GetInvoice GetInvoice => new(_invoices);
 
-    public InvoiceReactions InvoiceReactions { get; } = new([], Microsoft.Extensions.Logging.Abstractions.NullLogger<InvoiceReactions>.Instance);
+    public InvoiceReactions InvoiceReactions { get; }
+
+    public RenderInvoicePdf RenderInvoicePdf { get; }
 
     public RenderQuotePdf RenderQuotePdf { get; }
 
