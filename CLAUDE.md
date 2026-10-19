@@ -90,7 +90,8 @@ explanation makes no claim to verify.
 Proofs here, in the fast feedback loop: `dotnet test` and `dotnet format --verify-no-changes` after every
 change (about 10 seconds). At the end of each pull request, locally, a coverage report
 (`dotnet test --collect:"XPlat Code Coverage"`, summarized by ReportGenerator) shows what the tests leave
-uncovered. Mutation testing runs in the CI only, in a `mutation` job beside `build-and-test`, the fast signal:
+uncovered: **branch coverage is the indicator**, read without generated code (`-classfilters:"-System.*"`), and
+every untaken branch in the files the pull request changed is either tested or explained. Mutation testing runs in the CI only, in a `mutation` job beside `build-and-test`, the fast signal:
 `dotnet stryker` (configured in `stryker-config.json`, blocking below its `break` threshold) mutates the files a
 pull request changed, and everything on `main` (about 10 minutes). A surviving mutant the CI reports is a test
 gap to report, not to hide.
