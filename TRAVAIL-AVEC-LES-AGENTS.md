@@ -107,7 +107,10 @@ chaque pull request.
   question des séries : elle tombait d'elle-même, puisque les avoirs sont hors roadmap, comme il l'a
   rappelé. Il a retenu les propositions de l'agent : une facture qui recopie le devis tel qu'émis, une
   échéance à 30 jours réglable jusqu'au plafond légal de 60, et un stockage des PDF commun à tous les
-  documents ([ADR-0010](docs/adr/ADR-0010-facture-emise-depuis-un-devis-finalise.md)).
+  documents ([ADR-0010](docs/adr/ADR-0010-facture-emise-depuis-un-devis-finalise.md)). Pour la démo, Samir a
+  demandé un front hors périmètre. Il a retenu une page sans framework, servie par l'API, et déclarée zone de
+  démo : hors TDD, sauf le test qui vérifie que l'API la sert. L'agent l'a pilotée dans Edge et a regardé les
+  captures : trois défauts sont apparus, invisibles dans les codes de retour, et ont été corrigés.
 - **La roadmap.** L'agent a proposé un découpage en lots, et Samir l'a validé. Samir a ensuite validé la
   structure de la solution (projets et sens des dépendances), et l'agent a rédigé le détail PR par PR
   dans [docs/ROADMAP.md](docs/ROADMAP.md), avec les questions à trancher en chemin. L'agent a signalé un

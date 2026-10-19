@@ -56,6 +56,10 @@ accessible sous le nom `typst` (réglage `Rendering:Typst`). Il est rangé à c�
 `GET /issuers/{issuerId}/quotes/{id}/pdf`. La facture d'un devis finalisé s'émet par `POST /issuers/{issuerId}/invoices`,
 et son PDF se télécharge de la même façon (`GET …/invoices/{id}/pdf`).
 
+**La démo** : une fois l'API lancée, http://localhost:5045/ ouvre un front de démonstration qui déroule tout le
+parcours, de l'émetteur à la facture et à leurs PDF. Il est hors du périmètre du kata : une page sans
+framework, servie par l'API, qui n'appelle que ses routes.
+
 ## Périmètre retenu
 
 La partie back d'un logiciel de devis et de factures, exposée par une **API** ([docs/API.md](docs/API.md)) :

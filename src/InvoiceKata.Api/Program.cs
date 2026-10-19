@@ -85,6 +85,10 @@ var app = builder.Build();
 
 // Stryker disable once Statement : killed by the API tests when applied by hand; a shared test host never re-runs startup under a mutant
 app.UseExceptionHandler();
+
+// The demo front, out of the kata's scope: a page with no framework, served from wwwroot (a demo zone, CLAUDE.md).
+app.UseDefaultFiles();
+app.UseStaticFiles();
 app.MapControllers();
 
 app.Run();

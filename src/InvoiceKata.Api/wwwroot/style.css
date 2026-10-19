@@ -1,0 +1,64 @@
+/* The demo front: plain CSS, no framework. */
+:root {
+  --accent: #1f4e79;
+  --ink: #1d2733;
+  --muted: #5b6776;
+  --line: #d9dee5;
+  --paper: #ffffff;
+  --ground: #f3f5f8;
+  --ok: #1e7b4a;
+  --error: #b42318;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: var(--ink);
+  background: var(--ground);
+}
+
+body { margin: 0 auto; max-width: 1080px; padding: 16px; }
+
+/* The hidden attribute wins over the display of the layout classes. */
+[hidden] { display: none !important; }
+
+.top { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+h1 { margin: 0; color: var(--accent); }
+.lead { margin: 4px 0 0; color: var(--muted); }
+
+.step { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.step.locked { opacity: 0.45; pointer-events: none; }
+.step h2 { margin-top: 0; font-size: 1.15rem; display: flex; align-items: center; gap: 10px; }
+.badge { background: var(--accent); color: #fff; border-radius: 50%; width: 26px; height: 26px; display: inline-grid; place-items: center; font-size: 0.9rem; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px 14px; align-items: end; }
+.grid.inline { margin-top: 12px; }
+label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; color: var(--muted); }
+input, select { font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; color: var(--ink); background: #fff; }
+input:disabled { background: var(--ground); color: var(--muted); }
+
+button, .button { font: inherit; background: var(--accent); color: #fff; border: 0; border-radius: 6px; padding: 8px 14px; cursor: pointer; text-decoration: none; display: inline-block; }
+button.secondary { background: #fff; color: var(--accent); border: 1px solid var(--accent); }
+button.link { background: none; color: var(--error); padding: 0 4px; }
+.button { margin-top: 12px; }
+
+.summary { margin: 12px 0 0; padding: 8px 12px; background: #eef4fa; border-radius: 6px; }
+.chip { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 0.8rem; background: #e7ecf2; margin-left: 6px; }
+.chip.final { background: #def3e7; color: var(--ok); }
+
+table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 0.92rem; }
+th { text-align: left; background: var(--accent); color: #fff; padding: 6px 8px; font-weight: 600; }
+td { padding: 6px 8px; border-bottom: 1px solid var(--line); }
+.num { text-align: right; white-space: nowrap; }
+
+.totals { margin: 12px 0 0 auto; width: fit-content; min-width: 280px; }
+.totals div { display: flex; justify-content: space-between; gap: 24px; padding: 2px 0; }
+.totals .grand { font-weight: 700; border-top: 1px solid var(--accent); padding-top: 4px; }
+.mentions { color: var(--muted); font-size: 0.88rem; }
+
+.message { position: fixed; right: 16px; bottom: 16px; max-width: min(520px, calc(100vw - 32px)); z-index: 1; padding: 10px 14px; border-radius: 8px;
+  background: #def3e7; color: var(--ok); box-shadow: 0 4px 16px rgba(29, 39, 51, 0.18); }
+.message.error { background: #fde8e7; color: var(--error); }
+
+footer { color: var(--muted); font-size: 0.8rem; margin: 24px 0; text-align: center; }
+
+@media (max-width: 640px) {
+  table { font-size: 0.8rem; }
+  .totals { width: 100%; }
+}
