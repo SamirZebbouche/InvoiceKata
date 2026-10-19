@@ -55,6 +55,33 @@ public sealed class QuoteVatRegimeTests
         Assert.Throws<VatRateNotApplicableException>(() => restored.AddLine(Quotes.Line(unitPrice: 1m, vatRate: 10m)));
     }
 
+    // In franchise the breakdown is empty: the issued totals still add up, with no VAT at all.
+    [Fact]
+    public void Should_RebuildTheFinalizedFranchiseQuote_When_RestoredFromItsState()
+    {
+        var quote = FranchiseDraft();
+        quote.AddLine(Quotes.Line(unitPrice: 800m, quantity: 2m, vatRate: 0m));
+        quote.Finalize(new QuoteNumber(2026, 1), new DateOnly(2026, 10, 18), new DateOnly(2026, 11, 17), "Devis valable 30 jours, jusqu'au 17/11/2026.");
+
+        var restored = Quote.FromState(quote.ToState());
+
+        Assert.Equal((new Money(1600m), Money.Zero, new Money(1600m)), (restored.TotalExcludingVat, restored.TotalVat, restored.TotalIncludingVat));
+    }
+
+    [Fact]
+    public void Should_RebuildTheInvoiceOfAFranchiseQuote_When_RestoredFromItsState()
+    {
+        var quote = FranchiseDraft();
+        quote.AddLine(Quotes.Line(unitPrice: 800m, quantity: 2m, vatRate: 0m));
+        quote.Finalize(new QuoteNumber(2026, 1), new DateOnly(2026, 10, 18), new DateOnly(2026, 11, 17), "Devis valable 30 jours, jusqu'au 17/11/2026.");
+        var invoice = Invoice.IssueFor(quote, new InvoiceNumber(2026, 1), new DateOnly(2026, 11, 30), new DateOnly(2026, 12, 30),
+            new PaymentMentionTexts("Échéance : 30/12/2026.", "Escompte : néant.", "Pénalités : trois fois le taux légal.", "Indemnité : 40 €."));
+
+        var restored = Invoice.FromState(invoice.ToState());
+
+        Assert.Equal((new Money(1600m), Money.Zero, new Money(1600m)), (restored.TotalExcludingVat, restored.TotalVat, restored.TotalIncludingVat));
+    }
+
     // Upcasting on read (ADR-0009): a version 2 quote is at the normal regime.
     [Fact]
     public void Should_ReadAVersion2QuoteAtTheNormalRegime_When_RestoringAnOlderState()
@@ -74,6 +101,10 @@ public sealed class QuoteVatRegimeTests
             () => Quote.FromState(FranchiseState() with { Lines = [FranchiseState().Lines[0] with { VatRate = 20m }] })
         },
         { "version 2 quote that is not at the normal regime", "a version 2 quote is at the normal VAT regime", () => Quote.FromState(FranchiseState() with { Version = 2 }) },
+        {
+            "VAT without breakdown", "the issued totals do not add up",
+            () => Quote.FromState(FinalizedFranchiseState() with { Finalization = FinalizedFranchiseState().Finalization! with { TotalVat = 1m, TotalIncludingVat = 1601m } })
+        },
     };
 
     [Theory]
@@ -91,6 +122,14 @@ public sealed class QuoteVatRegimeTests
         var issuer = Issuer.ConfigureIndividualEntrepreneur(
             "Jean Dupont", new Siren("853123456"), new Address { Street = "8 chemin des Vignes", PostalCode = "47000", City = "Agen" });
         return Quote.DraftFor(issuer, Quotes.ProfessionalCustomerOf(issuer));
+    }
+
+    private static QuoteState FinalizedFranchiseState()
+    {
+        var quote = FranchiseDraft();
+        quote.AddLine(Quotes.Line(unitPrice: 800m, quantity: 2m, vatRate: 0m));
+        quote.Finalize(new QuoteNumber(2026, 1), new DateOnly(2026, 10, 18), new DateOnly(2026, 11, 17), "Devis valable 30 jours, jusqu'au 17/11/2026.");
+        return quote.ToState();
     }
 
     private static QuoteState FranchiseState()

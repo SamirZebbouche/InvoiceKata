@@ -8,9 +8,15 @@ public sealed class FrenchMentionTexts : IMentionTexts
 {
     private static readonly CultureInfo French = CultureInfo.GetCultureInfo("fr-FR");
 
-    public string IssuerLegalIdentity(Issuer issuer) =>
-        $"{issuer.Name}, {LegalFormLabels.Of(issuer.LegalForm!.Value)} au capital de {Written(issuer.ShareCapital!.Value)}\u00A0€, "
-        + $"SIREN {Grouped(issuer.Siren.Value)}";
+    // A company states its legal form and capital; an individual entrepreneur, "EI" after the name (R526-27 C. com.).
+    public string IssuerLegalIdentity(Issuer issuer) => issuer.Kind switch
+    {
+        IssuerKind.Company =>
+            $"{issuer.Name}, {LegalFormLabels.Of(issuer.LegalForm!.Value)} au capital de {Written(issuer.ShareCapital!.Value)}\u00A0€, "
+            + $"SIREN {Grouped(issuer.Siren.Value)}",
+        IssuerKind.IndividualEntrepreneur => $"{issuer.Name} EI, SIREN {Grouped(issuer.Siren.Value)}",
+        _ => throw new ArgumentOutOfRangeException(nameof(issuer), issuer.Kind, "This kind of issuer has no legal identity text."),
+    };
 
     public string ReducedVatRate() =>
         "Taux de TVA réduit de 10 % appliqué aux travaux d'amélioration d'un logement achevé depuis plus de "
@@ -28,6 +34,9 @@ public sealed class FrenchMentionTexts : IMentionTexts
     public string LatePaymentPenalties() => "Pénalités de retard : trois fois le taux d'intérêt légal.";
 
     public string RecoveryIndemnity() => "Indemnité forfaitaire pour frais de recouvrement : 40 €.";
+
+    // The reference in force since 1 September 2026; "art. 293 B du CGI" is only tolerated until the end of 2027 (ADR-0011).
+    public string VatFranchise() => "TVA non applicable, art. L. 223 et s. du code des impositions sur les biens et services (CIBS)";
 
     // "20 000", but "7 622,45": a capital converted from francs keeps its cents, never rounded.
     private static string Written(decimal shareCapital) =>

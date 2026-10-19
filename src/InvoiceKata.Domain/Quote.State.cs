@@ -99,11 +99,7 @@ public sealed partial class Quote : IPersistable<Quote, QuoteState>
         StateGuard.Require(finalization.ValidUntil > finalization.IssuedOn, "the validity does not end after the issue date");
         StateGuard.Require(_lines.Count > 0, "a finalized quote has no line");
         StateGuard.Require(_mentions.ContainsKey(MentionCode.QuoteValidity), "a finalized quote has no validity mention");
-        StateGuard.Require(
-            finalization.TotalExcludingVat == finalization.VatBreakdown.Sum(rate => rate.BaseExcludingVat)
-            && finalization.TotalVat == finalization.VatBreakdown.Sum(rate => rate.Vat)
-            && finalization.TotalIncludingVat == finalization.TotalExcludingVat + finalization.TotalVat,
-            "the issued totals do not add up");
+        StateGuard.RequireTotalsAddUp(finalization.TotalExcludingVat, finalization.VatBreakdown, finalization.TotalVat, finalization.TotalIncludingVat);
 
         (Status, Number, IssuedOn, ValidUntil) = (QuoteStatus.Finalized, number, finalization.IssuedOn, finalization.ValidUntil);
         _issued = new IssuedAmounts(

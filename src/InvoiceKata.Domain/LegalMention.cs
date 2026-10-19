@@ -10,6 +10,7 @@ public enum MentionCode
     EarlyPaymentDiscount,
     LatePaymentPenalties,
     RecoveryIndemnity,
+    VatFranchise,
 }
 
 public sealed record LegalMention(MentionCode Code, string Text);

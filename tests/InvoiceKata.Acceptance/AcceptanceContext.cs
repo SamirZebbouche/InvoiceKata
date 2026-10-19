@@ -24,7 +24,7 @@ public sealed class AcceptanceContext
 
     public AcceptanceContext(Reqnroll.ScenarioInfo scenario)
     {
-        QuoteEventHandlers = [new IssuerLegalIdentityMention(_texts), new ReducedVatRateMention(_texts)];
+        QuoteEventHandlers = [new IssuerLegalIdentityMention(_texts), new ReducedVatRateMention(_texts), new VatFranchiseMention(_texts)];
         _events = new QuoteEventDispatcher(QuoteEventHandlers);
         _scopes = new QuoteScopes(_issuers, _customers);
         // The real Typst rendering for the @pdf scenarios: they read the PDF the reader would get.
@@ -41,6 +41,8 @@ public sealed class AcceptanceContext
     public ConfigureIssuer ConfigureIssuer => new(_issuers);
 
     public GetIssuer GetIssuer => new(_issuers);
+
+    public ConfigureIndividualEntrepreneur ConfigureIndividualEntrepreneur => new(_issuers);
 
     public RegisterCustomer RegisterCustomer => new(_issuers, _customers);
 
