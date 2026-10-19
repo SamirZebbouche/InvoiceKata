@@ -44,5 +44,5 @@ public sealed record ConfigureIssuerRequest(string Name, string LegalForm, decim
 public sealed record IssuerResponse(Guid Id, string Name, string LegalForm, decimal ShareCapital, string Siren, string VatNumber, AddressBody Address)
 {
     public static IssuerResponse From(Issuer issuer) =>
-        new(issuer.Id.Value, issuer.Name, LegalFormLabels.Of(issuer.LegalForm), issuer.ShareCapital, issuer.Siren.Value, issuer.VatNumber.Value, AddressBody.From(issuer.Address));
+        new(issuer.Id.Value, issuer.Name, LegalFormLabels.Of(issuer.LegalForm!.Value), issuer.ShareCapital!.Value, issuer.Siren.Value, issuer.VatNumber!.Value.Value, AddressBody.From(issuer.Address));
 }

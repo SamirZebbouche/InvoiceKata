@@ -88,7 +88,7 @@ public sealed class PersistentStateTests
     // Every structural invariant re-checked on restore has its own case: a guarantee nobody tests guarantees nothing.
     public static TheoryData<string, string, Func<object>> CorruptStates => new()
     {
-        { "issuer of an unknown version", "version 2 is not supported", () => Issuer.FromState(Quotes.Issuer().ToState() with { Version = 2 }) },
+        { "issuer of an unknown version", "version 3 is not supported", () => Issuer.FromState(Quotes.Issuer().ToState() with { Version = 3 }) },
         { "issuer without identifier", "the issuer has no identifier", () => Issuer.FromState(Quotes.Issuer().ToState() with { Id = Guid.Empty }) },
         { "issuer of an unknown legal form", "legal form 99 is unknown", () => Issuer.FromState(Quotes.Issuer().ToState() with { LegalForm = (LegalForm)99 }) },
         { "customer of an unknown version", "version 2 is not supported", () => Customer.FromState(CustomerState() with { Version = 2 }) },

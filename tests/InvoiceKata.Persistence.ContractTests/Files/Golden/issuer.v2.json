@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "id": "6f9a3c2e-1b4d-4e8a-9c7f-2d5e8a1b3c4d",
+  "kind": "IndividualEntrepreneur",
+  "vatRegime": "Franchise",
+  "name": "Jean Dupont",
+  "legalForm": null,
+  "shareCapital": null,
+  "siren": "853123456",
+  "vatNumber": null,
+  "address": {
+    "street": "8 chemin des Vignes",
+    "postalCode": "47000",
+    "city": "Agen"
+  }
+}

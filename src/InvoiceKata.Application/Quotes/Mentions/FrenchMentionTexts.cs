@@ -9,7 +9,7 @@ public sealed class FrenchMentionTexts : IMentionTexts
     private static readonly CultureInfo French = CultureInfo.GetCultureInfo("fr-FR");
 
     public string IssuerLegalIdentity(Issuer issuer) =>
-        $"{issuer.Name}, {LegalFormLabels.Of(issuer.LegalForm)} au capital de {Written(issuer.ShareCapital)}\u00A0€, "
+        $"{issuer.Name}, {LegalFormLabels.Of(issuer.LegalForm!.Value)} au capital de {Written(issuer.ShareCapital!.Value)}\u00A0€, "
         + $"SIREN {Grouped(issuer.Siren.Value)}";
 
     public string ReducedVatRate() =>

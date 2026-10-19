@@ -42,7 +42,7 @@ public sealed record ResolvedDocument(
         [.. invoice.Mentions.Select(Of)]);
 
     private static DocumentIssuer Of(Issuer issuer) =>
-        new(issuer.Name, LegalFormLabels.Of(issuer.LegalForm), issuer.Siren.Value, issuer.VatNumber.Value, AddressLines(issuer.Address));
+        new(issuer.Name, LegalFormLabels.Of(issuer.LegalForm!.Value), issuer.Siren.Value, issuer.VatNumber!.Value.Value, AddressLines(issuer.Address));
 
     private static DocumentCustomer Of(Customer customer) => new(customer.Name, AddressLines(customer.Address), customer.Siren?.Value, customer.VatNumber?.Value);
 
