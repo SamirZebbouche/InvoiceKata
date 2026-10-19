@@ -21,6 +21,7 @@ public sealed class TypstRenderer(string executable, string? workRoot = null) : 
         Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
     };
 
+    /// <exception cref="ArgumentOutOfRangeException">The kind of issuer has no template.</exception>
     /// <exception cref="InvalidOperationException">Typst cannot be run, or fails to compile the document.</exception>
     public async Task<byte[]> RenderAsync(ResolvedDocument document, CancellationToken cancellationToken)
     {

@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
 
+using InvoiceKata.Domain;
+
 namespace InvoiceKata.Api.Tests;
 
 // The second kind of issuer through the API (ADR-0011): an individual entrepreneur in VAT franchise.
@@ -66,6 +68,27 @@ public sealed class IndividualEntrepreneurEndpointsTests(ApiFactory factory) : I
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Contains("Unknown issuer kind", await response.Content.ReadAsStringAsync(), StringComparison.Ordinal);
+    }
+
+    public static TheoryData<IssuerKind> AllIssuerKinds => [.. Enum.GetValues<IssuerKind>()];
+
+    // A kind added to the domain but not to the controller would fall into its throwing default: this fails that day.
+    [Theory]
+    [MemberData(nameof(AllIssuerKinds))]
+    public async Task Should_ConfigureTheIssuer_When_GivenAnyIssuerKind(IssuerKind kind)
+    {
+        var response = await factory.CreateClient().PostAsJsonAsync("/issuers", new
+        {
+            kind = kind.ToString(),
+            name = "Émetteur",
+            legalForm = "SAS",
+            shareCapital = 20000m,
+            siren = "912345678",
+            vatNumber = "FR12912345678",
+            address = new { street = "1 rue", postalCode = "47000", city = "Agen" },
+        });
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
     }
 
     [Fact]

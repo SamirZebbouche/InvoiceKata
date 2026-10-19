@@ -159,6 +159,17 @@ public sealed class TypstRendererTests
         Assert.Contains("Typst failed to render the document", Assert.IsType<InvalidOperationException>(refusal).Message, StringComparison.Ordinal);
     }
 
+    // The template follows the kind of issuer: a kind without one is refused before anything is rendered.
+    [Fact]
+    public async Task Should_FailAndSayWhy_When_TheIssuerKindHasNoTemplate()
+    {
+        var document = Quote(lines: 1);
+
+        var refusal = await Record.ExceptionAsync(() => _renderer.RenderAsync(document with { Issuer = document.Issuer with { Kind = "trust" } }, CancellationToken.None));
+
+        Assert.Contains("trust", Assert.IsType<ArgumentOutOfRangeException>(refusal).Message, StringComparison.Ordinal);
+    }
+
     [Fact]
     public async Task Should_FailAndSayWhy_When_TypstCannotBeRun()
     {
