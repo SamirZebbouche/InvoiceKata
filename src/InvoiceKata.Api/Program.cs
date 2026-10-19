@@ -37,6 +37,7 @@ builder.Services.AddSingleton<IDocumentRenderer>(new TypstRenderer(typst));
 
 builder.Services.AddSingleton<IIssuerRepository, FileIssuerRepository>();
 builder.Services.AddTransient<ConfigureIssuer>();
+builder.Services.AddTransient<ConfigureIndividualEntrepreneur>();
 builder.Services.AddTransient<GetIssuer>();
 builder.Services.AddSingleton<ICustomerRepository, FileCustomerRepository>();
 builder.Services.AddTransient<RegisterCustomer>();
@@ -80,6 +81,8 @@ builder.Services.AddSingleton<IMentionTexts, FrenchMentionTexts>();
 builder.Services.AddTransient<IQuoteEventHandler, IssuerLegalIdentityMention>();
 // Stryker disable once Statement : killed by the API tests when applied by hand; a shared test host never re-runs startup under a mutant
 builder.Services.AddTransient<IQuoteEventHandler, ReducedVatRateMention>();
+// Stryker disable once Statement : killed by the API tests when applied by hand; a shared test host never re-runs startup under a mutant
+builder.Services.AddTransient<IQuoteEventHandler, VatFranchiseMention>();
 
 var app = builder.Build();
 
