@@ -4,9 +4,9 @@ namespace InvoiceKata.Domain;
 // finalized quote stores them as issued, with its number and dates (CDR-0006, version 2).
 public sealed record QuoteState(
     int Version, Guid Id, Guid IssuerId, Guid CustomerId, QuoteStatus Status, IReadOnlyList<QuoteLineState> Lines, IReadOnlyList<LegalMention> Mentions,
-    QuoteFinalizationState? Finalization)
+    QuoteFinalizationState? Finalization, VatRegime VatRegime = VatRegime.Normal)
 {
-    public const int CurrentVersion = 2;
+    public const int CurrentVersion = 3;
 }
 
 public sealed record QuoteFinalizationState(
@@ -31,10 +31,13 @@ public sealed partial class Quote : IPersistable<Quote, QuoteState>
         StateGuard.Require(state.Lines.Select(line => line.Id).Distinct().Count() == state.Lines.Count, "two lines share an identifier");
         StateGuard.Require(state.Mentions.All(mention => Enum.IsDefined(mention.Code)), "a mention code is unknown");
         StateGuard.Require(state.Mentions.Select(mention => mention.Code).Distinct().Count() == state.Mentions.Count, "two mentions share a code");
+        StateGuard.Require(Enum.IsDefined(state.VatRegime), $"VAT regime {state.VatRegime} is unknown");
+        StateGuard.Require(state.VatRegime != VatRegime.Franchise || state.Lines.All(line => line.VatRate == 0m),
+            "a quote in VAT franchise has a line with a VAT rate");
         StateGuard.Require((state.Status == QuoteStatus.Finalized) == (state.Finalization is not null),
             "a quote is finalized if and only if it has a finalization");
 
-        var quote = new Quote(new QuoteId(state.Id), new IssuerId(state.IssuerId), new CustomerId(state.CustomerId));
+        var quote = new Quote(new QuoteId(state.Id), new IssuerId(state.IssuerId), new CustomerId(state.CustomerId), state.VatRegime);
         quote._lines.AddRange(state.Lines.Select(QuoteLine.FromState));
 
         foreach (var mention in state.Mentions)
@@ -65,19 +68,28 @@ public sealed partial class Quote : IPersistable<Quote, QuoteState>
                 [.. VatBreakdown.Select(rate => new VatBreakdownState(rate.Rate.Percent, rate.BaseExcludingVat.Amount, rate.Vat.Amount))],
                 TotalVat.Amount,
                 TotalIncludingVat.Amount)
-            : null);
+            : null,
+        VatRegime);
 
-    // One converter per version, applied on read and never written back (ADR-0009). Version 2 only added the
-    // finalization, so a version 1 file reads into the current record, and its converter checks it was a draft.
+    // One converter per version, applied on read and never written back (ADR-0009). Versions 2 and 3 only added
+    // fields (the finalization, then the VAT regime), so an older file reads into the current record, and each
+    // converter checks what the older version could hold before raising the version.
     private static QuoteState Upcast(QuoteState stored)
     {
-        if (stored.Version != 1)
+        var state = stored;
+        if (state.Version == 1)
         {
-            return stored;
+            StateGuard.Require(state.Status == QuoteStatus.Draft && state.Finalization is null, "a version 1 quote is a draft");
+            state = state with { Version = 2 };
         }
 
-        StateGuard.Require(stored.Status == QuoteStatus.Draft && stored.Finalization is null, "a version 1 quote is a draft");
-        return stored with { Version = 2 };
+        if (state.Version == 2)
+        {
+            StateGuard.Require(state.VatRegime == VatRegime.Normal, "a version 2 quote is at the normal VAT regime");
+            state = state with { Version = 3 };
+        }
+
+        return state;
     }
 
     private void RestoreFinalization(QuoteFinalizationState finalization)

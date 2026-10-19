@@ -87,7 +87,7 @@ public sealed class FinalizedQuoteStateTests
 
     public static TheoryData<string, string, Func<object>> CorruptStates => new()
     {
-        { "quote of an unknown version", "version 3 is not supported", () => Quote.FromState(Finalized().ToState() with { Version = 3 }) },
+        { "quote of an unknown version", "version 4 is not supported", () => Quote.FromState(Finalized().ToState() with { Version = 4 }) },
         { "finalized quote of version 1", "a version 1 quote is a draft", () => Quote.FromState(Finalized().ToState() with { Version = 1 }) },
         { "version 1 quote finalized without its finalization", "a version 1 quote is a draft", () => Quote.FromState(Finalized().ToState() with { Version = 1, Finalization = null }) },
         { "version 1 draft with a finalization", "a version 1 quote is a draft", () => Quote.FromState(Finalized().ToState() with { Version = 1, Status = QuoteStatus.Draft }) },

@@ -95,7 +95,7 @@ public sealed class PersistentStateTests
         { "customer without identifier", "the customer or its issuer has no identifier", () => Customer.FromState(CustomerState() with { Id = Guid.Empty }) },
         { "customer without issuer", "the customer or its issuer has no identifier", () => Customer.FromState(CustomerState() with { IssuerId = Guid.Empty }) },
         { "customer of an unknown kind", "customer kind 99 is unknown", () => Customer.FromState(CustomerState() with { Kind = (CustomerKind)99 }) },
-        { "quote of an unknown version", "version 3 is not supported", () => Quote.FromState(Quotes.Draft().ToState() with { Version = 3 }) },
+        { "quote of an unknown version", "version 4 is not supported", () => Quote.FromState(Quotes.Draft().ToState() with { Version = 4 }) },
         { "quote without issuer", "the quote, its issuer or its customer has no identifier", () => Quote.FromState(Quotes.Draft().ToState() with { IssuerId = Guid.Empty }) },
         { "quote without customer", "the quote, its issuer or its customer has no identifier", () => Quote.FromState(Quotes.Draft().ToState() with { CustomerId = Guid.Empty }) },
         { "quote of an unknown status", "status 99 is unknown", () => Quote.FromState(Quotes.Draft().ToState() with { Status = (QuoteStatus)99 }) },

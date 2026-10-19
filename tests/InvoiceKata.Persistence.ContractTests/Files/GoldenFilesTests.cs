@@ -91,11 +91,11 @@ public sealed class GoldenFilesTests : IDisposable
         Assert.Contains(new LegalMention(MentionCode.QuoteValidity, "Devis valable 30 jours, jusqu'au 17/11/2026."), quote.Mentions);
     }
 
-    // A finalized quote is written in the version 2 format, its amounts included, byte for byte apart from line endings.
+    // A quote is written in the version 3 format, its finalization and VAT regime included, byte for byte apart from line endings.
     [Fact]
-    public async Task Should_WriteAFinalizedQuoteInTheVersion2Format()
+    public async Task Should_WriteAFinalizedQuoteInTheVersion3Format()
     {
-        var golden = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "Files", "Golden", "quote.v2.json"));
+        var golden = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "Files", "Golden", "quote.v3.json"));
         var quote = Quote.FromState(FinalizedQuoteState());
 
         await new FileQuoteRepository(new JsonFileStore(_directory.Path)).AddAsync(quote, CancellationToken.None);

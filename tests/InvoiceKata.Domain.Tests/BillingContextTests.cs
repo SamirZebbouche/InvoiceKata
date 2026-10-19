@@ -17,4 +17,21 @@ public sealed class BillingContextTests
 
         Assert.False(context.IsSupported);
     }
+
+    // The second context (ADR-0011).
+    [Fact]
+    public void Should_BeSupported_When_AnIndividualEntrepreneurBillsAProfessional()
+    {
+        var context = new BillingContext(IssuerKind.IndividualEntrepreneur, CustomerKind.Professional);
+
+        Assert.True(context.IsSupported);
+    }
+
+    [Fact]
+    public void Should_NotBeSupported_When_AnIndividualEntrepreneurBillsAnIndividual()
+    {
+        var context = new BillingContext(IssuerKind.IndividualEntrepreneur, CustomerKind.Individual);
+
+        Assert.False(context.IsSupported);
+    }
 }
