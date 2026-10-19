@@ -64,7 +64,9 @@ framework, servie par l'API, qui n'appelle que ses routes.
 
 La partie back d'un logiciel de devis et de factures, exposée par une **API** ([docs/API.md](docs/API.md)) :
 un SaaS où chaque entreprise émettrice configure son profil. On enregistre un client, on crée un devis, on y
-ajoute ou on en retire des lignes, et la TVA est recalculée à chaque fois. On finalise ensuite le devis
+ajoute ou on en retire des lignes, et la TVA est recalculée à chaque fois. L'émetteur est une société au
+régime normal, ou un entrepreneur individuel en franchise de TVA, dont les devis et les factures ne portent
+aucune TVA ([ADR-0011](docs/adr/ADR-0011-ei-en-franchise-de-tva.md)). On finalise ensuite le devis
 pour en rendre le PDF, puis on génère la facture à partir du devis. Les mentions légales dépendent de
 l'émetteur et du client, et tout contexte non pris en charge est refusé
 ([ADR-0002](docs/adr/ADR-0002-variations-selon-emetteur-et-client.md)).

@@ -124,15 +124,21 @@ Ajoutée en chemin : un scénario d'acceptation ne dispense pas d'un test unitai
 
 ## Lot 4 — Un second contexte : un EI en franchise de TVA
 
-### PR 4.1
+### PR 4.1 — Un EI en franchise de TVA
 
 - **Scénarios** :
   - un devis d'EI en franchise, sans TVA, avec la mention « TVA non applicable, art. L. 223 et s. du CIBS »
-    (la référence en vigueur depuis le 1er septembre 2026, [ADR-0011](adr/ADR-0011-ei-en-franchise-de-tva.md))
-    et la mention « EI ».
-- **Ce qui apparaît** :
-  - la Strategy `VatRegime`, qui a désormais deux implémentations ;
-  - un template « EI », sans colonnes de TVA ;
+    (la référence en vigueur depuis le 1er septembre 2026) et la mention « EI » ;
+  - une ligne avec un taux de TVA est refusée sur un devis en franchise ;
+  - la facture d'un EI, sans TVA, avec les mêmes mentions.
+- **Ce qui apparaît** ([ADR-0011](adr/ADR-0011-ei-en-franchise-de-tva.md)) :
+  - le type et le régime de TVA de l'émetteur : `POST /issuers` prend un `kind`, et l'état de l'émetteur passe
+    en version 2 ;
+  - la Strategy du régime de TVA, avec ses deux implémentations : le régime normal, et la franchise, qui
+    refuse un taux et ne calcule aucune TVA ;
+  - le régime gardé par le devis à sa création, dont l'état passe en version 3 ;
+  - la mention de franchise, et la mention d'identité légale propre à l'EI ;
+  - le template `ei.typ`, sans TVA, avec un « Net à payer », choisi selon le type d'émetteur ;
   - une ligne de plus dans la liste blanche.
 
 ## Lot 5 — Un client particulier
