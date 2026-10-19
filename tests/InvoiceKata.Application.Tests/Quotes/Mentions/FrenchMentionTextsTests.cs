@@ -79,6 +79,14 @@ public sealed class FrenchMentionTextsTests
         Assert.StartsWith("Pénalités de retard : ", _texts.LatePaymentPenalties(kind), StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void Should_RefuseToStateThePenalties_When_TheCustomerKindIsUnknown()
+    {
+        var refusal = Record.Exception(() => _texts.LatePaymentPenalties((CustomerKind)99));
+
+        Assert.IsType<ArgumentOutOfRangeException>(refusal);
+    }
+
     // The individual entrepreneur's name, followed by "EI" (article R526-27 of the code de commerce, ADR-0011).
     [Fact]
     public void Should_StateTheNameFollowedByEIAndTheSiren_When_TheIssuerIsAnIndividualEntrepreneur()
