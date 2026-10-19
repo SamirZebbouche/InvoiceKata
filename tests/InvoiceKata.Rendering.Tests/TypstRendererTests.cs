@@ -45,6 +45,22 @@ public sealed class TypstRendererTests
         Assert.DoesNotContain(Flat("Bon pour accord"), text, StringComparison.Ordinal);
     }
 
+    // The EI template (ADR-0011): no VAT column nor VAT line, the name followed by "EI", and the franchise mention.
+    [Fact]
+    public async Task Should_RenderAQuoteWithoutVat_When_TheIssuerIsAnIndividualEntrepreneurInFranchise()
+    {
+        var pdf = await RenderAsync("devis-ei", EntrepreneurQuote());
+
+        var text = Text(pdf);
+        string[] expected =
+        [
+            "DEVIS", "Jean Dupont EI", "D-2026-0001", "Audit 1", "1600,00 €", "Net à payer",
+            "TVA non applicable, art. L. 223 et s. du code des impositions sur les biens et services (CIBS)", "Bon pour accord",
+        ];
+        Assert.All(expected, fragment => Assert.Contains(Flat(fragment), text, StringComparison.Ordinal));
+        Assert.All(["Total TVA", "Total TTC", "TVA intracommunautaire"], fragment => Assert.DoesNotContain(Flat(fragment), text, StringComparison.Ordinal));
+    }
+
     // The number and an n/N pagination on every page (ADR-0005, decision 5).
     [Fact]
     public async Task Should_PutTheNumberAndThePaginationOnEveryPage_When_TheQuoteRunsOverSeveralPages()
@@ -190,6 +206,28 @@ public sealed class TypstRendererTests
         quote.PutMention(new LegalMention(MentionCode.IssuerLegalIdentity, Texts.IssuerLegalIdentity(issuer)));
         quote.Finalize(new QuoteNumber(2026, 1), new DateOnly(2026, 10, 18), new DateOnly(2026, 11, 17), Texts.QuoteValidity(30, new DateOnly(2026, 11, 17)));
         return (quote, issuer, customer);
+    }
+
+    private static ResolvedDocument EntrepreneurQuote()
+    {
+        var issuer = Issuer.ConfigureIndividualEntrepreneur(
+            "Jean Dupont", new Siren("853123456"), new Address { Street = "8 chemin des Vignes", PostalCode = "47000", City = "Agen" });
+        var customer = Customer.RegisterProfessional(
+            issuer.Id, "Les Toits Rouges SARL", new Siren("834567890"), new VatNumber("FR45834567890"),
+            new Address { Street = "4 place du Marché", PostalCode = "33000", City = "Bordeaux" });
+        var quote = InvoiceKata.Domain.Quote.DraftFor(issuer, customer);
+        quote.AddLine(new NewQuoteLine
+        {
+            Designation = "Audit 1",
+            Quantity = new Quantity(2m),
+            Unit = "jour",
+            UnitPriceExcludingVat = new Money(800m),
+            VatRate = new VatRate(0m),
+        });
+        quote.PutMention(new LegalMention(MentionCode.IssuerLegalIdentity, Texts.IssuerLegalIdentity(issuer)));
+        quote.PutMention(new LegalMention(MentionCode.VatFranchise, Texts.VatFranchise()));
+        quote.Finalize(new QuoteNumber(2026, 1), new DateOnly(2026, 10, 18), new DateOnly(2026, 11, 17), Texts.QuoteValidity(30, new DateOnly(2026, 11, 17)));
+        return ResolvedDocument.OfQuote(new QuoteScope(quote, issuer, customer));
     }
 
     private static ResolvedDocument Invoice()

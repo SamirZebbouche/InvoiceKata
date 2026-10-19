@@ -41,8 +41,23 @@ public sealed record ResolvedDocument(
         new DocumentTotals(Cents(invoice.TotalExcludingVat.Amount), Cents(invoice.TotalVat.Amount), Cents(invoice.TotalIncludingVat.Amount)),
         [.. invoice.Mentions.Select(Of)]);
 
-    private static DocumentIssuer Of(Issuer issuer) =>
-        new(issuer.Name, LegalFormLabels.Of(issuer.LegalForm!.Value), issuer.Siren.Value, issuer.VatNumber!.Value.Value, AddressLines(issuer.Address));
+    // A company shows its legal form and VAT number; an individual entrepreneur, "EI" and none (ADR-0011).
+    private static DocumentIssuer Of(Issuer issuer) => issuer.Kind switch
+    {
+        IssuerKind.Company => new(
+            issuer.Name, LegalFormLabels.Of(issuer.LegalForm!.Value), issuer.Siren.Value, issuer.VatNumber!.Value.Value, AddressLines(issuer.Address),
+            "company", Regime(issuer.VatRegime)),
+        IssuerKind.IndividualEntrepreneur => new(
+            issuer.Name, "EI", issuer.Siren.Value, null, AddressLines(issuer.Address), "individual-entrepreneur", Regime(issuer.VatRegime)),
+        _ => throw new ArgumentOutOfRangeException(nameof(issuer), issuer.Kind, "This kind of issuer has no document."),
+    };
+
+    private static string Regime(VatRegime regime) => regime switch
+    {
+        VatRegime.Normal => "normal",
+        VatRegime.Franchise => "franchise",
+        _ => throw new ArgumentOutOfRangeException(nameof(regime), regime, "This VAT regime has no document."),
+    };
 
     private static DocumentCustomer Of(Customer customer) => new(customer.Name, AddressLines(customer.Address), customer.Siren?.Value, customer.VatNumber?.Value);
 
@@ -75,7 +90,8 @@ public sealed record DocumentHeader(string Kind, string Number, string IssuedOn,
 // The quote an invoice was issued from, which the template refers to.
 public sealed record QuoteReference(string Number, string IssuedOn);
 
-public sealed record DocumentIssuer(string Name, string LegalForm, string Siren, string VatNumber, IReadOnlyList<string> Address);
+public sealed record DocumentIssuer(
+    string Name, string LegalForm, string Siren, string? VatNumber, IReadOnlyList<string> Address, string Kind = "company", string VatRegime = "normal");
 
 public sealed record DocumentCustomer(string Name, IReadOnlyList<string> Address, string? Siren, string? VatNumber);
 

@@ -13,7 +13,6 @@ namespace InvoiceKata.Adapters.Rendering;
 // The working folders go under workRoot, the system's temporary folder by default.
 public sealed class TypstRenderer(string executable, string? workRoot = null) : IDocumentRenderer
 {
-    private const string Template = "societe.typ";
 
     private static readonly JsonSerializerOptions Json = new()
     {
@@ -28,17 +27,18 @@ public sealed class TypstRenderer(string executable, string? workRoot = null) : 
         // A concatenation, not an interpolated string: emptying the literal still leaves a folder of its own, so no
         // mutant can turn the working folder into its root, which the finally block would then delete.
         // Stryker disable once String : equivalent, an emptied prefix or GUID format still names a folder of its own
+        var template = TemplateFor(document.Issuer.Kind);
         var work = Directory.CreateDirectory(Path.Combine(workRoot ?? Path.GetTempPath(), "invoicekata-render-" + Guid.NewGuid().ToString("N")));
         try
         {
-            await using (var template = File.Create(Path.Combine(work.FullName, Template)))
-            await using (var embedded = typeof(TypstRenderer).Assembly.GetManifestResourceStream($"Templates.{Template}")!)
+            await using (var file = File.Create(Path.Combine(work.FullName, template)))
+            await using (var embedded = typeof(TypstRenderer).Assembly.GetManifestResourceStream($"Templates.{template}")!)
             {
-                await embedded.CopyToAsync(template, cancellationToken);
+                await embedded.CopyToAsync(file, cancellationToken);
             }
 
             await File.WriteAllTextAsync(Path.Combine(work.FullName, "document.json"), JsonSerializer.Serialize(document, Json), cancellationToken);
-            await CompileAsync(work.FullName, cancellationToken);
+            await CompileAsync(work.FullName, template, cancellationToken);
             return await File.ReadAllBytesAsync(Path.Combine(work.FullName, "document.pdf"), cancellationToken);
         }
         finally
@@ -47,7 +47,15 @@ public sealed class TypstRenderer(string executable, string? workRoot = null) : 
         }
     }
 
-    private async Task CompileAsync(string root, CancellationToken cancellationToken)
+    // One template per kind of issuer (ADR-0005, decision 3; ADR-0011).
+    private static string TemplateFor(string issuerKind) => issuerKind switch
+    {
+        "company" => "societe.typ",
+        "individual-entrepreneur" => "ei.typ",
+        _ => throw new ArgumentOutOfRangeException(nameof(issuerKind), issuerKind, "This kind of issuer has no template."),
+    };
+
+    private async Task CompileAsync(string root, string template, CancellationToken cancellationToken)
     {
         var startInfo = new ProcessStartInfo(executable)
         {
@@ -55,7 +63,7 @@ public sealed class TypstRenderer(string executable, string? workRoot = null) : 
             RedirectStandardError = true,
             UseShellExecute = false,
         };
-        foreach (var argument in new[] { "compile", Template, "document.pdf", "--root", root, "--input", "data=/document.json" })
+        foreach (var argument in new[] { "compile", template, "document.pdf", "--root", root, "--input", "data=/document.json" })
         {
             startInfo.ArgumentList.Add(argument);
         }
